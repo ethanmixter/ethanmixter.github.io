@@ -1,0 +1,1398 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+  <meta name="theme-color" content="#0d4f66">
+  <title>Walnut Avenue Splash</title>
+  <style>
+    :root {
+      color-scheme: dark;
+      --ink: #f4fbff;
+      --muted: #b3d0d8;
+      --water: #267d8f;
+      --panel: rgba(8, 34, 42, 0.88);
+      --line: rgba(255, 255, 255, 0.2);
+      --green: #5c8f4b;
+      --sand: #d8bd7c;
+      --orange: #f28c3c;
+      --red: #dc3c32;
+    }
+
+    * { box-sizing: border-box; }
+
+    html,
+    body {
+      width: 100%;
+      height: 100%;
+      margin: 0;
+      overflow: hidden;
+    }
+
+    body {
+      background: #0a2f39;
+      color: var(--ink);
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      user-select: none;
+      touch-action: none;
+    }
+
+    button { font: inherit; }
+
+    #shell {
+      position: relative;
+      width: 100%;
+      height: 100%;
+    }
+
+    canvas {
+      display: block;
+      width: 100%;
+      height: 100%;
+      background: #1f7890;
+    }
+
+    #hud {
+      position: absolute;
+      inset: 0 0 auto;
+      z-index: 4;
+      display: grid;
+      grid-template-columns: 1fr auto 1fr;
+      gap: 14px;
+      align-items: start;
+      padding: 14px 16px 34px;
+      pointer-events: none;
+      background: linear-gradient(rgba(4, 20, 25, 0.78), rgba(4, 20, 25, 0));
+    }
+
+    .meter {
+      width: min(330px, 35vw);
+      min-width: 150px;
+    }
+
+    .meter.right {
+      justify-self: end;
+      text-align: right;
+    }
+
+    .label {
+      display: flex;
+      justify-content: space-between;
+      gap: 10px;
+      margin-bottom: 6px;
+      color: var(--muted);
+      font-size: 11px;
+      font-weight: 900;
+      letter-spacing: 0;
+      text-transform: uppercase;
+    }
+
+    .bar {
+      height: 14px;
+      padding: 2px;
+      border: 1px solid rgba(255, 255, 255, 0.42);
+      border-radius: 7px;
+      background: rgba(0, 0, 0, 0.42);
+      box-shadow: inset 0 2px 5px rgba(0, 0, 0, 0.35);
+    }
+
+    .fill {
+      height: 100%;
+      width: 100%;
+      border-radius: 5px;
+      background: linear-gradient(90deg, #29d18d, #f0d25f, #eb553f);
+      transform-origin: left;
+      transition: width 0.08s linear;
+    }
+
+    #enemyFill {
+      background: linear-gradient(90deg, #ffbc52, #ff5b4a);
+    }
+
+    #readout {
+      min-width: 190px;
+      padding: 9px 13px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: var(--panel);
+      text-align: center;
+      box-shadow: 0 12px 30px rgba(0, 0, 0, 0.2);
+    }
+
+    #score {
+      font-size: 24px;
+      font-weight: 950;
+      line-height: 1;
+    }
+
+    #status {
+      margin-top: 5px;
+      color: var(--muted);
+      font-size: 10px;
+      font-weight: 900;
+      letter-spacing: 0;
+      text-transform: uppercase;
+    }
+
+    .overlay {
+      position: absolute;
+      inset: 0;
+      z-index: 10;
+      display: grid;
+      place-items: center;
+      padding: 18px;
+      background:
+        linear-gradient(rgba(5, 30, 36, 0.86), rgba(4, 20, 24, 0.88)),
+        radial-gradient(circle at 45% 20%, rgba(63, 176, 190, 0.55), transparent 34rem);
+      backdrop-filter: blur(5px);
+    }
+
+    .hidden { display: none !important; }
+
+    .card {
+      width: min(780px, 94vw);
+      text-align: center;
+    }
+
+    .eyebrow {
+      margin: 0 0 10px;
+      color: #9fe7d0;
+      font-size: 11px;
+      font-weight: 950;
+      letter-spacing: 0;
+      text-transform: uppercase;
+    }
+
+    h1 {
+      margin: 0;
+      font-size: clamp(46px, 9vw, 104px);
+      line-height: 0.88;
+      letter-spacing: 0;
+      text-transform: uppercase;
+    }
+
+    .lead {
+      max-width: 620px;
+      margin: 18px auto 24px;
+      color: #d8edf1;
+      font-size: clamp(14px, 2.2vw, 18px);
+      line-height: 1.55;
+    }
+
+    .primary {
+      min-height: 48px;
+      padding: 0 22px;
+      border: 1px solid rgba(255, 255, 255, 0.5);
+      border-radius: 8px;
+      background: linear-gradient(135deg, #fbad44, #d74736);
+      color: white;
+      font-weight: 950;
+      cursor: pointer;
+      box-shadow: 0 12px 30px rgba(0, 0, 0, 0.28);
+    }
+
+    .primary:hover {
+      filter: brightness(1.08);
+      transform: translateY(-1px);
+    }
+
+    .controls {
+      margin-top: 18px;
+      color: #b9d6dd;
+      font-size: 11px;
+      font-weight: 850;
+      letter-spacing: 0;
+      text-transform: uppercase;
+    }
+
+    .upgradePanel {
+      display: grid;
+      gap: 10px;
+      width: min(360px, 100%);
+      margin: 0 auto 18px;
+      padding: 13px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: rgba(6, 32, 39, 0.72);
+    }
+
+    .upgradePanel p {
+      margin: 0;
+      color: #d8edf1;
+      font-size: 13px;
+      font-weight: 850;
+    }
+
+    .tutorialGrid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 12px;
+      margin: 22px auto 24px;
+      text-align: left;
+    }
+
+    .tutorialItem {
+      min-height: 104px;
+      padding: 14px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: rgba(6, 32, 39, 0.72);
+    }
+
+    .tutorialItem strong {
+      display: block;
+      margin-bottom: 6px;
+      color: #ffffff;
+      font-size: 14px;
+    }
+
+    .tutorialItem span {
+      color: #cce6eb;
+      font-size: 13px;
+      line-height: 1.45;
+    }
+
+    .modeButtons {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 10px;
+    }
+
+    .primary:disabled {
+      cursor: default;
+      filter: grayscale(0.45) brightness(0.72);
+      transform: none;
+    }
+
+    #mobileControls {
+      position: absolute;
+      inset: auto 0 14px;
+      z-index: 6;
+      display: none;
+      justify-content: space-between;
+      padding: 0 14px;
+      pointer-events: none;
+    }
+
+    .touchGroup {
+      display: grid;
+      grid-template-columns: repeat(2, 64px);
+      gap: 7px;
+      pointer-events: auto;
+    }
+
+    .touchBtn {
+      height: 52px;
+      border: 1px solid rgba(255, 255, 255, 0.4);
+      border-radius: 8px;
+      background: rgba(6, 32, 39, 0.72);
+      color: white;
+      font-weight: 950;
+      touch-action: none;
+    }
+
+    @media (max-width: 760px) {
+      #hud {
+        grid-template-columns: 1fr 1fr;
+        gap: 9px;
+        padding: 9px 10px 50px;
+      }
+
+      .meter {
+        width: 44vw;
+      }
+
+      #readout {
+        position: absolute;
+        top: 54px;
+        left: 50%;
+        min-width: 144px;
+        padding: 7px 9px;
+        transform: translateX(-50%);
+      }
+
+      #score {
+        font-size: 18px;
+      }
+
+      .label {
+        font-size: 9px;
+      }
+
+      #mobileControls {
+        display: flex;
+      }
+
+      .tutorialGrid {
+        grid-template-columns: 1fr;
+        max-height: 48vh;
+        overflow: auto;
+      }
+
+      .tutorialItem {
+        min-height: auto;
+      }
+    }
+  </style>
+</head>
+<body>
+<main id="shell">
+  <canvas id="game" aria-label="2D tubing battle game at Walnut Avenue"></canvas>
+
+  <section id="hud" class="hidden" aria-label="Game status">
+    <div class="meter">
+      <div class="label"><span>Your tube</span><span id="hpText">100%</span></div>
+      <div class="bar"><div class="fill" id="hpFill"></div></div>
+    </div>
+    <div id="readout">
+      <div id="score">0 hits</div>
+      <div id="status">Walnut Avenue run</div>
+    </div>
+    <div class="meter right">
+      <div class="label"><span>AI robot tube</span><span id="enemyText">100%</span></div>
+      <div class="bar"><div class="fill" id="enemyFill"></div></div>
+    </div>
+  </section>
+
+  <section id="menu" class="overlay">
+    <div class="card">
+      <p class="eyebrow">Walnut Avenue</p>
+      <h1>Walnut Avenue<br>Splash</h1>
+      <p class="lead">
+        Ride behind a pontoon boat, sling your tube across the wake, and smash the AI robot rider until its tube breaks apart.
+      </p>
+      <button class="primary" id="start">Start Tubing</button>
+      <div class="controls">Move: A/D or left/right arrows. On phones, use the side buttons. Hit the robot harder than it hits you.</div>
+    </div>
+  </section>
+
+  <section id="tutorial" class="overlay hidden">
+    <div class="card">
+      <p class="eyebrow">Tutorial</p>
+      <h1>How To Ride</h1>
+      <div class="tutorialGrid">
+        <div class="tutorialItem"><strong>Steer</strong><span>Move only side to side with A/D, left/right arrows, or the phone buttons.</span></div>
+        <div class="tutorialItem"><strong>Win</strong><span>Smash into the AI robot tube harder than it smashes into you to damage it.</span></div>
+        <div class="tutorialItem"><strong>Avoid</strong><span>Rocks hit hard. Alligators swim toward you but do lighter damage.</span></div>
+        <div class="tutorialItem"><strong>Upgrade</strong><span>Win rides to earn coins, then spend coins on better steering.</span></div>
+      </div>
+      <div class="modeButtons">
+        <button class="primary" id="beginRide">Battle Mode</button>
+        <button class="primary" id="beginScoreRun">High Score Mode</button>
+      </div>
+    </div>
+  </section>
+
+  <section id="end" class="overlay hidden">
+    <div class="card">
+      <p class="eyebrow" id="endEyebrow">Tube destroyed</p>
+      <h1 id="endTitle">You Win</h1>
+      <p class="lead" id="endText"></p>
+      <div class="upgradePanel">
+        <p id="coinText">Coins: 0</p>
+        <p id="steeringText">Steering: Level 0</p>
+        <button class="primary" id="buySteering">Upgrade Steering</button>
+      </div>
+      <div class="modeButtons">
+        <button class="primary" id="restart">Ride Again</button>
+        <button class="primary" id="switchMode">Switch Mode</button>
+      </div>
+    </div>
+  </section>
+
+  <div id="mobileControls" class="hidden" aria-hidden="true">
+    <div class="touchGroup">
+      <button class="touchBtn" data-key="left">◀</button><button class="touchBtn" data-key="right">▶</button>
+    </div>
+  </div>
+</main>
+
+<script>
+(() => {
+  "use strict";
+
+  const canvas = document.querySelector("#game");
+  const ctx = canvas.getContext("2d");
+  const $ = (selector) => document.querySelector(selector);
+  const ui = {
+    hud: $("#hud"),
+    menu: $("#menu"),
+    tutorial: $("#tutorial"),
+    end: $("#end"),
+    hpFill: $("#hpFill"),
+    hpText: $("#hpText"),
+    enemyFill: $("#enemyFill"),
+    enemyText: $("#enemyText"),
+    enemyMeter: $(".meter.right"),
+    score: $("#score"),
+    status: $("#status"),
+    endTitle: $("#endTitle"),
+    endText: $("#endText"),
+    endEyebrow: $("#endEyebrow"),
+    coinText: $("#coinText"),
+    steeringText: $("#steeringText"),
+    buySteering: $("#buySteering"),
+    mobile: $("#mobileControls")
+  };
+
+  let W = 1280;
+  let H = 720;
+  let dpr = 1;
+  let state = "menu";
+  let last = 0;
+  let time = 0;
+  let scroll = 0;
+  let shake = 0;
+  let hits = 0;
+  let survivalScore = 0;
+  let highScore = Number(localStorage.getItem("walnutSplashHighScore") || 0);
+  let gameMode = "battle";
+  let statusFlash = 0;
+  let statusMessage = "";
+  let coins = 0;
+  let steeringLevel = 0;
+  let audioCtx = null;
+  let musicTimer = null;
+  let musicStep = 0;
+  const keys = {};
+  const bubbles = [];
+  const sparks = [];
+  const debris = [];
+  const obstacles = [];
+  let obstacleTimer = 0;
+
+  const boat = { x: 0, y: 0, bob: 0 };
+  const player = tube("player", "#f26b3f", "#fff6d9", 100, 160);
+  const enemy = tube("enemy", "#75808a", "#aef25a", 100, -160);
+
+  function tube(kind, rim, rider, hp, side) {
+    return {
+      kind,
+      x: 0,
+      y: 0,
+      vx: 0,
+      vy: 0,
+      r: 34,
+      hp,
+      maxHp: hp,
+      side,
+      rim,
+      rider,
+      invuln: 0,
+      spin: 0,
+      stun: 0
+    };
+  }
+
+  function resize() {
+    dpr = Math.min(2, window.devicePixelRatio || 1);
+    W = Math.max(320, window.innerWidth);
+    H = Math.max(420, window.innerHeight);
+    canvas.width = Math.floor(W * dpr);
+    canvas.height = Math.floor(H * dpr);
+    canvas.style.width = `${W}px`;
+    canvas.style.height = `${H}px`;
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    boat.x = W * 0.5;
+    boat.y = Math.min(150, H * 0.22);
+    if (state === "menu") resetPositions();
+  }
+
+  function resetPositions() {
+    player.x = W * 0.5 - 145;
+    player.y = H * 0.68;
+    player.vx = 0;
+    player.vy = 0;
+    enemy.x = W * 0.5 + 145;
+    enemy.y = H * 0.66;
+    enemy.vx = 0;
+    enemy.vy = 0;
+  }
+
+  function start(mode = "battle") {
+    playSound("start");
+    startMusic();
+    gameMode = mode;
+    state = "play";
+    time = 0;
+    scroll = 0;
+    shake = 0;
+    hits = 0;
+    survivalScore = 0;
+    statusFlash = 0;
+    statusMessage = "";
+    player.hp = player.maxHp;
+    enemy.hp = enemy.maxHp;
+    player.invuln = 0;
+    enemy.invuln = 0;
+    player.stun = 0;
+    enemy.stun = 0;
+    obstacleTimer = 0.8;
+    bubbles.length = 0;
+    sparks.length = 0;
+    debris.length = 0;
+    obstacles.length = 0;
+    resetPositions();
+    ui.menu.classList.add("hidden");
+    ui.tutorial.classList.add("hidden");
+    ui.end.classList.add("hidden");
+    ui.hud.classList.remove("hidden");
+    ui.mobile.classList.remove("hidden");
+    ui.enemyMeter.classList.toggle("hidden", gameMode === "score");
+    updateHud();
+  }
+
+  function end(win) {
+    state = "end";
+    const scoreWin = gameMode === "score";
+    if (scoreWin && survivalScore > highScore) {
+      highScore = survivalScore;
+      localStorage.setItem("walnutSplashHighScore", String(highScore));
+    }
+    if (!scoreWin && win) coins += 50;
+    stopMusic();
+    playSound(win || scoreWin ? "win" : "lose");
+    ui.hud.classList.add("hidden");
+    ui.mobile.classList.add("hidden");
+    ui.end.classList.remove("hidden");
+    ui.enemyMeter.classList.remove("hidden");
+    if (scoreWin) {
+      ui.endEyebrow.textContent = "High score run";
+      ui.endTitle.textContent = "Run Over";
+      ui.endText.textContent = `Score: ${Math.floor(survivalScore)}. Best: ${Math.floor(highScore)}.`;
+    } else {
+      ui.endEyebrow.textContent = win ? "AI robot destroyed" : "Your tube broke";
+      ui.endTitle.textContent = win ? "You Win" : "Robot Wins";
+      ui.endText.textContent = win
+        ? `You landed ${hits} solid hits and earned 50 coins for steering upgrades.`
+        : `The robot cracked your tube first. You landed ${hits} hits before washing out.`;
+    }
+    updateUpgradeUi();
+  }
+
+  function showTutorial() {
+    ui.menu.classList.add("hidden");
+    ui.end.classList.add("hidden");
+    ui.hud.classList.add("hidden");
+    ui.mobile.classList.add("hidden");
+    ui.tutorial.classList.remove("hidden");
+  }
+
+  function update(dt) {
+    time += dt;
+    scroll -= dt * 285;
+    boat.bob = Math.sin(time * 2.2) * 5;
+    shake = Math.max(0, shake - dt * 22);
+    statusFlash = Math.max(0, statusFlash - dt);
+    if (gameMode === "score") survivalScore += dt * 10;
+    updateTube(player, dt, playerInput());
+    if (gameMode === "battle") updateEnemy(dt);
+    keepRoped(player, dt, -38);
+    if (gameMode === "battle") {
+      keepRoped(enemy, dt, 38);
+      collideTubes(dt);
+    }
+    updateObstacles(dt);
+    updateParticles(dt);
+    spawnWater(dt);
+
+    if (player.hp <= 0) end(false);
+    if (gameMode === "battle" && enemy.hp <= 0) end(true);
+    updateHud();
+  }
+
+  function playerInput() {
+    let ax = 0;
+    if (keys.ArrowLeft || keys.KeyA || keys.left) ax -= 1;
+    if (keys.ArrowRight || keys.KeyD || keys.right) ax += 1;
+    return { ax, ay: 0 };
+  }
+
+  function updateTube(t, dt, input) {
+    const pull = t.kind === "player" ? 390 + steeringLevel * 75 : 330;
+    const steer = t.stun > 0 ? 0.25 : 1;
+    const len = Math.hypot(input.ax, input.ay) || 1;
+    t.vx += (input.ax / len) * pull * steer * dt;
+    t.vy += (input.ay / len) * pull * steer * dt;
+    t.vy += 140 * dt;
+    t.vx *= Math.pow(0.015, dt);
+    t.vy *= Math.pow(0.07, dt);
+    t.x += t.vx * dt;
+    t.y += t.vy * dt;
+    t.spin += (t.vx * 0.035 + t.vy * 0.012) * dt;
+    t.invuln = Math.max(0, t.invuln - dt);
+    t.stun = Math.max(0, t.stun - dt);
+    const edge = shorelineAt(t.y + scroll);
+    t.x = Math.max(edge.left + t.r + 10, Math.min(edge.right - t.r - 10, t.x));
+    t.y = Math.max(boat.y + 170, Math.min(H - t.r - 16, t.y));
+  }
+
+  function updateEnemy(dt) {
+    const targetX = player.x + Math.sin(time * 1.45) * 138;
+    const targetY = player.y + Math.cos(time * 1.15) * 56;
+    const dodge = enemy.invuln > 0 ? -1 : 1;
+    const input = {
+      ax: Math.sign(targetX - enemy.x) * dodge,
+      ay: Math.sign(targetY - enemy.y)
+    };
+
+    if (Math.abs(targetX - enemy.x) < 34) input.ax = 0;
+    if (Math.abs(targetY - enemy.y) < 26) input.ay = 0;
+    updateTube(enemy, dt, input);
+  }
+
+  function keepRoped(t, dt, hitchOffset) {
+    const hitchX = boat.x + hitchOffset;
+    const hitchY = boat.y + 96 + boat.bob;
+    const dx = t.x - hitchX;
+    const dy = t.y - hitchY;
+    const dist = Math.hypot(dx, dy) || 1;
+    const maxLen = Math.min(430, H * 0.58);
+    const minLen = Math.min(260, H * 0.38);
+
+    if (dist > maxLen) {
+      const over = dist - maxLen;
+      t.x -= (dx / dist) * over * 0.72;
+      t.y -= (dy / dist) * over * 0.72;
+      t.vx -= (dx / dist) * over * 5.5 * dt;
+      t.vy -= (dy / dist) * over * 5.5 * dt;
+    }
+
+    if (dist < minLen) {
+      const under = minLen - dist;
+      t.x += (dx / dist) * under * 0.18;
+      t.y += (dy / dist) * under * 0.18;
+    }
+  }
+
+  function collideTubes() {
+    const dx = enemy.x - player.x;
+    const dy = enemy.y - player.y;
+    const dist = Math.hypot(dx, dy) || 1;
+    const min = player.r + enemy.r;
+    if (dist >= min) return;
+
+    const nx = dx / dist;
+    const ny = dy / dist;
+    const overlap = min - dist;
+    player.x -= nx * overlap * 0.5;
+    player.y -= ny * overlap * 0.5;
+    enemy.x += nx * overlap * 0.5;
+    enemy.y += ny * overlap * 0.5;
+
+    const relVx = player.vx - enemy.vx;
+    const relVy = player.vy - enemy.vy;
+    const force = Math.hypot(relVx, relVy);
+    const playerAttack = Math.max(0, player.vx * nx + player.vy * ny);
+    const enemyAttack = Math.max(0, -(enemy.vx * nx + enemy.vy * ny));
+    const impulse = Math.max(280, force * 0.72);
+    player.vx -= nx * impulse;
+    player.vy -= ny * impulse;
+    enemy.vx += nx * impulse;
+    enemy.vy += ny * impulse;
+
+    if ((enemy.invuln <= 0 || player.invuln <= 0) && Math.max(playerAttack, enemyAttack) > 24) {
+      const enemyDamage = Math.max(10, Math.min(34, 10 + playerAttack / 30));
+      const playerDamage = Math.max(6, Math.min(20, 6 + enemyAttack / 45));
+      const aiHitPlayer = enemyAttack > 24 && enemyAttack >= playerAttack * 0.65;
+
+      if (aiHitPlayer && player.invuln <= 0) {
+        player.hp -= playerDamage;
+        player.invuln = 0.55;
+        player.stun = 0.1;
+        playSound("hurt");
+      } else if (playerAttack > 24 && enemy.invuln <= 0) {
+        enemy.hp -= enemyDamage;
+        enemy.invuln = 0.42;
+        enemy.stun = 0.22;
+        hits += 1;
+        playSound("hit");
+      }
+
+      shake = Math.min(12, shake + force / 55);
+      burst((player.x + enemy.x) * 0.5, (player.y + enemy.y) * 0.5, 18, "#ffffff");
+    }
+  }
+
+  function updateObstacles(dt) {
+    obstacleTimer -= dt;
+    if (obstacleTimer <= 0 && obstacles.length < 7) {
+      spawnObstacle();
+      obstacleTimer = 1.4 + Math.random() * 1.6;
+    }
+
+    for (let i = obstacles.length - 1; i >= 0; i -= 1) {
+      const o = obstacles[i];
+      o.y += o.vy * dt;
+      o.x += o.vx * dt;
+      o.wiggle += dt;
+
+      if (o.type === "alligator") {
+        const playerDist = Math.hypot(player.x - o.x, player.y - o.y);
+        const enemyDist = gameMode === "battle" ? Math.hypot(enemy.x - o.x, enemy.y - o.y) : Infinity;
+        const target = enemyDist < playerDist ? enemy : player;
+        o.vx += Math.sign(target.x - o.x) * 22 * dt;
+        o.vx *= Math.pow(0.55, dt);
+        o.angle = Math.atan2(target.y - o.y, target.x - o.x);
+      }
+
+      const edge = shorelineAt(o.y + scroll);
+      o.x = Math.max(edge.left + o.r + 8, Math.min(edge.right - o.r - 8, o.x));
+      collideObstacle(o, player);
+      if (gameMode === "battle") collideObstacle(o, enemy);
+
+      if (o.y > H + 90) obstacles.splice(i, 1);
+    }
+  }
+
+  function spawnObstacle() {
+    const type = Math.random() < 0.58 ? "rock" : "alligator";
+    const y = -70;
+    const edge = shorelineAt(y + scroll);
+    const margin = type === "rock" ? 46 : 62;
+    obstacles.push({
+      type,
+      x: edge.left + margin + Math.random() * Math.max(40, edge.right - edge.left - margin * 2),
+      y,
+      vx: type === "alligator" ? (Math.random() - 0.5) * 24 : 0,
+      vy: type === "alligator" ? 178 : 285,
+      r: type === "alligator" ? 24 : 28 + Math.random() * 8,
+      damage: type === "alligator" ? 7 : 24,
+      hit: false,
+      wiggle: Math.random() * 10,
+      angle: Math.PI * 0.5
+    });
+  }
+
+  function collideObstacle(o, tubeTarget) {
+    if (o.hit || tubeTarget.invuln > 0) return;
+    const dx = tubeTarget.x - o.x;
+    const dy = tubeTarget.y - o.y;
+    const dist = Math.hypot(dx, dy) || 1;
+    const extraHitbox = tubeTarget.kind === "enemy" ? 18 : 6;
+    if (dist > tubeTarget.r + o.r + extraHitbox) return;
+
+    const nx = dx / dist;
+    const ny = dy / dist;
+    const push = o.type === "rock" ? 330 : 190;
+    tubeTarget.hp -= o.damage;
+    tubeTarget.invuln = o.type === "rock" ? 0.75 : 0.42;
+    tubeTarget.stun = o.type === "rock" ? 0.26 : 0.12;
+    tubeTarget.vx += nx * push;
+    tubeTarget.vy += ny * push;
+    o.hit = true;
+    if (tubeTarget.kind === "enemy") {
+      statusMessage = "Robot hit a hazard";
+      statusFlash = 1;
+    }
+    playSound(o.type === "rock" ? "rock" : "gator");
+    shake = Math.min(13, shake + (o.type === "rock" ? 8 : 4));
+    burst(o.x, o.y, o.type === "rock" ? 14 : 8, o.type === "rock" ? "#d2d6d0" : "#9fd86c");
+  }
+
+  function spawnWater(dt) {
+    const count = Math.floor(dt * 34);
+    for (let i = 0; i < count; i += 1) {
+      bubbles.push({
+        x: boat.x + (Math.random() - 0.5) * 190,
+        y: boat.y + 80 + Math.random() * 70,
+        vx: (Math.random() - 0.5) * 60,
+        vy: 120 + Math.random() * 130,
+        r: 2 + Math.random() * 5,
+        life: 1 + Math.random() * 0.7,
+        max: 1.7
+      });
+    }
+
+    for (const t of [player, enemy]) {
+      if (Math.hypot(t.vx, t.vy) > 90) {
+        bubbles.push({
+          x: t.x - t.vx * 0.025 + (Math.random() - 0.5) * 16,
+          y: t.y - t.vy * 0.025 + (Math.random() - 0.5) * 16,
+          vx: -t.vx * 0.16 + (Math.random() - 0.5) * 40,
+          vy: -t.vy * 0.16 + 40,
+          r: 2 + Math.random() * 4,
+          life: 0.55,
+          max: 0.55
+        });
+      }
+    }
+  }
+
+  function burst(x, y, amount, color) {
+    for (let i = 0; i < amount; i += 1) {
+      const a = Math.random() * Math.PI * 2;
+      const s = 100 + Math.random() * 360;
+      sparks.push({
+        x,
+        y,
+        vx: Math.cos(a) * s,
+        vy: Math.sin(a) * s,
+        r: 2 + Math.random() * 4,
+        life: 0.45 + Math.random() * 0.25,
+        max: 0.7,
+        color
+      });
+    }
+  }
+
+  function updateParticles(dt) {
+    for (const list of [bubbles, sparks, debris]) {
+      for (let i = list.length - 1; i >= 0; i -= 1) {
+        const p = list[i];
+        p.life -= dt;
+        p.x += p.vx * dt;
+        p.y += p.vy * dt;
+        p.vx *= Math.pow(0.4, dt);
+        p.vy *= Math.pow(0.45, dt);
+        if (p.life <= 0) list.splice(i, 1);
+      }
+    }
+  }
+
+  function updateHud() {
+    const hpPct = Math.max(0, player.hp / player.maxHp);
+    const enemyPct = Math.max(0, enemy.hp / enemy.maxHp);
+    ui.hpFill.style.width = `${hpPct * 100}%`;
+    ui.enemyFill.style.width = `${enemyPct * 100}%`;
+    ui.hpText.textContent = `${Math.ceil(Math.max(0, player.hp))}%`;
+    ui.enemyText.textContent = `${Math.ceil(Math.max(0, enemy.hp))}%`;
+    ui.score.textContent = gameMode === "score"
+      ? `Score ${Math.floor(survivalScore)}`
+      : `${hits} hit${hits === 1 ? "" : "s"}`;
+    ui.status.textContent = statusFlash > 0
+      ? statusMessage
+      : (gameMode === "score" ? `Best ${Math.floor(highScore)}` : (enemy.invuln > 0 ? "Robot rattled" : "Walnut Avenue run"));
+  }
+
+  function steeringCost() {
+    return 50 + steeringLevel * 35;
+  }
+
+  function updateUpgradeUi() {
+    const cost = steeringCost();
+    ui.coinText.textContent = `Coins: ${coins}`;
+    ui.steeringText.textContent = `Steering: Level ${steeringLevel}`;
+    ui.buySteering.textContent = `Upgrade Steering - ${cost} coins`;
+    ui.buySteering.disabled = coins < cost;
+  }
+
+  function buySteering() {
+    const cost = steeringCost();
+    if (coins < cost) return;
+    coins -= cost;
+    steeringLevel += 1;
+    playSound("upgrade");
+    updateUpgradeUi();
+  }
+
+  function getAudio() {
+    if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    if (audioCtx.state === "suspended") audioCtx.resume();
+    return audioCtx;
+  }
+
+  function tone(freq, start, duration, type, volume) {
+    const audio = getAudio();
+    const osc = audio.createOscillator();
+    const gain = audio.createGain();
+    osc.type = type;
+    osc.frequency.setValueAtTime(freq, audio.currentTime + start);
+    gain.gain.setValueAtTime(0.0001, audio.currentTime + start);
+    gain.gain.exponentialRampToValueAtTime(volume, audio.currentTime + start + 0.012);
+    gain.gain.exponentialRampToValueAtTime(0.0001, audio.currentTime + start + duration);
+    osc.connect(gain);
+    gain.connect(audio.destination);
+    osc.start(audio.currentTime + start);
+    osc.stop(audio.currentTime + start + duration + 0.02);
+  }
+
+  function noise(start, duration, volume) {
+    const audio = getAudio();
+    const buffer = audio.createBuffer(1, Math.floor(audio.sampleRate * duration), audio.sampleRate);
+    const data = buffer.getChannelData(0);
+    for (let i = 0; i < data.length; i += 1) data[i] = Math.random() * 2 - 1;
+    const source = audio.createBufferSource();
+    const gain = audio.createGain();
+    source.buffer = buffer;
+    gain.gain.setValueAtTime(volume, audio.currentTime + start);
+    gain.gain.exponentialRampToValueAtTime(0.0001, audio.currentTime + start + duration);
+    source.connect(gain);
+    gain.connect(audio.destination);
+    source.start(audio.currentTime + start);
+  }
+
+  function playSound(name) {
+    try {
+      if (name === "start") {
+        tone(220, 0, 0.08, "triangle", 0.08);
+        tone(330, 0.08, 0.1, "triangle", 0.08);
+      } else if (name === "hit") {
+        tone(150, 0, 0.08, "square", 0.09);
+        noise(0, 0.09, 0.05);
+      } else if (name === "hurt") {
+        tone(95, 0, 0.16, "sawtooth", 0.09);
+      } else if (name === "rock") {
+        tone(70, 0, 0.18, "square", 0.11);
+        noise(0, 0.16, 0.08);
+      } else if (name === "gator") {
+        tone(130, 0, 0.08, "sawtooth", 0.06);
+        tone(105, 0.07, 0.09, "sawtooth", 0.05);
+      } else if (name === "upgrade") {
+        tone(420, 0, 0.08, "triangle", 0.07);
+        tone(560, 0.08, 0.08, "triangle", 0.07);
+        tone(720, 0.16, 0.12, "triangle", 0.07);
+      } else if (name === "win") {
+        tone(330, 0, 0.1, "triangle", 0.08);
+        tone(440, 0.1, 0.1, "triangle", 0.08);
+        tone(660, 0.2, 0.18, "triangle", 0.08);
+      } else if (name === "lose") {
+        tone(220, 0, 0.14, "sawtooth", 0.08);
+        tone(150, 0.14, 0.22, "sawtooth", 0.08);
+      }
+    } catch (error) {
+      audioCtx = null;
+    }
+  }
+
+  function startMusic() {
+    stopMusic();
+    musicStep = 0;
+    playMusicStep();
+    musicTimer = window.setInterval(playMusicStep, 185);
+  }
+
+  function stopMusic() {
+    if (!musicTimer) return;
+    window.clearInterval(musicTimer);
+    musicTimer = null;
+  }
+
+  function playMusicStep() {
+    if (state !== "play" && musicStep > 0) return;
+    const bass = [131, 165, 196, 165, 147, 185, 220, 185, 110, 147, 196, 147, 123, 165, 208, 247];
+    const lead = [523, 659, 784, 659, 587, 740, 880, 740, 494, 622, 784, 622, 554, 698, 831, 988];
+    const step = musicStep % bass.length;
+    tone(bass[step], 0, 0.13, "triangle", 0.024);
+    tone(lead[step], 0.025, 0.105, "square", 0.018);
+    if (step % 4 === 2) tone(lead[(step + 2) % lead.length], 0.09, 0.08, "triangle", 0.015);
+    if (step % 2 === 1) noise(0.015, 0.028, 0.014);
+    musicStep += 1;
+  }
+
+  function shorelineAt(worldY) {
+    const left = 72 + Math.sin(worldY * 0.005) * 44 + Math.sin(worldY * 0.013) * 18;
+    const right = W - (84 + Math.cos(worldY * 0.0043) * 52 + Math.sin(worldY * 0.009) * 20);
+    return { left, right };
+  }
+
+  function draw() {
+    ctx.save();
+    drawLake();
+    if (shake > 0) ctx.translate((Math.random() - 0.5) * shake, (Math.random() - 0.5) * shake);
+    drawObstacles();
+    drawRopes();
+    if (gameMode === "battle") drawTube(enemy);
+    drawTube(player);
+    drawPontoon();
+    drawParticles();
+    ctx.restore();
+  }
+
+  function drawLake() {
+    const grad = ctx.createLinearGradient(0, 0, 0, H);
+    grad.addColorStop(0, "#1c7187");
+    grad.addColorStop(0.52, "#2b8fa0");
+    grad.addColorStop(1, "#1d687d");
+    ctx.fillStyle = grad;
+    ctx.fillRect(0, 0, W, H);
+
+    const waveScroll = -scroll;
+    for (let y = -80; y < H + 120; y += 38) {
+      const wy = y + (waveScroll % 38);
+      ctx.strokeStyle = "rgba(255,255,255,0.12)";
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      for (let x = 0; x <= W; x += 28) {
+        const waveY = wy + Math.sin((x + waveScroll) * 0.018) * 5;
+        if (x === 0) ctx.moveTo(x, waveY);
+        else ctx.lineTo(x, waveY);
+      }
+      ctx.stroke();
+    }
+
+    drawShoreline();
+    drawWake();
+  }
+
+  function drawShoreline() {
+    ctx.save();
+    ctx.fillStyle = "#d6bd77";
+    ctx.beginPath();
+    ctx.moveTo(0, 0);
+    const startWorldY = Math.floor(scroll / 24) * 24;
+    for (let worldY = startWorldY; worldY <= scroll + H + 48; worldY += 24) {
+      const y = worldY - scroll;
+      const edge = shorelineAt(worldY).left;
+      ctx.lineTo(edge, y);
+    }
+    ctx.lineTo(0, H);
+    ctx.closePath();
+    ctx.fill();
+
+    ctx.beginPath();
+    ctx.moveTo(W, 0);
+    for (let worldY = startWorldY; worldY <= scroll + H + 48; worldY += 24) {
+      const y = worldY - scroll;
+      const edge = shorelineAt(worldY).right;
+      ctx.lineTo(edge, y);
+    }
+    ctx.lineTo(W, H);
+    ctx.closePath();
+    ctx.fill();
+
+    ctx.fillStyle = "#416f38";
+    for (let side = 0; side < 2; side += 1) {
+      const treeStart = Math.floor((scroll - 90) / 32) * 32;
+      for (let worldY = treeStart; worldY < scroll + H + 120; worldY += 32) {
+        const y = worldY - scroll;
+        const edge = shorelineAt(worldY)[side === 0 ? "left" : "right"];
+        const dir = side === 0 ? -1 : 1;
+        ctx.beginPath();
+        ctx.ellipse(edge + dir * 48, y, 88 + Math.sin(worldY * 0.02) * 12, 27, 0, 0, Math.PI * 2);
+        ctx.fill();
+      }
+    }
+
+    for (let side = 0; side < 2; side += 1) {
+      const treeStart = Math.floor((scroll - 100) / 46) * 46;
+      for (let worldY = treeStart; worldY < scroll + H + 130; worldY += 46) {
+        const y = worldY - scroll;
+        const edge = shorelineAt(worldY)[side === 0 ? "left" : "right"];
+        const dir = side === 0 ? -1 : 1;
+        for (let row = 0; row < 3; row += 1) {
+          const x = edge + dir * (24 + row * 34 + Math.sin(worldY * 0.03 + row) * 8);
+          const size = 18 + row * 5 + Math.sin(worldY * 0.04 + row) * 3;
+          drawTree(x, y + row * 7, size);
+        }
+      }
+    }
+    ctx.restore();
+  }
+
+  function drawTree(x, y, size) {
+    ctx.save();
+    ctx.translate(x, y);
+    ctx.fillStyle = "#6b4c2f";
+    ctx.fillRect(-size * 0.11, size * 0.18, size * 0.22, size * 0.48);
+    ctx.fillStyle = "#2f5f34";
+    ctx.beginPath();
+    ctx.moveTo(0, -size * 0.85);
+    ctx.lineTo(-size * 0.58, size * 0.2);
+    ctx.lineTo(size * 0.58, size * 0.2);
+    ctx.closePath();
+    ctx.fill();
+    ctx.fillStyle = "#3f7a3d";
+    ctx.beginPath();
+    ctx.moveTo(0, -size * 0.45);
+    ctx.lineTo(-size * 0.7, size * 0.55);
+    ctx.lineTo(size * 0.7, size * 0.55);
+    ctx.closePath();
+    ctx.fill();
+    ctx.restore();
+  }
+
+  function drawWake() {
+    const y = boat.y + 110 + boat.bob;
+    ctx.save();
+    ctx.strokeStyle = "rgba(255,255,255,0.42)";
+    ctx.lineWidth = 4;
+    ctx.beginPath();
+    ctx.moveTo(boat.x - 44, y);
+    ctx.bezierCurveTo(boat.x - 150, y + 95, boat.x - 230, H - 140, boat.x - 330, H + 40);
+    ctx.moveTo(boat.x + 44, y);
+    ctx.bezierCurveTo(boat.x + 150, y + 95, boat.x + 230, H - 140, boat.x + 330, H + 40);
+    ctx.stroke();
+    ctx.strokeStyle = "rgba(255,255,255,0.18)";
+    ctx.lineWidth = 16;
+    ctx.beginPath();
+    ctx.moveTo(boat.x, y);
+    ctx.bezierCurveTo(boat.x - 38, y + 130, boat.x - 26, H - 100, boat.x, H + 40);
+    ctx.moveTo(boat.x, y);
+    ctx.bezierCurveTo(boat.x + 38, y + 130, boat.x + 26, H - 100, boat.x, H + 40);
+    ctx.stroke();
+    ctx.restore();
+  }
+
+  function drawRopes() {
+    drawRope(player, -38);
+    if (gameMode === "battle") drawRope(enemy, 38);
+  }
+
+  function drawRope(t, offset) {
+    ctx.save();
+    ctx.strokeStyle = "rgba(247,230,177,0.9)";
+    ctx.lineWidth = 3;
+    ctx.beginPath();
+    ctx.moveTo(boat.x + offset, boat.y + 96 + boat.bob);
+    const cx = (boat.x + offset + t.x) * 0.5 + Math.sin(time * 4 + offset) * 12;
+    const cy = (boat.y + t.y) * 0.5;
+    ctx.quadraticCurveTo(cx, cy, t.x, t.y);
+    ctx.stroke();
+    ctx.restore();
+  }
+
+  function drawPontoon() {
+    const x = boat.x;
+    const y = boat.y + boat.bob;
+    ctx.save();
+    ctx.translate(x, y);
+    ctx.fillStyle = "#87918c";
+    roundRect(-56, -96, 26, 196, 13);
+    roundRect(30, -96, 26, 196, 13);
+    ctx.fill();
+    ctx.fillStyle = "#d4d9d5";
+    roundRect(-62, -86, 124, 172, 20);
+    ctx.fill();
+    ctx.fillStyle = "#f4f0db";
+    roundRect(-43, -72, 86, 137, 8);
+    ctx.fill();
+    ctx.fillStyle = "#467b52";
+    roundRect(-34, -48, 27, 38, 6);
+    roundRect(7, -48, 27, 38, 6);
+    roundRect(-34, 13, 27, 38, 6);
+    roundRect(7, 13, 27, 38, 6);
+    ctx.fill();
+    ctx.fillStyle = "#c64536";
+    roundRect(-25, -91, 50, 28, 8);
+    ctx.fill();
+    ctx.fillStyle = "#273a42";
+    roundRect(-19, 69, 38, 24, 6);
+    ctx.fill();
+    ctx.fillStyle = "#ffffff";
+    ctx.font = "900 9px system-ui, sans-serif";
+    ctx.textAlign = "center";
+    ctx.fillText("PONTOON", 0, -74);
+    ctx.fillStyle = "rgba(255,255,255,0.55)";
+    ctx.beginPath();
+    ctx.moveTo(0, -114);
+    ctx.lineTo(-18, -86);
+    ctx.lineTo(18, -86);
+    ctx.closePath();
+    ctx.fill();
+    ctx.restore();
+  }
+
+  function drawObstacles() {
+    for (const o of obstacles) {
+      if (o.type === "rock") drawRock(o);
+      else drawAlligator(o);
+    }
+  }
+
+  function drawRock(o) {
+    ctx.save();
+    ctx.translate(o.x, o.y);
+    ctx.rotate(Math.sin(o.wiggle) * 0.06);
+    ctx.globalAlpha = o.hit ? 0.62 : 1;
+    ctx.fillStyle = "rgba(0,0,0,0.22)";
+    ctx.beginPath();
+    ctx.ellipse(4, 9, o.r * 1.04, o.r * 0.55, 0, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.fillStyle = "#7e817a";
+    ctx.beginPath();
+    ctx.moveTo(-o.r * 0.86, o.r * 0.14);
+    ctx.lineTo(-o.r * 0.48, -o.r * 0.62);
+    ctx.lineTo(o.r * 0.16, -o.r * 0.78);
+    ctx.lineTo(o.r * 0.78, -o.r * 0.25);
+    ctx.lineTo(o.r * 0.62, o.r * 0.55);
+    ctx.lineTo(-o.r * 0.28, o.r * 0.72);
+    ctx.closePath();
+    ctx.fill();
+    ctx.fillStyle = "rgba(255,255,255,0.22)";
+    ctx.beginPath();
+    ctx.ellipse(-o.r * 0.2, -o.r * 0.33, o.r * 0.25, o.r * 0.11, -0.35, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.restore();
+  }
+
+  function drawAlligator(o) {
+    ctx.save();
+    ctx.translate(o.x, o.y);
+    ctx.rotate(o.angle + Math.sin(o.wiggle * 3) * 0.08);
+    ctx.globalAlpha = o.hit ? 0.62 : 1;
+    ctx.fillStyle = "rgba(0,0,0,0.2)";
+    ctx.beginPath();
+    ctx.ellipse(4, 8, 42, 13, 0, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.fillStyle = "#355d32";
+    roundRect(-28, -9, 55, 18, 8);
+    ctx.fill();
+    ctx.beginPath();
+    ctx.moveTo(27, -8);
+    ctx.lineTo(53, 0);
+    ctx.lineTo(27, 8);
+    ctx.closePath();
+    ctx.fill();
+    ctx.beginPath();
+    ctx.moveTo(-28, -7);
+    ctx.lineTo(-48, 0);
+    ctx.lineTo(-28, 7);
+    ctx.closePath();
+    ctx.fill();
+    ctx.fillStyle = "#4d8743";
+    ctx.beginPath();
+    ctx.ellipse(4, 0, 25, 6, 0, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.fillStyle = "#e8f4d8";
+    ctx.fillRect(40, -4, 4, 3);
+    ctx.fillRect(40, 1, 4, 3);
+    ctx.fillStyle = "#101b14";
+    ctx.beginPath();
+    ctx.arc(24, -5, 2, 0, Math.PI * 2);
+    ctx.arc(24, 5, 2, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.restore();
+  }
+
+  function drawTube(t) {
+    ctx.save();
+    ctx.translate(t.x, t.y);
+    ctx.rotate(t.spin);
+    const hurt = t.invuln > 0 && Math.floor(time * 22) % 2 === 0;
+    ctx.globalAlpha = hurt ? 0.62 : 1;
+
+    ctx.fillStyle = "rgba(0,0,0,0.24)";
+    ctx.beginPath();
+    ctx.ellipse(5, 9, t.r * 1.1, t.r * 0.72, 0, 0, Math.PI * 2);
+    ctx.fill();
+
+    ctx.fillStyle = t.rim;
+    ctx.beginPath();
+    ctx.arc(0, 0, t.r, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.fillStyle = "#12262d";
+    ctx.beginPath();
+    ctx.arc(0, 0, t.r * 0.54, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.strokeStyle = "rgba(255,255,255,0.65)";
+    ctx.lineWidth = 4;
+    ctx.beginPath();
+    ctx.arc(0, 0, t.r - 6, -0.4, Math.PI * 1.2);
+    ctx.stroke();
+
+    drawRider(t);
+    ctx.restore();
+  }
+
+  function drawRider(t) {
+    ctx.save();
+    ctx.rotate(-t.spin);
+    ctx.fillStyle = t.rider;
+    ctx.beginPath();
+    ctx.arc(0, -9, 12, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.fillStyle = t.kind === "enemy" ? "#3d454b" : "#1a4560";
+    roundRect(-13, 3, 26, 22, 6);
+    ctx.fill();
+    if (t.kind === "enemy") {
+      ctx.fillStyle = "#b9ff52";
+      ctx.fillRect(-8, -12, 5, 4);
+      ctx.fillRect(3, -12, 5, 4);
+      ctx.strokeStyle = "#8b9499";
+      ctx.lineWidth = 3;
+      ctx.beginPath();
+      ctx.moveTo(-13, 8);
+      ctx.lineTo(-28, -2);
+      ctx.moveTo(13, 8);
+      ctx.lineTo(28, -2);
+      ctx.stroke();
+    } else {
+      ctx.fillStyle = "#ffe2ba";
+      ctx.beginPath();
+      ctx.arc(0, -10, 8, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.fillStyle = "#e84f37";
+      roundRect(-12, 2, 24, 18, 5);
+      ctx.fill();
+    }
+    ctx.restore();
+  }
+
+  function drawParticles() {
+    for (const p of bubbles) {
+      const a = Math.max(0, p.life / p.max);
+      ctx.fillStyle = `rgba(255,255,255,${0.3 * a})`;
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+      ctx.fill();
+    }
+
+    for (const p of sparks) {
+      const a = Math.max(0, p.life / p.max);
+      ctx.fillStyle = p.color.replace(")", `,${a})`).replace("rgb", "rgba");
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+      ctx.fill();
+    }
+  }
+
+  function roundRect(x, y, w, h, r) {
+    ctx.beginPath();
+    ctx.moveTo(x + r, y);
+    ctx.lineTo(x + w - r, y);
+    ctx.quadraticCurveTo(x + w, y, x + w, y + r);
+    ctx.lineTo(x + w, y + h - r);
+    ctx.quadraticCurveTo(x + w, y + h, x + w - r, y + h);
+    ctx.lineTo(x + r, y + h);
+    ctx.quadraticCurveTo(x, y + h, x, y + h - r);
+    ctx.lineTo(x, y + r);
+    ctx.quadraticCurveTo(x, y, x + r, y);
+  }
+
+  function frame(ts) {
+    const dt = Math.min(0.033, (ts - last) / 1000 || 0);
+    last = ts;
+    if (state === "play") update(dt);
+    draw();
+    requestAnimationFrame(frame);
+  }
+
+  window.addEventListener("resize", resize);
+  window.addEventListener("keydown", (event) => {
+    keys[event.code] = true;
+    if (["ArrowLeft", "ArrowRight", "Space"].includes(event.code)) event.preventDefault();
+  });
+  window.addEventListener("keyup", (event) => {
+    keys[event.code] = false;
+  });
+
+  document.querySelector("#start").addEventListener("click", showTutorial);
+  document.querySelector("#beginRide").addEventListener("click", () => start("battle"));
+  document.querySelector("#beginScoreRun").addEventListener("click", () => start("score"));
+  document.querySelector("#restart").addEventListener("click", () => start(gameMode));
+  document.querySelector("#switchMode").addEventListener("click", showTutorial);
+  ui.buySteering.addEventListener("click", buySteering);
+
+  for (const button of document.querySelectorAll(".touchBtn")) {
+    const key = button.dataset.key;
+    const set = (value) => {
+      keys[key] = value;
+    };
+    button.addEventListener("pointerdown", (event) => {
+      event.preventDefault();
+      button.setPointerCapture(event.pointerId);
+      set(true);
+    });
+    button.addEventListener("pointerup", () => set(false));
+    button.addEventListener("pointercancel", () => set(false));
+    button.addEventListener("pointerleave", () => set(false));
+  }
+
+  resize();
+  requestAnimationFrame(frame);
+})();
+</script>
+</body>
+</html>
