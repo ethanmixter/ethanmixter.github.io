@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
   <meta name="theme-color" content="#0d4f66">
-  <title>Walnut Avenue Splash</title>
+  <title>Vermilion Tubing</title>
   <style>
     :root {
       color-scheme: dark;
@@ -338,7 +338,7 @@
 </head>
 <body>
 <main id="shell">
-  <canvas id="game" aria-label="2D tubing battle game at Walnut Avenue"></canvas>
+  <canvas id="game" aria-label="2D Vermilion Tubing battle game"></canvas>
 
   <section id="hud" class="hidden" aria-label="Game status">
     <div class="meter">
@@ -347,7 +347,7 @@
     </div>
     <div id="readout">
       <div id="score">0 hits</div>
-      <div id="status">Walnut Avenue run</div>
+      <div id="status">Vermilion run</div>
     </div>
     <div class="meter right">
       <div class="label"><span>AI robot tube</span><span id="enemyText">100%</span></div>
@@ -357,8 +357,8 @@
 
   <section id="menu" class="overlay">
     <div class="card">
-      <p class="eyebrow">Walnut Avenue</p>
-      <h1>Walnut Avenue<br>Splash</h1>
+      <p class="eyebrow">Pontoon battle</p>
+      <h1>Vermilion<br>Tubing</h1>
       <p class="lead">
         Ride behind a pontoon boat, sling your tube across the wake, and smash the AI robot rider until its tube breaks apart.
       </p>
@@ -374,8 +374,8 @@
       <div class="tutorialGrid">
         <div class="tutorialItem"><strong>Steer</strong><span>Move only side to side with A/D, left/right arrows, or the phone buttons.</span></div>
         <div class="tutorialItem"><strong>Win</strong><span>Smash into the AI robot tube harder than it smashes into you to damage it.</span></div>
-        <div class="tutorialItem"><strong>Avoid</strong><span>Rocks hit hard. Alligators swim toward you but do lighter damage.</span></div>
-        <div class="tutorialItem"><strong>Upgrade</strong><span>Win rides to earn coins, then spend coins on better steering.</span></div>
+        <div class="tutorialItem"><strong>Avoid</strong><span>Rocks hit hard. Otters swim toward you but do lighter damage.</span></div>
+        <div class="tutorialItem"><strong>Upgrade</strong><span>Win rides, survive score runs, and collect yellow buoys to buy better steering.</span></div>
       </div>
       <div class="modeButtons">
         <button class="primary" id="beginRide">Battle Mode</button>
@@ -446,12 +446,15 @@
   let shake = 0;
   let hits = 0;
   let survivalScore = 0;
-  let highScore = Number(localStorage.getItem("walnutSplashHighScore") || 0);
+  const savedHighScore = Number(localStorage.getItem("vermilionTubingHighScore") || 0);
+  let highScore = Number.isFinite(savedHighScore) ? savedHighScore : 0;
   let gameMode = "battle";
   let statusFlash = 0;
   let statusMessage = "";
-  let coins = 0;
-  let steeringLevel = 0;
+  const savedCoins = Number(localStorage.getItem("vermilionTubingCoins") || 0);
+  const savedSteering = Number(localStorage.getItem("vermilionTubingSteering") || 0);
+  let coins = Number.isFinite(savedCoins) ? savedCoins : 0;
+  let steeringLevel = Number.isFinite(savedSteering) ? savedSteering : 0;
   let audioCtx = null;
   let musicTimer = null;
   let musicStep = 0;
@@ -548,9 +551,17 @@
     const scoreWin = gameMode === "score";
     if (scoreWin && survivalScore > highScore) {
       highScore = survivalScore;
-      localStorage.setItem("walnutSplashHighScore", String(highScore));
+      localStorage.setItem("vermilionTubingHighScore", String(highScore));
     }
-    if (!scoreWin && win) coins += 50;
+    let earned = 0;
+    if (scoreWin) {
+      earned = Math.floor(survivalScore / 35);
+      coins += earned;
+    } else if (win) {
+      earned = 50;
+      coins += earned;
+    }
+    saveProgress();
     stopMusic();
     playSound(win || scoreWin ? "win" : "lose");
     ui.hud.classList.add("hidden");
@@ -560,12 +571,12 @@
     if (scoreWin) {
       ui.endEyebrow.textContent = "High score run";
       ui.endTitle.textContent = "Run Over";
-      ui.endText.textContent = `Score: ${Math.floor(survivalScore)}. Best: ${Math.floor(highScore)}.`;
+      ui.endText.textContent = `Score: ${Math.floor(survivalScore)}. Best: ${Math.floor(highScore)}. Earned ${earned} coins.`;
     } else {
       ui.endEyebrow.textContent = win ? "AI robot destroyed" : "Your tube broke";
       ui.endTitle.textContent = win ? "You Win" : "Robot Wins";
       ui.endText.textContent = win
-        ? `You landed ${hits} solid hits and earned 50 coins for steering upgrades.`
+        ? `You landed ${hits} solid hits and earned ${earned} coins for steering upgrades.`
         : `The robot cracked your tube first. You landed ${hits} hits before washing out.`;
     }
     updateUpgradeUi();
@@ -728,7 +739,7 @@
       o.x += o.vx * dt;
       o.wiggle += dt;
 
-      if (o.type === "alligator") {
+      if (o.type === "otter") {
         const playerDist = Math.hypot(player.x - o.x, player.y - o.y);
         const enemyDist = gameMode === "battle" ? Math.hypot(enemy.x - o.x, enemy.y - o.y) : Infinity;
         const target = enemyDist < playerDist ? enemy : player;
@@ -747,18 +758,19 @@
   }
 
   function spawnObstacle() {
-    const type = Math.random() < 0.58 ? "rock" : "alligator";
+    const roll = Math.random();
+    const type = roll < 0.5 ? "rock" : (roll < 0.82 ? "otter" : "buoy");
     const y = -70;
     const edge = shorelineAt(y + scroll);
-    const margin = type === "rock" ? 46 : 62;
+    const margin = type === "rock" ? 46 : (type === "otter" ? 62 : 42);
     obstacles.push({
       type,
       x: edge.left + margin + Math.random() * Math.max(40, edge.right - edge.left - margin * 2),
       y,
-      vx: type === "alligator" ? (Math.random() - 0.5) * 24 : 0,
-      vy: type === "alligator" ? 178 : 285,
-      r: type === "alligator" ? 24 : 28 + Math.random() * 8,
-      damage: type === "alligator" ? 7 : 24,
+      vx: type === "otter" ? (Math.random() - 0.5) * 24 : 0,
+      vy: type === "otter" ? 178 : (type === "buoy" ? 245 : 285),
+      r: type === "otter" ? 24 : (type === "buoy" ? 19 : 28 + Math.random() * 8),
+      damage: type === "otter" ? 7 : (type === "buoy" ? 0 : 24),
       hit: false,
       wiggle: Math.random() * 10,
       angle: Math.PI * 0.5
@@ -773,6 +785,20 @@
     const extraHitbox = tubeTarget.kind === "enemy" ? 18 : 6;
     if (dist > tubeTarget.r + o.r + extraHitbox) return;
 
+    if (o.type === "buoy") {
+      o.hit = true;
+      if (tubeTarget.kind === "player") {
+        coins += 5;
+        survivalScore += gameMode === "score" ? 18 : 0;
+        statusMessage = "+5 coins";
+        statusFlash = 1;
+        saveProgress();
+        playSound("coin");
+        burst(o.x, o.y, 10, "#ffe16b");
+      }
+      return;
+    }
+
     const nx = dx / dist;
     const ny = dy / dist;
     const push = o.type === "rock" ? 330 : 190;
@@ -786,7 +812,7 @@
       statusMessage = "Robot hit a hazard";
       statusFlash = 1;
     }
-    playSound(o.type === "rock" ? "rock" : "gator");
+    playSound(o.type === "rock" ? "rock" : "otter");
     shake = Math.min(13, shake + (o.type === "rock" ? 8 : 4));
     burst(o.x, o.y, o.type === "rock" ? 14 : 8, o.type === "rock" ? "#d2d6d0" : "#9fd86c");
   }
@@ -863,7 +889,7 @@
       : `${hits} hit${hits === 1 ? "" : "s"}`;
     ui.status.textContent = statusFlash > 0
       ? statusMessage
-      : (gameMode === "score" ? `Best ${Math.floor(highScore)}` : (enemy.invuln > 0 ? "Robot rattled" : "Walnut Avenue run"));
+      : (gameMode === "score" ? `Best ${Math.floor(highScore)}` : (enemy.invuln > 0 ? "Robot rattled" : "Vermilion run"));
   }
 
   function steeringCost() {
@@ -883,8 +909,14 @@
     if (coins < cost) return;
     coins -= cost;
     steeringLevel += 1;
+    saveProgress();
     playSound("upgrade");
     updateUpgradeUi();
+  }
+
+  function saveProgress() {
+    localStorage.setItem("vermilionTubingCoins", String(coins));
+    localStorage.setItem("vermilionTubingSteering", String(steeringLevel));
   }
 
   function getAudio() {
@@ -936,13 +968,16 @@
       } else if (name === "rock") {
         tone(70, 0, 0.18, "square", 0.11);
         noise(0, 0.16, 0.08);
-      } else if (name === "gator") {
+      } else if (name === "otter") {
         tone(130, 0, 0.08, "sawtooth", 0.06);
         tone(105, 0.07, 0.09, "sawtooth", 0.05);
       } else if (name === "upgrade") {
         tone(420, 0, 0.08, "triangle", 0.07);
         tone(560, 0.08, 0.08, "triangle", 0.07);
         tone(720, 0.16, 0.12, "triangle", 0.07);
+      } else if (name === "coin") {
+        tone(680, 0, 0.07, "triangle", 0.06);
+        tone(920, 0.06, 0.09, "triangle", 0.05);
       } else if (name === "win") {
         tone(330, 0, 0.1, "triangle", 0.08);
         tone(440, 0.1, 0.1, "triangle", 0.08);
@@ -1187,8 +1222,36 @@
   function drawObstacles() {
     for (const o of obstacles) {
       if (o.type === "rock") drawRock(o);
-      else drawAlligator(o);
+      else if (o.type === "otter") drawOtter(o);
+      else drawBuoy(o);
     }
+  }
+
+  function drawBuoy(o) {
+    ctx.save();
+    ctx.translate(o.x, o.y + Math.sin(o.wiggle * 4) * 3);
+    ctx.rotate(Math.sin(o.wiggle * 2) * 0.12);
+    ctx.globalAlpha = o.hit ? 0.45 : 1;
+    ctx.fillStyle = "rgba(0,0,0,0.2)";
+    ctx.beginPath();
+    ctx.ellipse(3, 11, 24, 9, 0, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.fillStyle = "#ffdc4d";
+    ctx.beginPath();
+    ctx.arc(0, 0, o.r, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.fillStyle = "#f28c3c";
+    ctx.fillRect(-o.r, -5, o.r * 2, 10);
+    ctx.fillStyle = "#fff5b0";
+    ctx.beginPath();
+    ctx.arc(-6, -7, 5, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.strokeStyle = "rgba(255,255,255,0.7)";
+    ctx.lineWidth = 3;
+    ctx.beginPath();
+    ctx.arc(0, 0, o.r - 4, -0.7, 0.9);
+    ctx.stroke();
+    ctx.restore();
   }
 
   function drawRock(o) {
@@ -1217,42 +1280,55 @@
     ctx.restore();
   }
 
-  function drawAlligator(o) {
+  function drawOtter(o) {
     ctx.save();
     ctx.translate(o.x, o.y);
     ctx.rotate(o.angle + Math.sin(o.wiggle * 3) * 0.08);
     ctx.globalAlpha = o.hit ? 0.62 : 1;
     ctx.fillStyle = "rgba(0,0,0,0.2)";
     ctx.beginPath();
-    ctx.ellipse(4, 8, 42, 13, 0, 0, Math.PI * 2);
+    ctx.ellipse(2, 8, 38, 13, 0, 0, Math.PI * 2);
     ctx.fill();
-    ctx.fillStyle = "#355d32";
-    roundRect(-28, -9, 55, 18, 8);
+    ctx.fillStyle = "#6a432d";
+    roundRect(-25, -11, 50, 22, 11);
     ctx.fill();
+    ctx.fillStyle = "#7f553b";
     ctx.beginPath();
-    ctx.moveTo(27, -8);
-    ctx.lineTo(53, 0);
-    ctx.lineTo(27, 8);
+    ctx.ellipse(27, 0, 14, 11, 0, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.fillStyle = "#5a3424";
+    ctx.beginPath();
+    ctx.moveTo(-25, -6);
+    ctx.lineTo(-50, 0);
+    ctx.lineTo(-25, 6);
     ctx.closePath();
     ctx.fill();
+    ctx.fillStyle = "#d5b08a";
     ctx.beginPath();
-    ctx.moveTo(-28, -7);
-    ctx.lineTo(-48, 0);
-    ctx.lineTo(-28, 7);
-    ctx.closePath();
+    ctx.ellipse(1, 3, 22, 7, 0, 0, Math.PI * 2);
     ctx.fill();
-    ctx.fillStyle = "#4d8743";
+    ctx.strokeStyle = "#4b2b20";
+    ctx.lineWidth = 4;
     ctx.beginPath();
-    ctx.ellipse(4, 0, 25, 6, 0, 0, Math.PI * 2);
-    ctx.fill();
-    ctx.fillStyle = "#e8f4d8";
-    ctx.fillRect(40, -4, 4, 3);
-    ctx.fillRect(40, 1, 4, 3);
-    ctx.fillStyle = "#101b14";
+    ctx.moveTo(-9, -8);
+    ctx.lineTo(-19, -16);
+    ctx.moveTo(-8, 8);
+    ctx.lineTo(-18, 16);
+    ctx.stroke();
+    ctx.fillStyle = "#2b1711";
     ctx.beginPath();
-    ctx.arc(24, -5, 2, 0, Math.PI * 2);
-    ctx.arc(24, 5, 2, 0, Math.PI * 2);
+    ctx.arc(31, -4, 2, 0, Math.PI * 2);
+    ctx.arc(31, 4, 2, 0, Math.PI * 2);
+    ctx.arc(39, 0, 2.4, 0, Math.PI * 2);
     ctx.fill();
+    ctx.strokeStyle = "#f1d2b2";
+    ctx.lineWidth = 1.5;
+    ctx.beginPath();
+    ctx.moveTo(39, 0);
+    ctx.lineTo(48, -5);
+    ctx.moveTo(39, 0);
+    ctx.lineTo(48, 5);
+    ctx.stroke();
     ctx.restore();
   }
 
