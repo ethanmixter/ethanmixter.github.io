@@ -766,6 +766,22 @@
             const enemyHeight = 12;
             fps.enemy.mesh = createCombatPieceMesh(enemyData, enemyHeight, enemyMat, 3, 4);
             fps.enemy.mesh.position.set(ePos.x, fps.enemy.mesh.userData.groundY, ePos.z);
+
+            const enemyGlow = new THREE.Mesh(
+                fps.enemy.mesh.geometry,
+                new THREE.MeshBasicMaterial({
+                    color: 0xff2020,
+                    transparent: true,
+                    opacity: 0.18,
+                    side: THREE.BackSide,
+                    blending: THREE.AdditiveBlending,
+                    depthWrite: false
+                })
+            );
+            enemyGlow.scale.setScalar(1.08);
+            enemyGlow.userData.baseScale = 1.08;
+            fps.enemy.mesh.add(enemyGlow);
+            fps.enemy.mesh.userData.enemyGlow = enemyGlow;
             fps.scene.add(fps.enemy.mesh);
 
             // Setup Player Camera
@@ -897,6 +913,13 @@
             );
             fps.enemy.mesh.rotation.x = 0;
             fps.enemy.mesh.rotation.z = 0;
+
+            const enemyGlow = fps.enemy.mesh.userData.enemyGlow;
+            if (enemyGlow) {
+                const pulse = (Math.sin(performance.now() * 0.004) + 1) / 2;
+                enemyGlow.material.opacity = 0.14 + pulse * 0.08;
+                enemyGlow.scale.setScalar(enemyGlow.userData.baseScale + pulse * 0.025);
+            }
 
             // Enemy Shooting (Nerfed fire rate and accuracy)
             const now = performance.now();
