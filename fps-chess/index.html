@@ -567,19 +567,33 @@
             if (!fps.scene) {
                 // Initialize Three.js one-time setup
                 fps.scene = new THREE.Scene();
-                fps.scene.background = new THREE.Color(0x050508);
-                fps.scene.fog = new THREE.FogExp2(0x050508, 0.006);
+                const skyCanvas = document.createElement('canvas');
+                skyCanvas.width = 2;
+                skyCanvas.height = 512;
+                const skyContext = skyCanvas.getContext('2d');
+                const skyGradient = skyContext.createLinearGradient(0, 0, 0, skyCanvas.height);
+                skyGradient.addColorStop(0, '#72b8ee');
+                skyGradient.addColorStop(0.58, '#cce9f8');
+                skyGradient.addColorStop(1, '#fff0ca');
+                skyContext.fillStyle = skyGradient;
+                skyContext.fillRect(0, 0, skyCanvas.width, skyCanvas.height);
+                fps.scene.background = new THREE.CanvasTexture(skyCanvas);
+                fps.scene.fog = new THREE.FogExp2(0xd7e8ee, 0.003);
 
                 fps.camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
                 
                 fps.renderer = new THREE.WebGLRenderer({ canvas: ui.fpsCanvas, antialias: true });
                 fps.renderer.setSize(window.innerWidth, window.innerHeight);
+                fps.renderer.outputEncoding = THREE.sRGBEncoding;
 
-                // Immersive Lighting
-                const ambient = new THREE.AmbientLight(0x222233);
+                // Bright, soft daylight keeps both piece colors readable.
+                const ambient = new THREE.AmbientLight(0xffffff, 0.72);
                 fps.scene.add(ambient);
+
+                const hemisphere = new THREE.HemisphereLight(0xe9f7ff, 0x76513a, 0.85);
+                fps.scene.add(hemisphere);
                 
-                const spotLight = new THREE.SpotLight(0xffffff, 1.5);
+                const spotLight = new THREE.SpotLight(0xfff4dc, 1.25);
                 spotLight.position.set(0, 150, 0); 
                 spotLight.angle = Math.PI / 3;
                 spotLight.penumbra = 0.8;
@@ -751,7 +765,7 @@
 
             const tableGeo = new THREE.PlaneGeometry(1000, 1000);
             tableGeo.rotateX(-Math.PI / 2);
-            const tableMat = new THREE.MeshLambertMaterial({ color: 0x110804 });
+            const tableMat = new THREE.MeshLambertMaterial({ color: 0x76513a });
             const table = new THREE.Mesh(tableGeo, tableMat);
             table.position.y = -2;
             fps.boardGroup.add(table);
