@@ -471,13 +471,16 @@
             killcamVictim: null
         };
 
+        const pieceModelBase = window.location.protocol === 'file:'
+            ? 'https://ethanmixter.github.io/fps-chess/assets/'
+            : 'assets/';
         const pieceModelFiles = {
-            pawn: 'assets/pawn.stl?v=original-2',
-            knight: 'assets/knight.stl?v=original-2',
-            bishop: 'assets/bishop.stl?v=original-2',
-            rook: 'assets/rook.stl?v=original-2',
-            queen: 'assets/queen.stl?v=original-2',
-            king: 'assets/king.stl?v=original-2'
+            pawn: `${pieceModelBase}pawn.stl?v=original-3`,
+            knight: `${pieceModelBase}knight.stl?v=original-3`,
+            bishop: `${pieceModelBase}bishop.stl?v=original-3`,
+            rook: `${pieceModelBase}rook.stl?v=original-3`,
+            queen: `${pieceModelBase}queen.stl?v=original-3`,
+            king: `${pieceModelBase}king.stl?v=original-3`
         };
         const pieceGeometries = {};
 
@@ -497,7 +500,10 @@
                     geometry.computeVertexNormals();
                     pieceGeometries[type] = geometry;
                     resolve(geometry);
-                }, undefined, () => resolve(null));
+                }, undefined, (error) => {
+                    console.error(`Failed to load ${type} model from ${path}`, error);
+                    resolve(null);
+                });
             });
         }
 
