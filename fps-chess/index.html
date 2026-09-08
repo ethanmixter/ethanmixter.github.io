@@ -56,7 +56,7 @@
         }
         
         .square { width: 100%; height: 100%; display: flex; justify-content: center; align-items: center; cursor: pointer; user-select: none; transition: background-color 0.2s, transform 0.1s; position: relative; }
-        .square.light { background-color: #c58b55; }
+        .square.light { background-color: #99613b; }
         .square.dark { background-color: #15171b; }
         .square.selected { background-color: rgba(255, 255, 0, 0.6) !important; box-shadow: inset 0 0 15px rgba(255,255,0,0.4); z-index: 3; }
         .square.valid-move::after {
@@ -627,7 +627,7 @@
 
             chess3d.tileGeometry = new THREE.BoxGeometry(CHESS_TILE_SIZE, 0.8, CHESS_TILE_SIZE);
             chess3d.materials = {
-                light: new THREE.MeshPhongMaterial({ color: 0xc58b55, shininess: 28 }),
+                light: new THREE.MeshPhongMaterial({ color: 0x99613b, shininess: 28 }),
                 dark: new THREE.MeshPhongMaterial({ color: 0x15171b, shininess: 22 }),
                 selected: new THREE.MeshPhongMaterial({ color: 0xf6d64a, emissive: 0x493700 }),
                 valid: new THREE.MeshPhongMaterial({ color: 0x73b66f, emissive: 0x142c10 }),
@@ -981,7 +981,7 @@
             const getPos = (r, c) => ({ x: (c - 3.5) * TILE_SIZE, z: (r - 3.5) * TILE_SIZE });
 
             // Materials
-            const lightMat = new THREE.MeshPhongMaterial({ color: 0xc58b55, shininess: 16 });
+            const lightMat = new THREE.MeshPhongMaterial({ color: 0x99613b, shininess: 16 });
             const darkMat = new THREE.MeshPhongMaterial({ color: 0x15171b, shininess: 14 });
             const tileGeo = new THREE.PlaneGeometry(TILE_SIZE, TILE_SIZE);
             tileGeo.rotateX(-Math.PI / 2);
