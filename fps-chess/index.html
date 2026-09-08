@@ -826,15 +826,17 @@
                 fps.renderer = new THREE.WebGLRenderer({ canvas: ui.fpsCanvas, antialias: true });
                 fps.renderer.setSize(window.innerWidth, window.innerHeight);
                 fps.renderer.outputEncoding = THREE.sRGBEncoding;
+                fps.renderer.toneMapping = THREE.ACESFilmicToneMapping;
+                fps.renderer.toneMappingExposure = 0.82;
 
                 // Bright, soft daylight keeps both piece colors readable.
-                const ambient = new THREE.AmbientLight(0xffffff, 0.72);
+                const ambient = new THREE.AmbientLight(0xffffff, 0.28);
                 fps.scene.add(ambient);
 
-                const hemisphere = new THREE.HemisphereLight(0xe9f7ff, 0x76513a, 0.85);
+                const hemisphere = new THREE.HemisphereLight(0xe9f7ff, 0x5b3424, 0.48);
                 fps.scene.add(hemisphere);
                 
-                const spotLight = new THREE.SpotLight(0xfff4dc, 1.25);
+                const spotLight = new THREE.SpotLight(0xfff1cf, 0.85);
                 spotLight.position.set(0, 150, 0); 
                 spotLight.angle = Math.PI / 3;
                 spotLight.penumbra = 0.8;
@@ -963,8 +965,8 @@
             const getPos = (r, c) => ({ x: (c - 3.5) * TILE_SIZE, z: (r - 3.5) * TILE_SIZE });
 
             // Materials
-            const lightMat = new THREE.MeshPhongMaterial({ color: 0xf0d9b5, shininess: 30 });
-            const darkMat = new THREE.MeshPhongMaterial({ color: 0xb58863, shininess: 30 });
+            const lightMat = new THREE.MeshPhongMaterial({ color: 0xd7b77a, shininess: 16 });
+            const darkMat = new THREE.MeshPhongMaterial({ color: 0x70412e, shininess: 16 });
             const tileGeo = new THREE.PlaneGeometry(TILE_SIZE, TILE_SIZE);
             tileGeo.rotateX(-Math.PI / 2);
 
@@ -983,8 +985,12 @@
 
                     if (pieceCode && !isAttacker && !isDefender) {
                         const pieceDef = PIECES[pieceCode];
-                        const pieceColor = pieceDef.color === 'white' ? 0xdddddd : 0x222222;
-                        const obsMat = new THREE.MeshPhongMaterial({ color: pieceColor, shininess: 80 });
+                        const pieceColor = pieceDef.color === 'white' ? 0xbfc4cc : 0x06070a;
+                        const obsMat = new THREE.MeshPhongMaterial({
+                            color: pieceColor,
+                            specular: pieceDef.color === 'white' ? 0x555b66 : 0x222733,
+                            shininess: 38
+                        });
                         
                         const height = (pieceDef.hp / 10) + 10; 
                         const obs = createCombatPieceMesh(pieceDef, height, obsMat, 5, 7);
@@ -995,7 +1001,7 @@
             }
 
             // Board Rim & Table
-            const rimMat = new THREE.MeshPhongMaterial({ color: 0x3d2314, shininess: 10 });
+            const rimMat = new THREE.MeshPhongMaterial({ color: 0x2c180f, shininess: 8 });
             const rimGeo1 = new THREE.BoxGeometry(TILE_SIZE * 8 + 10, 10, 5); 
             const rimGeo2 = new THREE.BoxGeometry(5, 10, TILE_SIZE * 8 + 10); 
             
@@ -1006,7 +1012,7 @@
 
             const tableGeo = new THREE.PlaneGeometry(1000, 1000);
             tableGeo.rotateX(-Math.PI / 2);
-            const tableMat = new THREE.MeshLambertMaterial({ color: 0x76513a });
+            const tableMat = new THREE.MeshLambertMaterial({ color: 0x4a2a1c });
             const table = new THREE.Mesh(tableGeo, tableMat);
             table.position.y = -2;
             fps.boardGroup.add(table);
@@ -1014,9 +1020,10 @@
             if (fps.enemy.mesh) fps.scene.remove(fps.enemy.mesh);
             const ePos = getPos(eSquare.r, eSquare.c);
             const enemyMat = new THREE.MeshPhongMaterial({ 
-                color: enemyData.color === 'white' ? 0xffffff : 0x222222,
+                color: enemyData.color === 'white' ? 0xc9ced6 : 0x06070a,
+                specular: enemyData.color === 'white' ? 0x5f6672 : 0x272c38,
                 emissive: 0x000000,
-                shininess: 100
+                shininess: 45
             });
             const enemyHeight = 12;
             fps.enemy.mesh = createCombatPieceMesh(enemyData, enemyHeight, enemyMat, 3, 4);
