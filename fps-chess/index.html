@@ -92,6 +92,16 @@
         }
         .crosshair::before { top: 9px; left: 0; width: 20px; height: 2px; }
         .crosshair::after { top: 0; left: 9px; width: 2px; height: 20px; }
+
+        #reload-indicator {
+            position: absolute; top: calc(50% + 34px); left: 50%; transform: translateX(-50%);
+            display: none; align-items: center; gap: 7px; padding: 5px 10px;
+            color: #facc15; background: rgba(9, 12, 18, 0.72); border: 1px solid rgba(250, 204, 21, 0.5);
+            border-radius: 999px; font-size: 0.82rem; font-weight: 700; font-variant-numeric: tabular-nums;
+            line-height: 1; pointer-events: none; text-shadow: 0 1px 3px #000;
+        }
+        #reload-indicator i { animation: reload-spin 0.8s linear infinite; }
+        @keyframes reload-spin { to { transform: rotate(360deg); } }
         
         #hit-marker {
             position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
@@ -142,6 +152,10 @@
     
     <div id="fps-phase">
         <div class="crosshair"></div>
+        <div id="reload-indicator" role="timer" aria-label="Weapon reload time remaining">
+            <i class="fa-solid fa-arrows-rotate" aria-hidden="true"></i>
+            <span id="reload-countdown">1.5s</span>
+        </div>
         <div id="hit-marker"></div>
         
         <!-- Player HUD (Bottom Left) -->
@@ -248,6 +262,8 @@
             enemyName: document.getElementById('enemy-name'),
             enemyHpBar: document.getElementById('enemy-health-bar'),
             weaponName: document.getElementById('weapon-name'),
+            reloadIndicator: document.getElementById('reload-indicator'),
+            reloadCountdown: document.getElementById('reload-countdown'),
             hitMarker: document.getElementById('hit-marker'),
             fpsInstructions: document.getElementById('fps-instructions'),
             combatStartMessage: document.getElementById('combat-start-message'),
@@ -1110,10 +1126,27 @@
             setTimeout(() => ui.hitMarker.style.opacity = 0, 150);
         }
 
+        function updateReloadUI(now = performance.now()) {
+            if (!fps.player.weapon || fps.lastFireTime <= 0 || fps.duelEnded || fps.killcamActive) {
+                ui.reloadIndicator.style.display = 'none';
+                return;
+            }
+
+            const remainingMs = fps.player.weapon.fireRate - (now - fps.lastFireTime);
+            if (remainingMs <= 0) {
+                ui.reloadIndicator.style.display = 'none';
+                return;
+            }
+
+            ui.reloadCountdown.textContent = `${(remainingMs / 1000).toFixed(1)}s`;
+            ui.reloadIndicator.style.display = 'flex';
+        }
+
         function playerShoot() {
             const now = performance.now();
             if (now - fps.lastFireTime < fps.player.weapon.fireRate) return;
             fps.lastFireTime = now;
+            updateReloadUI(now);
 
             const raycaster = new THREE.Raycaster();
             raycaster.setFromCamera(new THREE.Vector2(0, 0), fps.camera);
@@ -1215,6 +1248,7 @@
             const time = performance.now();
             const delta = Math.min((time - fps.lastTime) / 1000, 0.05);
             fps.lastTime = time;
+            updateReloadUI(time);
 
             if (fps.killcamActive) {
                 fps.killcamTimer += delta;
