@@ -616,7 +616,7 @@
                 selected: new THREE.MeshPhongMaterial({ color: 0xf6d64a, emissive: 0x493700 }),
                 valid: new THREE.MeshPhongMaterial({ color: 0x73b66f, emissive: 0x142c10 }),
                 capture: new THREE.MeshPhongMaterial({ color: 0xc64a46, emissive: 0x3b0907 }),
-                whitePiece: new THREE.MeshPhongMaterial({ color: 0xc58b55, specular: 0x6f4930, shininess: 30 }),
+                whitePiece: new THREE.MeshPhongMaterial({ color: 0x402414, specular: 0x24150d, shininess: 30 }),
                 blackPiece: new THREE.MeshPhongMaterial({ color: 0x17191f, specular: 0x44495a, shininess: 48 }),
                 rim: new THREE.MeshPhongMaterial({ color: 0x3f2415, shininess: 24 }),
                 base: new THREE.MeshPhongMaterial({ color: 0x21130d, shininess: 12 })
@@ -985,10 +985,10 @@
 
                     if (pieceCode && !isAttacker && !isDefender) {
                         const pieceDef = PIECES[pieceCode];
-                        const pieceColor = pieceDef.color === 'white' ? 0xc58b55 : 0x06070a;
+                        const pieceColor = pieceDef.color === 'white' ? 0x402414 : 0x06070a;
                         const obsMat = new THREE.MeshPhongMaterial({
                             color: pieceColor,
-                            specular: pieceDef.color === 'white' ? 0x6f4930 : 0x222733,
+                            specular: pieceDef.color === 'white' ? 0x24150d : 0x222733,
                             shininess: pieceDef.color === 'white' ? 30 : 38
                         });
                         
@@ -1020,8 +1020,8 @@
             if (fps.enemy.mesh) fps.scene.remove(fps.enemy.mesh);
             const ePos = getPos(eSquare.r, eSquare.c);
             const enemyMat = new THREE.MeshPhongMaterial({ 
-                color: enemyData.color === 'white' ? 0xc58b55 : 0x06070a,
-                specular: enemyData.color === 'white' ? 0x6f4930 : 0x272c38,
+                color: enemyData.color === 'white' ? 0x402414 : 0x06070a,
+                specular: enemyData.color === 'white' ? 0x24150d : 0x272c38,
                 emissive: 0x000000,
                 shininess: enemyData.color === 'white' ? 30 : 45
             });
