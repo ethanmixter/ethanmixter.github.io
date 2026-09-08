@@ -56,8 +56,8 @@
         }
         
         .square { width: 100%; height: 100%; display: flex; justify-content: center; align-items: center; cursor: pointer; user-select: none; transition: background-color 0.2s, transform 0.1s; position: relative; }
-        .square.light { background-color: #eeddbb; }
-        .square.dark { background-color: #996644; }
+        .square.light { background-color: #e1c99b; }
+        .square.dark { background-color: #15171b; }
         .square.selected { background-color: rgba(255, 255, 0, 0.6) !important; box-shadow: inset 0 0 15px rgba(255,255,0,0.4); z-index: 3; }
         .square.valid-move::after {
             content: ''; position: absolute; width: 25%; height: 25%; border-radius: 50%;
@@ -611,8 +611,8 @@
 
             chess3d.tileGeometry = new THREE.BoxGeometry(CHESS_TILE_SIZE, 0.8, CHESS_TILE_SIZE);
             chess3d.materials = {
-                light: new THREE.MeshPhongMaterial({ color: 0xead7b0, shininess: 35 }),
-                dark: new THREE.MeshPhongMaterial({ color: 0x875437, shininess: 35 }),
+                light: new THREE.MeshPhongMaterial({ color: 0xe1c99b, shininess: 28 }),
+                dark: new THREE.MeshPhongMaterial({ color: 0x15171b, shininess: 22 }),
                 selected: new THREE.MeshPhongMaterial({ color: 0xf6d64a, emissive: 0x493700 }),
                 valid: new THREE.MeshPhongMaterial({ color: 0x73b66f, emissive: 0x142c10 }),
                 capture: new THREE.MeshPhongMaterial({ color: 0xc64a46, emissive: 0x3b0907 }),
@@ -965,8 +965,8 @@
             const getPos = (r, c) => ({ x: (c - 3.5) * TILE_SIZE, z: (r - 3.5) * TILE_SIZE });
 
             // Materials
-            const lightMat = new THREE.MeshPhongMaterial({ color: 0xd7b77a, shininess: 16 });
-            const darkMat = new THREE.MeshPhongMaterial({ color: 0x70412e, shininess: 16 });
+            const lightMat = new THREE.MeshPhongMaterial({ color: 0xe1c99b, shininess: 16 });
+            const darkMat = new THREE.MeshPhongMaterial({ color: 0x15171b, shininess: 14 });
             const tileGeo = new THREE.PlaneGeometry(TILE_SIZE, TILE_SIZE);
             tileGeo.rotateX(-Math.PI / 2);
 
