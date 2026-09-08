@@ -17,7 +17,7 @@
         body { margin: 0; overflow: hidden; background-color: #111; color: white; font-family: 'Inter', sans-serif; }
         body.duel-active, body.duel-active * { cursor: none !important; }
         
-        /* Chess Board Styles (2D overlay for logic) */
+        /* Angled 3D chess board */
         #chess-phase {
             position: absolute; top: 0; left: 0; width: 100vw; height: 100vh;
             background: radial-gradient(circle, #2a2a35 0%, #0d0d12 100%);
@@ -25,7 +25,7 @@
         }
 
         #chess-board-ui {
-            display: grid;
+            display: none;
             grid-template-columns: repeat(8, 1fr);
             grid-template-rows: repeat(8, 1fr);
             width: min(80vw, 70vh); height: min(80vw, 70vh);
@@ -35,6 +35,24 @@
             border-radius: 8px;
             box-shadow: 0 15px 40px rgba(0,0,0,0.9), inset 0 0 15px rgba(0,0,0,0.5);
             background-color: #222;
+        }
+
+        #chess-board-stage {
+            position: relative;
+            width: min(94vw, 1000px);
+            height: min(70vh, 680px);
+            min-height: 360px;
+            border: 1px solid rgba(255,255,255,0.12);
+            border-radius: 18px;
+            overflow: hidden;
+            box-shadow: 0 24px 60px rgba(0,0,0,0.65);
+            background: linear-gradient(#24354d, #11131b);
+        }
+
+        #chess-canvas { width: 100%; height: 100%; display: block; cursor: pointer; }
+        #chess-loading {
+            position: absolute; inset: 0; display: flex; align-items: center; justify-content: center;
+            background: rgba(10,12,18,0.88); color: #eac46a; font-size: 1.1rem; letter-spacing: 0.08em;
         }
         
         .square { width: 100%; height: 100%; display: flex; justify-content: center; align-items: center; cursor: pointer; user-select: none; transition: background-color 0.2s, transform 0.1s; position: relative; }
@@ -110,7 +128,11 @@
             <h1 class="text-4xl font-bold tracking-widest uppercase bg-clip-text text-transparent bg-gradient-to-r from-yellow-400 to-yellow-600 drop-shadow-lg">FPS Chess</h1>
             <p id="turn-indicator" class="text-xl mt-2 text-gray-300">White's Turn</p>
         </div>
-        <div id="chess-board-ui"></div>
+        <div id="chess-board-stage">
+            <canvas id="chess-canvas" aria-label="Interactive 3D chess board"></canvas>
+            <div id="chess-loading">Loading 3D chess pieces…</div>
+        </div>
+        <div id="chess-board-ui" aria-hidden="true"></div>
         <p style="margin: 16px; text-align: center; color: #aaa;">You play White. Capture a piece to enter combat.<br>Desktop: WASD · Mouse to aim · Click to shoot · Esc to pause</p>
         <a href="../" style="color: #eac46a;">Back to games</a>
     </div>
@@ -216,6 +238,8 @@
         const ui = {
             chessPhase: document.getElementById('chess-phase'),
             boardUI: document.getElementById('chess-board-ui'),
+            chessCanvas: document.getElementById('chess-canvas'),
+            chessLoading: document.getElementById('chess-loading'),
             turnIndicator: document.getElementById('turn-indicator'),
             fpsPhase: document.getElementById('fps-phase'),
             fpsCanvas: document.getElementById('fps-canvas'),
@@ -271,6 +295,7 @@
 
             const pendingMove = gameState.pendingMoveAnimation;
             gameState.pendingMoveAnimation = null;
+            renderChessBoard3D(pendingMove);
             if (pendingMove && !window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
                 requestAnimationFrame(() => {
                     const targetSquare = ui.boardUI.children[pendingMove.to.r * 8 + pendingMove.to.c];
@@ -525,6 +550,220 @@
             return mesh;
         }
 
+        const CHESS_TILE_SIZE = 12;
+        const CHESS_PIECE_HEIGHTS = {
+            pawn: 12,
+            knight: 18,
+            bishop: 18,
+            rook: 14,
+            queen: 20,
+            king: 23
+        };
+        const chess3d = {
+            ready: false,
+            scene: null,
+            camera: null,
+            renderer: null,
+            boardGroup: null,
+            tiles: [],
+            raycaster: new THREE.Raycaster(),
+            pointer: new THREE.Vector2(),
+            animationToken: 0,
+            materials: null,
+            tileGeometry: null
+        };
+
+        function getChessBoardPosition(r, c) {
+            return {
+                x: (c - 3.5) * CHESS_TILE_SIZE,
+                z: (r - 3.5) * CHESS_TILE_SIZE
+            };
+        }
+
+        function resetChessCamera() {
+            const framingScale = Math.max(1.08, 0.95 / Math.max(chess3d.camera.aspect, 0.1));
+            chess3d.camera.position.set(75 * framingScale, 110 * framingScale, 95 * framingScale);
+            chess3d.camera.lookAt(0, 4, 0);
+        }
+
+        function initializeChess3D() {
+            if (chess3d.scene) return;
+
+            chess3d.scene = new THREE.Scene();
+            chess3d.camera = new THREE.PerspectiveCamera(42, 1, 0.1, 500);
+            chess3d.renderer = new THREE.WebGLRenderer({
+                canvas: ui.chessCanvas,
+                antialias: true,
+                alpha: true
+            });
+            chess3d.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 1.5));
+            chess3d.renderer.outputEncoding = THREE.sRGBEncoding;
+            chess3d.renderer.setClearColor(0x000000, 0);
+            resetChessCamera();
+
+            chess3d.scene.add(new THREE.HemisphereLight(0xeaf6ff, 0x5b321d, 0.72));
+            const keyLight = new THREE.DirectionalLight(0xfff1d2, 0.9);
+            keyLight.position.set(45, 100, 65);
+            chess3d.scene.add(keyLight);
+            const fillLight = new THREE.DirectionalLight(0x8dbdff, 0.28);
+            fillLight.position.set(-70, 45, -30);
+            chess3d.scene.add(fillLight);
+
+            chess3d.tileGeometry = new THREE.BoxGeometry(CHESS_TILE_SIZE, 0.8, CHESS_TILE_SIZE);
+            chess3d.materials = {
+                light: new THREE.MeshPhongMaterial({ color: 0xead7b0, shininess: 35 }),
+                dark: new THREE.MeshPhongMaterial({ color: 0x875437, shininess: 35 }),
+                selected: new THREE.MeshPhongMaterial({ color: 0xf6d64a, emissive: 0x493700 }),
+                valid: new THREE.MeshPhongMaterial({ color: 0x73b66f, emissive: 0x142c10 }),
+                capture: new THREE.MeshPhongMaterial({ color: 0xc64a46, emissive: 0x3b0907 }),
+                whitePiece: new THREE.MeshPhongMaterial({ color: 0xd8d6cf, specular: 0x666666, shininess: 42 }),
+                blackPiece: new THREE.MeshPhongMaterial({ color: 0x17191f, specular: 0x44495a, shininess: 48 }),
+                rim: new THREE.MeshPhongMaterial({ color: 0x3f2415, shininess: 24 }),
+                base: new THREE.MeshPhongMaterial({ color: 0x21130d, shininess: 12 })
+            };
+
+            ui.chessCanvas.addEventListener('click', (event) => {
+                if (!chess3d.ready || gameState.phase !== 'chess') return;
+                const rect = ui.chessCanvas.getBoundingClientRect();
+                chess3d.pointer.x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
+                chess3d.pointer.y = -((event.clientY - rect.top) / rect.height) * 2 + 1;
+                chess3d.raycaster.setFromCamera(chess3d.pointer, chess3d.camera);
+                const hit = chess3d.raycaster.intersectObjects(chess3d.tiles, false)[0];
+                if (hit) onSquareClick(hit.object.userData.r, hit.object.userData.c);
+            });
+
+            window.addEventListener('resize', () => renderChessBoard3D());
+        }
+
+        function sizeChessRenderer() {
+            const width = Math.max(1, ui.chessCanvas.clientWidth);
+            const height = Math.max(1, ui.chessCanvas.clientHeight);
+            chess3d.renderer.setSize(width, height, false);
+            chess3d.camera.aspect = width / height;
+            chess3d.camera.updateProjectionMatrix();
+        }
+
+        function renderChessBoard3D(pendingMove = null) {
+            if (!chess3d.ready) return;
+            initializeChess3D();
+            sizeChessRenderer();
+            resetChessCamera();
+            chess3d.animationToken += 1;
+            const animationToken = chess3d.animationToken;
+
+            if (chess3d.boardGroup) chess3d.scene.remove(chess3d.boardGroup);
+            chess3d.boardGroup = new THREE.Group();
+            chess3d.tiles = [];
+            chess3d.scene.add(chess3d.boardGroup);
+
+            const boardWidth = CHESS_TILE_SIZE * 8;
+            const base = new THREE.Mesh(
+                new THREE.BoxGeometry(boardWidth + 10, 3, boardWidth + 10),
+                chess3d.materials.base
+            );
+            base.position.y = -1.9;
+            chess3d.boardGroup.add(base);
+
+            let movingMesh = null;
+            let movingDestination = null;
+            for (let r = 0; r < 8; r++) {
+                for (let c = 0; c < 8; c++) {
+                    const pos = getChessBoardPosition(r, c);
+                    const moveInfo = gameState.validMoves.find((move) => move.r === r && move.c === c);
+                    const isSelected = gameState.selectedSquare && gameState.selectedSquare.r === r && gameState.selectedSquare.c === c;
+                    let tileMaterial = (r + c) % 2 === 0 ? chess3d.materials.light : chess3d.materials.dark;
+                    if (isSelected) tileMaterial = chess3d.materials.selected;
+                    else if (moveInfo?.isCapture) tileMaterial = chess3d.materials.capture;
+                    else if (moveInfo) tileMaterial = chess3d.materials.valid;
+
+                    const tile = new THREE.Mesh(chess3d.tileGeometry, tileMaterial);
+                    tile.position.set(pos.x, 0, pos.z);
+                    tile.userData.r = r;
+                    tile.userData.c = c;
+                    chess3d.tiles.push(tile);
+                    chess3d.boardGroup.add(tile);
+
+                    const pieceCode = gameState.board[r][c];
+                    if (!pieceCode) continue;
+                    const pieceData = PIECES[pieceCode];
+                    const geometry = pieceGeometries[pieceData.type];
+                    if (!geometry) continue;
+                    const material = pieceData.color === 'white'
+                        ? chess3d.materials.whitePiece
+                        : chess3d.materials.blackPiece;
+                    const pieceMesh = new THREE.Mesh(geometry, material);
+                    const pieceHeight = CHESS_PIECE_HEIGHTS[pieceData.type];
+                    pieceMesh.scale.setScalar(pieceHeight);
+                    pieceMesh.position.set(pos.x, 0.45, pos.z);
+                    if (pieceData.color === 'black') pieceMesh.rotation.y = Math.PI;
+                    chess3d.boardGroup.add(pieceMesh);
+
+                    if (pendingMove && pendingMove.to.r === r && pendingMove.to.c === c) {
+                        movingMesh = pieceMesh;
+                        movingDestination = new THREE.Vector3(pos.x, 0.45, pos.z);
+                    }
+                }
+            }
+
+            if (!movingMesh || !pendingMove || window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+                chess3d.renderer.render(chess3d.scene, chess3d.camera);
+                return;
+            }
+
+            const startPos = getChessBoardPosition(pendingMove.from.r, pendingMove.from.c);
+            const origin = new THREE.Vector3(startPos.x, 0.45, startPos.z);
+            const startedAt = performance.now();
+            function animateMove(time) {
+                if (animationToken !== chess3d.animationToken) return;
+                const progress = Math.min(1, (time - startedAt) / 520);
+                const eased = 1 - Math.pow(1 - progress, 3);
+                movingMesh.position.lerpVectors(origin, movingDestination, eased);
+                movingMesh.position.y += Math.sin(progress * Math.PI) * 7;
+                chess3d.renderer.render(chess3d.scene, chess3d.camera);
+                if (progress < 1) requestAnimationFrame(animateMove);
+            }
+            requestAnimationFrame(animateMove);
+        }
+
+        function animateChessToCombat(square) {
+            if (!chess3d.ready || !chess3d.scene) return Promise.resolve();
+            chess3d.animationToken += 1;
+            const animationToken = chess3d.animationToken;
+            const startPosition = chess3d.camera.position.clone();
+            const destination = getChessBoardPosition(square.r, square.c);
+            const endPosition = new THREE.Vector3(destination.x + 12, 18, destination.z + 24);
+            const startTarget = new THREE.Vector3(0, 4, 0);
+            const endTarget = new THREE.Vector3(destination.x, 4, destination.z);
+            const startedAt = performance.now();
+
+            return new Promise((resolve) => {
+                function animateDive(time) {
+                    if (animationToken !== chess3d.animationToken) return resolve();
+                    const progress = Math.min(1, (time - startedAt) / 700);
+                    const eased = progress * progress * (3 - 2 * progress);
+                    chess3d.camera.position.lerpVectors(startPosition, endPosition, eased);
+                    const target = startTarget.clone().lerp(endTarget, eased);
+                    chess3d.camera.lookAt(target);
+                    chess3d.renderer.render(chess3d.scene, chess3d.camera);
+                    if (progress < 1) requestAnimationFrame(animateDive);
+                    else resolve();
+                }
+                requestAnimationFrame(animateDive);
+            });
+        }
+
+        pieceGeometriesReady.then(() => {
+            const missingModels = Object.keys(pieceModelFiles).filter((type) => !pieceGeometries[type]);
+            if (missingModels.length) {
+                ui.chessLoading.innerText = `Could not load: ${missingModels.join(', ')}`;
+                return;
+            }
+            chess3d.ready = true;
+            ui.chessLoading.style.display = 'none';
+            initializeChess3D();
+            renderChessBoard3D();
+        });
+
         async function initiateCombat(attackerSquare, defenderSquare) {
             gameState.combatAttackerSquare = attackerSquare;
             gameState.combatDefenderSquare = defenderSquare;
@@ -551,6 +790,8 @@
                 playerSquare = defenderSquare;
                 enemySquare = attackerSquare;
             }
+
+            await animateChessToCombat(defenderSquare);
 
             setupFPSScene(playerRole, enemyRole, playerSquare, enemySquare);
             
