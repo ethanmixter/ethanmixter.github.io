@@ -1,0 +1,1081 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" href="../assets/ethan-player-1-avatar.jpg">
+    <title>FPS Chess</title>
+    <!-- Tailwind CSS for UI styling -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Font Awesome for Chess Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Three.js for 3D rendering -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/STLLoader.js"></script>
+    
+    <style>
+        body { margin: 0; overflow: hidden; background-color: #111; color: white; font-family: 'Inter', sans-serif; }
+        body.duel-active, body.duel-active * { cursor: none !important; }
+        
+        /* Chess Board Styles (2D overlay for logic) */
+        #chess-phase {
+            position: absolute; top: 0; left: 0; width: 100vw; height: 100vh;
+            background: radial-gradient(circle, #2a2a35 0%, #0d0d12 100%);
+            display: flex; flex-direction: column; justify-content: center; align-items: center; z-index: 10;
+        }
+
+        #chess-board-ui {
+            display: grid;
+            grid-template-columns: repeat(8, 1fr);
+            grid-template-rows: repeat(8, 1fr);
+            width: min(80vw, 70vh); height: min(80vw, 70vh);
+            max-width: 600px; max-height: 600px;
+            pointer-events: auto;
+            border: 12px solid #2c1a0e;
+            border-radius: 8px;
+            box-shadow: 0 15px 40px rgba(0,0,0,0.9), inset 0 0 15px rgba(0,0,0,0.5);
+            background-color: #222;
+        }
+        
+        .square { width: 100%; height: 100%; display: flex; justify-content: center; align-items: center; cursor: pointer; user-select: none; transition: background-color 0.2s, transform 0.1s; position: relative; }
+        .square.light { background-color: #eeddbb; }
+        .square.dark { background-color: #996644; }
+        .square.selected { background-color: rgba(255, 255, 0, 0.6) !important; box-shadow: inset 0 0 15px rgba(255,255,0,0.4); z-index: 3; }
+        .square.valid-move::after {
+            content: ''; position: absolute; width: 25%; height: 25%; border-radius: 50%;
+            background-color: rgba(0, 0, 0, 0.3);
+        }
+        .square.valid-capture::after {
+            content: ''; position: absolute; width: 90%; height: 90%; border-radius: 50%;
+            border: 6px solid rgba(255, 0, 0, 0.6); background-color: rgba(255, 0, 0, 0.2);
+        }
+        
+        .piece { 
+            font-size: clamp(2.5rem, 6vmin, 4.5rem); 
+            filter: drop-shadow(0 6px 4px rgba(0,0,0,0.6)); 
+            z-index: 2; 
+            pointer-events: none; 
+            transition: all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275); 
+        }
+        .piece.white { color: #ffffff; -webkit-text-stroke: 2px #222; }
+        .piece.black { color: #222222; -webkit-text-stroke: 2px #ddd; }
+        .square:hover .piece { transform: scale(1.15) translateY(-5px); filter: drop-shadow(0 10px 8px rgba(0,0,0,0.8)); }
+
+        /* FPS UI Styles */
+        #fps-phase { position: absolute; top: 0; left: 0; width: 100vw; height: 100vh; display: none; z-index: 5; pointer-events: none; }
+        #fps-canvas { display: none; position: absolute; top: 0; left: 0; width: 100vw; height: 100vh; z-index: 1; cursor: none !important; }
+        
+        .crosshair {
+            position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+            width: 20px; height: 20px; pointer-events: none;
+        }
+        .crosshair::before, .crosshair::after {
+            content: ''; position: absolute; background: rgba(255,255,255,0.8);
+        }
+        .crosshair::before { top: 9px; left: 0; width: 20px; height: 2px; }
+        .crosshair::after { top: 0; left: 9px; width: 2px; height: 20px; }
+        
+        #hit-marker {
+            position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+            width: 30px; height: 30px; opacity: 0; transition: opacity 0.1s; pointer-events: none;
+            background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><line x1="20" y1="20" x2="40" y2="40" stroke="white" stroke-width="4"/><line x1="80" y1="20" x2="60" y2="40" stroke="white" stroke-width="4"/><line x1="20" y1="80" x2="40" y2="60" stroke="white" stroke-width="4"/><line x1="80" y1="80" x2="60" y2="60" stroke="white" stroke-width="4"/></svg>');
+        }
+
+        .hud-panel {
+            background: rgba(0,0,0,0.6); padding: 15px 25px; border-radius: 8px;
+            border: 1px solid rgba(255,255,255,0.1); backdrop-filter: blur(4px);
+        }
+        .hp-bar-container { width: 200px; height: 12px; background: rgba(255,0,0,0.3); border-radius: 6px; overflow: hidden; margin-top: 5px; }
+        .hp-bar-fill { height: 100%; background: #4ade80; transition: width 0.2s; }
+        .enemy-hp-bar-fill { background: #ef4444; }
+
+        #fps-instructions {
+            position: absolute; top: 0; left: 0; width: 100vw; height: 100vh;
+            background: rgba(0,0,0,0.8); display: none; z-index: 20;
+            flex-direction: column; justify-content: center; align-items: center; pointer-events: auto;
+        }
+
+        #match-result-screen {
+            position: absolute; top: 0; left: 0; width: 100vw; height: 100vh;
+            background: rgba(0,0,0,0.9); display: none; z-index: 30;
+            flex-direction: column; justify-content: center; align-items: center; pointer-events: auto;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Chess Phase -->
+    <div id="chess-phase">
+        <div class="text-center" style="margin-bottom: 20px">
+            <h1 class="text-4xl font-bold tracking-widest uppercase bg-clip-text text-transparent bg-gradient-to-r from-yellow-400 to-yellow-600 drop-shadow-lg">FPS Chess</h1>
+            <p id="turn-indicator" class="text-xl mt-2 text-gray-300">White's Turn</p>
+        </div>
+        <div id="chess-board-ui"></div>
+        <p style="margin: 16px; text-align: center; color: #aaa;">You play White. Capture a piece to enter combat.<br>Desktop: WASD · Mouse to aim · Click to shoot · Esc to pause</p>
+        <a href="../" style="color: #eac46a;">Back to games</a>
+    </div>
+
+    <!-- FPS Phase -->
+    <canvas id="fps-canvas"></canvas>
+    
+    <div id="fps-phase">
+        <div class="crosshair"></div>
+        <div id="hit-marker"></div>
+        
+        <!-- Player HUD (Bottom Left) -->
+        <div class="absolute bottom-8 left-8 hud-panel">
+            <h2 id="player-name" class="text-xl font-bold text-white">Player</h2>
+            <div class="hp-bar-container">
+                <div id="player-health-bar" class="hp-bar-fill w-full"></div>
+            </div>
+            <p id="weapon-name" class="text-sm text-gray-400 mt-2">Weapon: Pistol</p>
+        </div>
+        
+        <!-- Enemy HUD (Top Right) -->
+        <div class="absolute top-8 right-8 hud-panel text-right">
+            <h2 id="enemy-name" class="text-xl font-bold text-red-400">Enemy</h2>
+            <div class="hp-bar-container ml-auto">
+                <div id="enemy-health-bar" class="hp-bar-fill enemy-hp-bar-fill w-full"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Instruction Overlay -->
+    <div id="fps-instructions" class="flex">
+        <h2 class="text-4xl font-bold text-white mb-4">COMBAT INITIATED</h2>
+        <p id="combat-start-message" class="text-gray-300 text-lg mb-8">Click anywhere to lock the mouse and start</p>
+        <div class="bg-gray-800 p-6 rounded-lg text-center border border-gray-700">
+            <p class="mb-2"><span class="font-bold text-yellow-400">W A S D</span> to Move</p>
+            <p class="mb-2"><span class="font-bold text-yellow-400">Space</span> to Jump</p>
+            <p class="mb-2"><span class="font-bold text-yellow-400">Mouse</span> to Aim (cursor aiming if mouse capture is unavailable)</p>
+            <p><span class="font-bold text-yellow-400">Left Click</span> to Shoot</p>
+        </div>
+    </div>
+
+    <!-- Match Result Overlay -->
+    <div id="match-result-screen" class="flex">
+        <h2 id="result-title" class="text-6xl font-bold text-white mb-4">VICTORY</h2>
+        <p id="result-desc" class="text-gray-300 text-xl mb-8">You destroyed the enemy piece.</p>
+        <button id="btn-continue" class="px-8 py-3 bg-gradient-to-r from-blue-600 to-blue-800 hover:from-blue-500 hover:to-blue-700 text-white font-bold rounded-full transition-transform transform hover:scale-105 shadow-lg">
+            Return to Chessboard
+        </button>
+    </div>
+
+    <script>
+        // --- CONSTANTS & DATA ---
+        const PIECES = {
+            'P': { type: 'pawn', color: 'white', icon: 'fa-chess-pawn', name: 'White Pawn', hp: 100, speed: 60.0, weapon: 'pistol' },
+            'N': { type: 'knight', color: 'white', icon: 'fa-chess-knight', name: 'White Knight', hp: 120, speed: 85.0, weapon: 'shotgun' },
+            'B': { type: 'bishop', color: 'white', icon: 'fa-chess-bishop', name: 'White Bishop', hp: 110, speed: 70.0, weapon: 'sniper' },
+            'R': { type: 'rook', color: 'white', icon: 'fa-chess-rook', name: 'White Rook', hp: 150, speed: 50.0, weapon: 'machinegun' },
+            'Q': { type: 'queen', color: 'white', icon: 'fa-chess-queen', name: 'White Queen', hp: 200, speed: 80.0, weapon: 'rocket' },
+            'K': { type: 'king', color: 'white', icon: 'fa-chess-king', name: 'White King', hp: 250, speed: 45.0, weapon: 'magnum' },
+            'p': { type: 'pawn', color: 'black', icon: 'fa-chess-pawn', name: 'Black Pawn', hp: 100, speed: 60.0, weapon: 'pistol' },
+            'n': { type: 'knight', color: 'black', icon: 'fa-chess-knight', name: 'Black Knight', hp: 120, speed: 85.0, weapon: 'shotgun' },
+            'b': { type: 'bishop', color: 'black', icon: 'fa-chess-bishop', name: 'Black Bishop', hp: 110, speed: 70.0, weapon: 'sniper' },
+            'r': { type: 'rook', color: 'black', icon: 'fa-chess-rook', name: 'Black Rook', hp: 150, speed: 50.0, weapon: 'machinegun' },
+            'q': { type: 'queen', color: 'black', icon: 'fa-chess-queen', name: 'Black Queen', hp: 200, speed: 80.0, weapon: 'rocket' },
+            'k': { type: 'king', color: 'black', icon: 'fa-chess-king', name: 'Black King', hp: 250, speed: 45.0, weapon: 'magnum' }
+        };
+
+        const WEAPONS = {
+            'pistol': { damage: 20, fireRate: 300, name: 'Service Pistol' },
+            'shotgun': { damage: 45, fireRate: 800, name: 'Pump Shotgun' },
+            'sniper': { damage: 80, fireRate: 1500, name: 'Bolt Sniper' },
+            'machinegun': { damage: 12, fireRate: 100, name: 'Heavy Machinegun' },
+            'rocket': { damage: 100, fireRate: 2000, name: 'Rocket Launcher' },
+            'magnum': { damage: 50, fireRate: 600, name: 'Royal Magnum' }
+        };
+
+        const INITIAL_BOARD = [
+            ['r', 'n', 'b', 'q', 'k', 'b', 'n', 'r'],
+            ['p', 'p', 'p', 'p', 'p', 'p', 'p', 'p'],
+            ['', '', '', '', '', '', '', ''],
+            ['', '', '', '', '', '', '', ''],
+            ['', '', '', '', '', '', '', ''],
+            ['', '', '', '', '', '', '', ''],
+            ['P', 'P', 'P', 'P', 'P', 'P', 'P', 'P'],
+            ['R', 'N', 'B', 'Q', 'K', 'B', 'N', 'R']
+        ];
+
+        // --- GLOBAL STATE ---
+        let gameState = {
+            board: JSON.parse(JSON.stringify(INITIAL_BOARD)),
+            turn: 'white',
+            phase: 'chess', // 'chess', 'fps'
+            selectedSquare: null,
+            validMoves: [],
+            combatAttackerSquare: null,
+            combatDefenderSquare: null,
+            aiThinking: false,
+            gameOver: false,
+            pendingMoveAnimation: null
+        };
+
+        // DOM Elements
+        const ui = {
+            chessPhase: document.getElementById('chess-phase'),
+            boardUI: document.getElementById('chess-board-ui'),
+            turnIndicator: document.getElementById('turn-indicator'),
+            fpsPhase: document.getElementById('fps-phase'),
+            fpsCanvas: document.getElementById('fps-canvas'),
+            playerName: document.getElementById('player-name'),
+            playerHpBar: document.getElementById('player-health-bar'),
+            enemyName: document.getElementById('enemy-name'),
+            enemyHpBar: document.getElementById('enemy-health-bar'),
+            weaponName: document.getElementById('weapon-name'),
+            hitMarker: document.getElementById('hit-marker'),
+            fpsInstructions: document.getElementById('fps-instructions'),
+            combatStartMessage: document.getElementById('combat-start-message'),
+            matchResultScreen: document.getElementById('match-result-screen'),
+            resultTitle: document.getElementById('result-title'),
+            resultDesc: document.getElementById('result-desc'),
+            btnContinue: document.getElementById('btn-continue')
+        };
+
+        // --- CHESS LOGIC ---
+        function renderBoard() {
+            ui.boardUI.innerHTML = '';
+            for (let r = 0; r < 8; r++) {
+                for (let c = 0; c < 8; c++) {
+                    const square = document.createElement('div');
+                    square.className = `square ${(r + c) % 2 === 0 ? 'light' : 'dark'}`;
+                    square.dataset.r = r;
+                    square.dataset.c = c;
+
+                    // Selection & Highlight Logic
+                    if (gameState.selectedSquare && gameState.selectedSquare.r === r && gameState.selectedSquare.c === c) {
+                        square.classList.add('selected');
+                    }
+
+                    const moveInfo = gameState.validMoves.find(m => m.r === r && m.c === c);
+                    if (moveInfo) {
+                        square.classList.add(moveInfo.isCapture ? 'valid-capture' : 'valid-move');
+                    }
+
+                    // Render Piece
+                    const pieceCode = gameState.board[r][c];
+                    if (pieceCode) {
+                        const pieceDef = PIECES[pieceCode];
+                        const pieceEl = document.createElement('i');
+                        pieceEl.className = `fa-solid ${pieceDef.icon} piece ${pieceDef.color}`;
+                        square.appendChild(pieceEl);
+                    }
+
+                    square.addEventListener('click', () => onSquareClick(r, c));
+                    ui.boardUI.appendChild(square);
+                }
+            }
+            ui.turnIndicator.innerText = gameState.turn === 'white' ? "White's Turn" : "Black's Turn";
+            ui.turnIndicator.style.color = gameState.turn === 'white' ? "#ffffff" : "#ff4444";
+
+            const pendingMove = gameState.pendingMoveAnimation;
+            gameState.pendingMoveAnimation = null;
+            if (pendingMove && !window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+                requestAnimationFrame(() => {
+                    const targetSquare = ui.boardUI.children[pendingMove.to.r * 8 + pendingMove.to.c];
+                    const movingPiece = targetSquare?.querySelector('.piece');
+                    if (!movingPiece) return;
+
+                    const squareRect = targetSquare.getBoundingClientRect();
+                    const startX = (pendingMove.from.c - pendingMove.to.c) * squareRect.width;
+                    const startY = (pendingMove.from.r - pendingMove.to.r) * squareRect.height;
+                    movingPiece.animate([
+                        { transform: `translate(${startX}px, ${startY}px) scale(0.92)`, opacity: 0.75 },
+                        { transform: `translate(${startX * 0.45}px, ${startY * 0.45 - 12}px) scale(1.14)`, opacity: 1, offset: 0.55 },
+                        { transform: 'translate(0, 0) scale(1)', opacity: 1 }
+                    ], {
+                        duration: 420,
+                        easing: 'cubic-bezier(0.22, 0.9, 0.3, 1)'
+                    });
+                });
+            }
+        }
+
+        function onSquareClick(r, c) {
+            if (gameState.phase !== 'chess' || (gameState.turn === 'black' && gameState.aiThinking)) return;
+
+            const pieceCode = gameState.board[r][c];
+            const isOwnPiece = pieceCode && PIECES[pieceCode].color === gameState.turn;
+
+            // Clicking a valid move square
+            const moveInfo = gameState.validMoves.find(m => m.r === r && m.c === c);
+            if (moveInfo && gameState.selectedSquare) {
+                if (moveInfo.isCapture) {
+                    initiateCombat(gameState.selectedSquare, {r, c});
+                } else {
+                    movePiece(gameState.selectedSquare, {r, c});
+                    endTurn();
+                }
+                return;
+            }
+
+            // Selecting a piece
+            if (isOwnPiece) {
+                if (gameState.selectedSquare && gameState.selectedSquare.r === r && gameState.selectedSquare.c === c) {
+                    gameState.selectedSquare = null;
+                    gameState.validMoves = [];
+                } else {
+                    gameState.selectedSquare = {r, c};
+                    gameState.validMoves = getValidMoves(r, c);
+                }
+                renderBoard();
+            } else {
+                gameState.selectedSquare = null;
+                gameState.validMoves = [];
+                renderBoard();
+            }
+        }
+
+        function getValidMoves(r, c) {
+            const pieceCode = gameState.board[r][c];
+            if (!pieceCode) return [];
+            
+            const pieceDef = PIECES[pieceCode];
+            const moves = [];
+            const dir = pieceDef.color === 'white' ? -1 : 1;
+
+            const addIfValid = (nr, nc) => {
+                if (nr >= 0 && nr < 8 && nc >= 0 && nc < 8) {
+                    const target = gameState.board[nr][nc];
+                    if (!target) {
+                        moves.push({r: nr, c: nc, isCapture: false});
+                        return true; // continue sliding
+                    } else if (PIECES[target].color !== pieceDef.color) {
+                        moves.push({r: nr, c: nc, isCapture: true});
+                        return false; // stop sliding
+                    }
+                    return false; // blocked by own piece
+                }
+                return false; // out of bounds
+            };
+
+            const slide = (dr, dc) => {
+                let nr = r + dr, nc = c + dc;
+                while (addIfValid(nr, nc)) { nr += dr; nc += dc; }
+            };
+
+            switch(pieceDef.type) {
+                case 'pawn':
+                    if (r+dir >= 0 && r+dir < 8 && !gameState.board[r+dir][c]) {
+                        moves.push({r: r+dir, c: c, isCapture: false});
+                        // Double move
+                        const startRow = pieceDef.color === 'white' ? 6 : 1;
+                        if (r === startRow && !gameState.board[r+(dir*2)][c]) {
+                            moves.push({r: r+(dir*2), c: c, isCapture: false});
+                        }
+                    }
+                    // Captures
+                    if (r+dir >= 0 && r+dir < 8) {
+                        if (c-1 >= 0 && gameState.board[r+dir][c-1] && PIECES[gameState.board[r+dir][c-1]].color !== pieceDef.color) moves.push({r: r+dir, c: c-1, isCapture: true});
+                        if (c+1 < 8 && gameState.board[r+dir][c+1] && PIECES[gameState.board[r+dir][c+1]].color !== pieceDef.color) moves.push({r: r+dir, c: c+1, isCapture: true});
+                    }
+                    break;
+                case 'knight':
+                    [[-2,-1],[-2,1],[-1,-2],[-1,2],[1,-2],[1,2],[2,-1],[2,1]].forEach(([dr, dc]) => addIfValid(r+dr, c+dc));
+                    break;
+                case 'bishop':
+                    [[-1,-1],[-1,1],[1,-1],[1,1]].forEach(([dr, dc]) => slide(dr, dc));
+                    break;
+                case 'rook':
+                    [[-1,0],[1,0],[0,-1],[0,1]].forEach(([dr, dc]) => slide(dr, dc));
+                    break;
+                case 'queen':
+                    [[-1,-1],[-1,1],[1,-1],[1,1],[-1,0],[1,0],[0,-1],[0,1]].forEach(([dr, dc]) => slide(dr, dc));
+                    break;
+                case 'king':
+                    [[-1,-1],[-1,1],[1,-1],[1,1],[-1,0],[1,0],[0,-1],[0,1]].forEach(([dr, dc]) => addIfValid(r+dr, c+dc));
+                    break;
+            }
+            return moves;
+        }
+
+        function movePiece(from, to) {
+            gameState.pendingMoveAnimation = {
+                from: { r: from.r, c: from.c },
+                to: { r: to.r, c: to.c }
+            };
+            gameState.board[to.r][to.c] = gameState.board[from.r][from.c];
+            gameState.board[from.r][from.c] = '';
+        }
+
+        function endTurn() {
+            gameState.turn = gameState.turn === 'white' ? 'black' : 'white';
+            gameState.selectedSquare = null;
+            gameState.validMoves = [];
+            gameState.aiThinking = false; // Always reset lock when turn changes
+            renderBoard();
+
+            if (gameState.turn === 'black') {
+                gameState.aiThinking = true;
+                setTimeout(makeAIMove, 1000); // AI wait time
+            }
+        }
+
+        function makeAIMove() {
+            if (gameState.phase !== 'chess') return;
+            
+            let allPossibleMoves = [];
+            
+            // Gather all valid moves for black pieces
+            for (let r = 0; r < 8; r++) {
+                for (let c = 0; c < 8; c++) {
+                    const piece = gameState.board[r][c];
+                    if (piece && PIECES[piece].color === 'black') {
+                        const moves = getValidMoves(r, c);
+                        moves.forEach(m => {
+                            allPossibleMoves.push({ from: {r, c}, to: m });
+                        });
+                    }
+                }
+            }
+
+            if (allPossibleMoves.length === 0) {
+                alert("Black has no moves!");
+                return;
+            }
+
+            // AI Logic: Prioritize captures to trigger FPS duel
+            let captures = allPossibleMoves.filter(m => m.to.isCapture);
+            let chosenMove;
+            
+            if (captures.length > 0) {
+                // Pick a random capture
+                chosenMove = captures[Math.floor(Math.random() * captures.length)];
+                initiateCombat(chosenMove.from, chosenMove.to);
+            } else {
+                // Pick a random standard move
+                chosenMove = allPossibleMoves[Math.floor(Math.random() * allPossibleMoves.length)];
+                movePiece(chosenMove.from, chosenMove.to);
+                endTurn();
+            }
+        }
+
+        // --- FPS COMBAT LOGIC ---
+        let fps = {
+            scene: null, camera: null, renderer: null,
+            boardGroup: null, 
+            player: { hp: 100, maxHp: 100, weapon: null, pieceData: null },
+            enemy: { hp: 100, maxHp: 100, mesh: null, pieceData: null, lastFire: 0, aiTimer: 0, aiState: 'rush', weapon: null },
+            isLocked: false, active: false, duelEnded: false,
+            keys: { w: false, a: false, s: false, d: false },
+            velocity: new THREE.Vector3(),
+            verticalVelocity: 0,
+            onGround: true,
+            direction: new THREE.Vector3(),
+            lastTime: performance.now(),
+            lastFireTime: 0,
+            animationId: null,
+            killcamActive: false,
+            killcamTimer: 0,
+            killcamVictim: null
+        };
+
+        const pieceModelFiles = {
+            pawn: 'assets/pawn.stl',
+            knight: 'assets/knight.stl',
+            bishop: 'assets/bishop.stl',
+            rook: 'assets/rook.stl',
+            queen: 'assets/queen.stl',
+            king: 'assets/king.stl'
+        };
+        const pieceGeometries = {};
+
+        function loadPieceGeometry(type, path) {
+            return new Promise((resolve) => {
+                const loader = new THREE.STLLoader();
+                loader.load(path, (geometry) => {
+                    geometry.computeBoundingBox();
+                    const bounds = geometry.boundingBox;
+                    const centerX = (bounds.min.x + bounds.max.x) / 2;
+                    const centerY = (bounds.min.y + bounds.max.y) / 2;
+                    geometry.translate(-centerX, -centerY, -bounds.min.z);
+                    geometry.rotateX(-Math.PI / 2);
+                    geometry.computeBoundingBox();
+                    const modelHeight = geometry.boundingBox.max.y - geometry.boundingBox.min.y;
+                    geometry.scale(1 / modelHeight, 1 / modelHeight, 1 / modelHeight);
+                    geometry.computeVertexNormals();
+                    pieceGeometries[type] = geometry;
+                    resolve(geometry);
+                }, undefined, () => resolve(null));
+            });
+        }
+
+        const pieceGeometriesReady = Promise.all(
+            Object.entries(pieceModelFiles).map(([type, path]) => loadPieceGeometry(type, path))
+        );
+
+        function createCombatPieceMesh(pieceData, height, material, topRadius, bottomRadius) {
+            let mesh;
+            if (pieceGeometries[pieceData.type]) {
+                mesh = new THREE.Mesh(pieceGeometries[pieceData.type], material);
+                mesh.scale.setScalar(height);
+                mesh.userData.groundY = 0;
+            } else {
+                const geometry = new THREE.CylinderGeometry(topRadius, bottomRadius, height, 16);
+                mesh = new THREE.Mesh(geometry, material);
+                mesh.userData.groundY = height / 2;
+            }
+            return mesh;
+        }
+
+        async function initiateCombat(attackerSquare, defenderSquare) {
+            gameState.combatAttackerSquare = attackerSquare;
+            gameState.combatDefenderSquare = defenderSquare;
+            gameState.phase = 'loading';
+            ui.turnIndicator.innerText = 'Loading combat…';
+
+            await pieceGeometriesReady;
+            
+            const attackerCode = gameState.board[attackerSquare.r][attackerSquare.c];
+            const defenderCode = gameState.board[defenderSquare.r][defenderSquare.c];
+            
+            const attackerData = PIECES[attackerCode];
+            const defenderData = PIECES[defenderCode];
+
+            let playerRole, enemyRole, playerSquare, enemySquare;
+            if (attackerData.color === 'white') {
+                playerRole = attackerData;
+                enemyRole = defenderData;
+                playerSquare = attackerSquare;
+                enemySquare = defenderSquare;
+            } else {
+                playerRole = defenderData;
+                enemyRole = attackerData;
+                playerSquare = defenderSquare;
+                enemySquare = attackerSquare;
+            }
+
+            setupFPSScene(playerRole, enemyRole, playerSquare, enemySquare);
+            
+            gameState.phase = 'fps';
+            fps.duelEnded = false;
+            ui.chessPhase.style.display = 'none';
+            ui.fpsCanvas.style.display = 'block';
+            ui.fpsPhase.style.display = 'block';
+            ui.fpsInstructions.style.display = 'flex';
+            ui.combatStartMessage.innerText = 'Click anywhere to lock the mouse and start';
+        }
+
+        function setupFPSScene(playerData, enemyData, pSquare, eSquare) {
+            if (!fps.scene) {
+                // Initialize Three.js one-time setup
+                fps.scene = new THREE.Scene();
+                fps.scene.background = new THREE.Color(0x050508);
+                fps.scene.fog = new THREE.FogExp2(0x050508, 0.006);
+
+                fps.camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+                
+                fps.renderer = new THREE.WebGLRenderer({ canvas: ui.fpsCanvas, antialias: true });
+                fps.renderer.setSize(window.innerWidth, window.innerHeight);
+
+                // Immersive Lighting
+                const ambient = new THREE.AmbientLight(0x222233);
+                fps.scene.add(ambient);
+                
+                const spotLight = new THREE.SpotLight(0xffffff, 1.5);
+                spotLight.position.set(0, 150, 0); 
+                spotLight.angle = Math.PI / 3;
+                spotLight.penumbra = 0.8;
+                fps.scene.add(spotLight);
+
+                window.addEventListener('resize', () => {
+                    fps.camera.aspect = window.innerWidth / window.innerHeight;
+                    fps.camera.updateProjectionMatrix();
+                    fps.renderer.setSize(window.innerWidth, window.innerHeight);
+                });
+
+                // Input handlers
+                document.addEventListener('keydown', (e) => {
+                    if (e.code === 'KeyW') fps.keys.w = true;
+                    if (e.code === 'KeyA') fps.keys.a = true;
+                    if (e.code === 'KeyS') fps.keys.s = true;
+                    if (e.code === 'KeyD') fps.keys.d = true;
+                    if (e.code === 'Space' && fps.isLocked && fps.active && fps.onGround) {
+                        e.preventDefault();
+                        fps.verticalVelocity = 24;
+                        fps.onGround = false;
+                    }
+                });
+                document.addEventListener('keyup', (e) => {
+                    if (e.code === 'KeyW') fps.keys.w = false;
+                    if (e.code === 'KeyA') fps.keys.a = false;
+                    if (e.code === 'KeyS') fps.keys.s = false;
+                    if (e.code === 'KeyD') fps.keys.d = false;
+                });
+
+                function startCombatInput() {
+                    if (gameState.phase !== 'fps' || fps.duelEnded || fps.killcamActive) return;
+                    fps.isLocked = true;
+                    document.body.classList.add('duel-active');
+                    ui.fpsInstructions.style.display = 'none';
+                    if (!fps.active) {
+                        fps.active = true;
+                        fps.lastTime = performance.now();
+                        fpsLoop();
+                    }
+                }
+
+                function pauseCombatInput() {
+                    fps.isLocked = false;
+                    document.body.classList.remove('duel-active');
+                    fps.keys = { w: false, a: false, s: false, d: false };
+                    fps.velocity.set(0, 0, 0);
+                    if (!fps.duelEnded && gameState.phase === 'fps' && !fps.killcamActive) {
+                        ui.fpsInstructions.style.display = 'flex';
+                    }
+                }
+
+                function requestMouseCapture() {
+                    if (document.pointerLockElement === ui.fpsCanvas) return;
+                    if (!ui.fpsCanvas.requestPointerLock) {
+                        ui.combatStartMessage.innerText = 'This browser does not support mouse lock. Open this localhost page in Chrome, Safari, or Firefox.';
+                        return;
+                    }
+                    try {
+                        const request = ui.fpsCanvas.requestPointerLock();
+                        if (request && request.catch) {
+                            request.catch(() => {
+                                ui.combatStartMessage.innerText = 'This embedded browser blocked mouse lock. Open this localhost page in Chrome, Safari, or Firefox.';
+                            });
+                        }
+                    } catch (error) {
+                        ui.combatStartMessage.innerText = 'This embedded browser blocked mouse lock. Open this localhost page in Chrome, Safari, or Firefox.';
+                    }
+                }
+
+                // Combat starts only after pointer lock succeeds, keeping the
+                // physical mouse fixed while movement controls the camera.
+                ui.fpsInstructions.addEventListener('click', () => {
+                    requestMouseCapture();
+                });
+
+                document.addEventListener('pointerlockerror', () => {
+                    if (gameState.phase === 'fps') {
+                        ui.combatStartMessage.innerText = 'This embedded browser blocked mouse lock. Open this localhost page in Chrome, Safari, or Firefox.';
+                        ui.fpsInstructions.style.display = 'flex';
+                    }
+                });
+
+                document.addEventListener('pointerlockchange', () => {
+                    if (document.pointerLockElement === ui.fpsCanvas) {
+                        startCombatInput();
+                    } else {
+                        pauseCombatInput();
+                    }
+                });
+                document.addEventListener('keydown', (e) => {
+                    if (e.code === 'Escape' && gameState.phase === 'fps') pauseCombatInput();
+                });
+                window.addEventListener('blur', pauseCombatInput);
+
+                document.addEventListener('mousemove', (e) => {
+                    if (!fps.isLocked || !fps.active || fps.duelEnded || fps.killcamActive) return;
+                    if (document.pointerLockElement === ui.fpsCanvas) {
+                        fps.camera.rotation.y -= e.movementX * 0.002;
+                        fps.camera.rotation.x -= e.movementY * 0.002;
+                    } else {
+                        // With a free cursor, position controls aim around the initial heading.
+                        fps.camera.rotation.y = fps.aimHeading - (e.clientX / window.innerWidth - 0.5) * Math.PI * 2;
+                        fps.camera.rotation.x = (0.5 - e.clientY / window.innerHeight) * Math.PI;
+                    }
+                    fps.camera.rotation.x = Math.max(-Math.PI/2, Math.min(Math.PI/2, fps.camera.rotation.x));
+                    fps.camera.rotation.order = 'YXZ'; 
+                });
+
+                document.addEventListener('mousedown', (e) => {
+                    if (!fps.isLocked || !fps.active || fps.duelEnded || fps.killcamActive || e.button !== 0) return;
+                    if (document.pointerLockElement !== ui.fpsCanvas) {
+                        requestMouseCapture();
+                        return;
+                    }
+                    playerShoot();
+                });
+            }
+
+            // --- DYNAMIC BOARD GENERATION ---
+            if (fps.boardGroup) fps.scene.remove(fps.boardGroup);
+            fps.boardGroup = new THREE.Group();
+            fps.scene.add(fps.boardGroup);
+
+            const TILE_SIZE = 20;
+            const getPos = (r, c) => ({ x: (c - 3.5) * TILE_SIZE, z: (r - 3.5) * TILE_SIZE });
+
+            // Materials
+            const lightMat = new THREE.MeshPhongMaterial({ color: 0xf0d9b5, shininess: 30 });
+            const darkMat = new THREE.MeshPhongMaterial({ color: 0xb58863, shininess: 30 });
+            const tileGeo = new THREE.PlaneGeometry(TILE_SIZE, TILE_SIZE);
+            tileGeo.rotateX(-Math.PI / 2);
+
+            for (let r = 0; r < 8; r++) {
+                for (let c = 0; c < 8; c++) {
+                    const isLight = (r + c) % 2 === 0;
+                    const tile = new THREE.Mesh(tileGeo, isLight ? lightMat : darkMat);
+                    const pos = getPos(r, c);
+                    tile.position.set(pos.x, 0, pos.z);
+                    fps.boardGroup.add(tile);
+
+                    // Create standing pieces as obstacles
+                    const pieceCode = gameState.board[r][c];
+                    const isAttacker = (r === gameState.combatAttackerSquare.r && c === gameState.combatAttackerSquare.c);
+                    const isDefender = (r === gameState.combatDefenderSquare.r && c === gameState.combatDefenderSquare.c);
+
+                    if (pieceCode && !isAttacker && !isDefender) {
+                        const pieceDef = PIECES[pieceCode];
+                        const pieceColor = pieceDef.color === 'white' ? 0xdddddd : 0x222222;
+                        const obsMat = new THREE.MeshPhongMaterial({ color: pieceColor, shininess: 80 });
+                        
+                        const height = (pieceDef.hp / 10) + 10; 
+                        const obs = createCombatPieceMesh(pieceDef, height, obsMat, 5, 7);
+                        obs.position.set(pos.x, obs.userData.groundY, pos.z);
+                        fps.boardGroup.add(obs);
+                    }
+                }
+            }
+
+            // Board Rim & Table
+            const rimMat = new THREE.MeshPhongMaterial({ color: 0x3d2314, shininess: 10 });
+            const rimGeo1 = new THREE.BoxGeometry(TILE_SIZE * 8 + 10, 10, 5); 
+            const rimGeo2 = new THREE.BoxGeometry(5, 10, TILE_SIZE * 8 + 10); 
+            
+            const rTop = new THREE.Mesh(rimGeo1, rimMat); rTop.position.set(0, 5, -TILE_SIZE*4 - 2.5); fps.boardGroup.add(rTop);
+            const rBot = new THREE.Mesh(rimGeo1, rimMat); rBot.position.set(0, 5, TILE_SIZE*4 + 2.5); fps.boardGroup.add(rBot);
+            const rLeft = new THREE.Mesh(rimGeo2, rimMat); rLeft.position.set(-TILE_SIZE*4 - 2.5, 5, 0); fps.boardGroup.add(rLeft);
+            const rRight = new THREE.Mesh(rimGeo2, rimMat); rRight.position.set(TILE_SIZE*4 + 2.5, 5, 0); fps.boardGroup.add(rRight);
+
+            const tableGeo = new THREE.PlaneGeometry(1000, 1000);
+            tableGeo.rotateX(-Math.PI / 2);
+            const tableMat = new THREE.MeshLambertMaterial({ color: 0x110804 });
+            const table = new THREE.Mesh(tableGeo, tableMat);
+            table.position.y = -2;
+            fps.boardGroup.add(table);
+
+            if (fps.enemy.mesh) fps.scene.remove(fps.enemy.mesh);
+            const ePos = getPos(eSquare.r, eSquare.c);
+            const enemyMat = new THREE.MeshPhongMaterial({ 
+                color: enemyData.color === 'white' ? 0xffffff : 0x222222,
+                emissive: 0x000000,
+                shininess: 100
+            });
+            const enemyHeight = 12;
+            fps.enemy.mesh = createCombatPieceMesh(enemyData, enemyHeight, enemyMat, 3, 4);
+            fps.enemy.mesh.position.set(ePos.x, fps.enemy.mesh.userData.groundY, ePos.z);
+            fps.scene.add(fps.enemy.mesh);
+
+            // Setup Player Camera
+            const pPos = getPos(pSquare.r, pSquare.c);
+            fps.camera.position.set(pPos.x, 8, pPos.z);
+            fps.camera.rotation.order = 'YXZ';
+            fps.camera.lookAt(fps.enemy.mesh.position);
+            fps.aimHeading = fps.camera.rotation.y;
+            
+            // Reset killcam states
+            fps.killcamActive = false;
+            fps.killcamTimer = 0;
+            fps.camera.fov = 75;
+            fps.camera.rotation.z = 0;
+            fps.camera.updateProjectionMatrix();
+
+            // Reset combat stats
+            fps.player.pieceData = playerData;
+            fps.player.hp = playerData.hp;
+            fps.player.maxHp = playerData.hp;
+            fps.player.weapon = WEAPONS[playerData.weapon];
+            
+            fps.enemy.pieceData = enemyData;
+            fps.enemy.hp = enemyData.hp;
+            fps.enemy.maxHp = enemyData.hp;
+            fps.enemy.weapon = WEAPONS[enemyData.weapon];
+            fps.enemy.aiState = 'rush';
+            
+            fps.active = false;
+            fps.keys = { w: false, a: false, s: false, d: false };
+            fps.verticalVelocity = 0;
+            fps.onGround = true;
+            fps.lastFireTime = 0;
+            fps.enemy.lastFire = performance.now();
+            fps.enemy.aiTimer = 0;
+            fps.velocity.set(0,0,0);
+            updateFPSUI();
+        }
+
+        function updateFPSUI() {
+            ui.playerName.innerText = fps.player.pieceData.name;
+            ui.weaponName.innerText = `Weapon: ${fps.player.weapon.name}`;
+            const pPercent = Math.max(0, (fps.player.hp / fps.player.maxHp) * 100);
+            ui.playerHpBar.style.width = `${pPercent}%`;
+
+            ui.enemyName.innerText = fps.enemy.pieceData.name;
+            const ePercent = Math.max(0, (fps.enemy.hp / fps.enemy.maxHp) * 100);
+            ui.enemyHpBar.style.width = `${ePercent}%`;
+        }
+
+        function triggerKillcam(playerWon) {
+            fps.killcamActive = true;
+            document.body.classList.remove('duel-active');
+            fps.killcamTimer = 0;
+            fps.killcamVictim = playerWon ? 'enemy' : 'player';
+            if (playerWon) fps.enemy.fallAngle = 0; // Track the rotation of the dying enemy
+            
+            document.exitPointerLock?.();
+            ui.fpsPhase.style.display = 'none'; // Hide all UI/HUD for cinematic feel
+        }
+
+        function showHitMarker() {
+            ui.hitMarker.style.opacity = 1;
+            setTimeout(() => ui.hitMarker.style.opacity = 0, 150);
+        }
+
+        function playerShoot() {
+            const now = performance.now();
+            if (now - fps.lastFireTime < fps.player.weapon.fireRate) return;
+            fps.lastFireTime = now;
+
+            const raycaster = new THREE.Raycaster();
+            raycaster.setFromCamera(new THREE.Vector2(0, 0), fps.camera);
+
+            const intersects = raycaster.intersectObject(fps.enemy.mesh);
+            if (intersects.length > 0) {
+                fps.enemy.hp -= fps.player.weapon.damage;
+                showHitMarker();
+                updateFPSUI();
+                
+                const originalEmissive = fps.enemy.mesh.material.emissive.getHex();
+                fps.enemy.mesh.material.emissive.setHex(0xffffff);
+                setTimeout(() => fps.enemy.mesh.material.emissive.setHex(originalEmissive), 100);
+
+                if (fps.enemy.hp <= 0 && !fps.duelEnded && !fps.killcamActive) {
+                    triggerKillcam(true); // Trigger Killcam on Enemy Death
+                }
+            }
+
+            fps.camera.rotation.x += 0.05; // Visual recoil
+        }
+
+        function enemyAI(delta) {
+            if (!fps.active || fps.duelEnded) return;
+
+            const dir = new THREE.Vector3().subVectors(fps.camera.position, fps.enemy.mesh.position);
+            dir.y = 0; 
+            const dist = dir.length();
+            
+            fps.enemy.aiTimer += delta;
+            // Less frequent state changes (more predictable)
+            if (fps.enemy.aiTimer > 2.0) {
+                fps.enemy.aiTimer = 0;
+                const rand = Math.random();
+                if (dist > 60) fps.enemy.aiState = 'rush';
+                else if (dist < 20) fps.enemy.aiState = 'retreat';
+                else fps.enemy.aiState = rand > 0.5 ? 'strafeLeft' : 'strafeRight';
+            }
+            
+            // Reduced enemy speed for easier tracking
+            const enemySpeed = fps.enemy.pieceData.speed * 0.5;
+            const moveVec = new THREE.Vector3();
+
+            if (fps.enemy.aiState === 'rush') moveVec.copy(dir).normalize();
+            else if (fps.enemy.aiState === 'retreat') moveVec.copy(dir).normalize().negate();
+            else if (fps.enemy.aiState === 'strafeLeft') moveVec.set(-dir.z, 0, dir.x).normalize();
+            else if (fps.enemy.aiState === 'strafeRight') moveVec.set(dir.z, 0, -dir.x).normalize();
+
+            fps.enemy.mesh.position.addScaledVector(moveVec, enemySpeed * delta);
+            fps.enemy.mesh.position.x = Math.max(-75, Math.min(75, fps.enemy.mesh.position.x));
+            fps.enemy.mesh.position.z = Math.max(-75, Math.min(75, fps.enemy.mesh.position.z));
+            fps.enemy.mesh.position.y = fps.enemy.mesh.userData.groundY;
+            // Turn toward the player only around the vertical axis. Looking at
+            // the camera's eye height would pitch the whole chess piece over.
+            fps.enemy.mesh.lookAt(
+                fps.camera.position.x,
+                fps.enemy.mesh.position.y,
+                fps.camera.position.z
+            );
+            fps.enemy.mesh.rotation.x = 0;
+            fps.enemy.mesh.rotation.z = 0;
+
+            // Enemy Shooting (Nerfed fire rate and accuracy)
+            const now = performance.now();
+            const enemyWeapon = fps.enemy.weapon;
+            
+            // Fire rate is 2.5x slower than maximum
+            if (now - fps.enemy.lastFire > enemyWeapon.fireRate * 2.5 && dist < 100) {
+                fps.enemy.lastFire = now;
+                
+                // Reduced hit chance, harder to hit if they are strafing
+                const hitChance = (fps.enemy.aiState.includes('strafe')) ? 0.2 : 0.4;
+                
+                if (Math.random() < hitChance) {
+                    fps.player.hp -= enemyWeapon.damage;
+                    updateFPSUI();
+                    
+                    ui.fpsPhase.style.backgroundColor = 'rgba(255,0,0,0.3)';
+                    setTimeout(() => ui.fpsPhase.style.backgroundColor = 'transparent', 100);
+
+                    if (fps.player.hp <= 0 && !fps.duelEnded && !fps.killcamActive) {
+                        triggerKillcam(false); // Trigger Killcam on Player Death
+                    }
+                }
+            }
+        }
+
+        function fpsLoop() {
+            if (!fps.active && !fps.killcamActive) return;
+            fps.animationId = requestAnimationFrame(fpsLoop);
+
+            const time = performance.now();
+            const delta = Math.min((time - fps.lastTime) / 1000, 0.05);
+            fps.lastTime = time;
+
+            if (fps.killcamActive) {
+                fps.killcamTimer += delta;
+                const slowDelta = delta * 0.3; // Dramatic slow motion
+
+                if (fps.killcamVictim === 'enemy') {
+                    // Enemy falls over backwards
+                    const fallAmount = 4 * slowDelta;
+                    if (fps.enemy.fallAngle < Math.PI / 2) {
+                        fps.enemy.mesh.rotateX(-fallAmount);
+                        fps.enemy.fallAngle += fallAmount;
+                    }
+                    
+                    // Cinematic zoom
+                    fps.camera.fov = THREE.MathUtils.lerp(fps.camera.fov, 25, slowDelta * 6);
+                    fps.camera.updateProjectionMatrix();
+                } else {
+                    // Player falls to the ground
+                    fps.camera.position.y = Math.max(1.5, fps.camera.position.y - 15 * slowDelta);
+                    // Camera rolls sideways
+                    fps.camera.rotation.z = THREE.MathUtils.lerp(fps.camera.rotation.z, Math.PI / 2.5, slowDelta * 4);
+                }
+
+                fps.renderer.render(fps.scene, fps.camera);
+
+                if (fps.killcamTimer > 2.5) { // 2.5 seconds of cinematic time
+                    fps.killcamActive = false;
+                    endDuel(fps.killcamVictim === 'enemy');
+                }
+                return; // Skip normal physics/AI during killcam
+            }
+
+            if (!fps.isLocked) return; // Pause movement and AI while the menu is open.
+
+            fps.velocity.x -= fps.velocity.x * 10.0 * delta;
+            fps.velocity.z -= fps.velocity.z * 10.0 * delta;
+
+            fps.direction.z = Number(fps.keys.w) - Number(fps.keys.s);
+            fps.direction.x = Number(fps.keys.d) - Number(fps.keys.a);
+            fps.direction.normalize();
+
+            const speed = fps.player.pieceData.speed * 1.5;
+
+            if (fps.keys.w || fps.keys.s) fps.velocity.z -= fps.direction.z * speed * delta;
+            if (fps.keys.a || fps.keys.d) fps.velocity.x += fps.direction.x * speed * delta;
+
+            const currentHeight = fps.camera.position.y;
+            fps.camera.translateX(fps.velocity.x * delta);
+            fps.camera.translateZ(fps.velocity.z * delta);
+            fps.camera.position.y = currentHeight;
+            
+            // Bounds check
+            if(fps.camera.position.x > 75) fps.camera.position.x = 75;
+            if(fps.camera.position.x < -75) fps.camera.position.x = -75;
+            if(fps.camera.position.z > 75) fps.camera.position.z = 75;
+            if(fps.camera.position.z < -75) fps.camera.position.z = -75;
+            
+            fps.verticalVelocity -= 45 * delta;
+            fps.camera.position.y += fps.verticalVelocity * delta;
+            if (fps.camera.position.y <= 8) {
+                fps.camera.position.y = 8;
+                fps.verticalVelocity = 0;
+                fps.onGround = true;
+            }
+
+            enemyAI(delta);
+
+            fps.renderer.render(fps.scene, fps.camera);
+        }
+
+        function endDuel(playerWon) {
+            fps.duelEnded = true;
+            document.body.classList.remove('duel-active');
+            fps.active = false;
+            cancelAnimationFrame(fps.animationId);
+
+            const attackerIsWhite = PIECES[gameState.board[gameState.combatAttackerSquare.r][gameState.combatAttackerSquare.c]].color === 'white';
+            const playerWasAttacker = attackerIsWhite;
+            
+            let message = "";
+            
+            if (playerWon) {
+                ui.resultTitle.innerText = "VICTORY";
+                ui.resultTitle.style.color = "#4ade80"; // Green
+                
+                if (playerWasAttacker) {
+                    message = "Attack Successful! You destroyed the enemy piece.";
+                    movePiece(gameState.combatAttackerSquare, gameState.combatDefenderSquare);
+                } else {
+                    message = "Defense Successful! You repelled the attacker.";
+                    gameState.board[gameState.combatAttackerSquare.r][gameState.combatAttackerSquare.c] = ''; // Attacker dies
+                }
+            } else {
+                ui.resultTitle.innerText = "DEFEAT";
+                ui.resultTitle.style.color = "#ef4444"; // Red
+                
+                if (playerWasAttacker) {
+                    message = "Attack Failed! Your piece was destroyed.";
+                    gameState.board[gameState.combatAttackerSquare.r][gameState.combatAttackerSquare.c] = ''; // Attacker dies
+                } else {
+                    message = "Defense Failed! Your piece was captured.";
+                    movePiece(gameState.combatAttackerSquare, gameState.combatDefenderSquare);
+                }
+            }
+
+            const remainingPieces = gameState.board.flat();
+            if (!remainingPieces.includes('k')) {
+                gameState.gameOver = true;
+                ui.resultTitle.innerText = "YOU WIN";
+                ui.resultTitle.style.color = "#facc15";
+                message = "The black king has been destroyed. You won the match!";
+                ui.btnContinue.innerText = "Play Again";
+            } else if (!remainingPieces.includes('K')) {
+                gameState.gameOver = true;
+                ui.resultTitle.innerText = "GAME OVER";
+                ui.resultTitle.style.color = "#ef4444";
+                message = "Your king has been destroyed.";
+                ui.btnContinue.innerText = "Play Again";
+            } else {
+                ui.btnContinue.innerText = "Return to Chessboard";
+            }
+            
+            ui.resultDesc.innerText = message;
+            ui.matchResultScreen.style.display = 'flex';
+        }
+
+        ui.btnContinue.addEventListener('click', () => {
+            ui.matchResultScreen.style.display = 'none';
+            ui.fpsCanvas.style.display = 'none';
+            ui.chessPhase.style.display = 'flex';
+            gameState.phase = 'chess';
+
+            if (gameState.gameOver) {
+                gameState.board = JSON.parse(JSON.stringify(INITIAL_BOARD));
+                gameState.turn = 'white';
+                gameState.selectedSquare = null;
+                gameState.validMoves = [];
+                gameState.combatAttackerSquare = null;
+                gameState.combatDefenderSquare = null;
+                gameState.aiThinking = false;
+                gameState.gameOver = false;
+                gameState.pendingMoveAnimation = null;
+                renderBoard();
+                return;
+            }
+            
+            endTurn();
+        });
+
+        // Initialize Game
+        renderBoard();
+
+    </script>
+</body>
+</html>
