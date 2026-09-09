@@ -536,7 +536,7 @@
             pistol: 1.9,
             shotgun: 4.4,
             sniper: 4.6,
-            machinegun: 2.2,
+            machinegun: 3.3,
             rocket: 4.2,
             magnum: 2.6
         };
@@ -586,8 +586,9 @@
                     } else if (type === 'shotgun') {
                         geometry.rotateX(-Math.PI / 2);
                     } else if (type === 'machinegun') {
-                        geometry.rotateZ(-Math.PI * 0.75);
+                        geometry.rotateZ(-Math.PI * 0.25);
                         geometry.rotateX(-Math.PI / 2);
+                        geometry.rotateY(Math.PI);
                     } else {
                         geometry.rotateY(type === 'magnum' ? -Math.PI / 2 : Math.PI / 2);
                     }
