@@ -525,13 +525,13 @@
             king: `${pieceModelBase}king.stl?v=original-3`
         };
         const weaponModelFiles = {
-            pistol: `${pieceModelBase}g17-pistol-web.stl?v=1`,
+            pistol: `${pieceModelBase}g17-pistol-web.stl?v=5`,
             sniper: `${pieceModelBase}halo-sniper.stl?v=1`,
             rocket: `${pieceModelBase}queen-sniper.stl?v=1`,
             magnum: `${pieceModelBase}magnum-44-web.stl?v=1`
         };
         const weaponModelScales = {
-            pistol: 1.65,
+            pistol: 1.9,
             sniper: 4.6,
             rocket: 4.2,
             magnum: 2.6
@@ -576,6 +576,7 @@
                     const center = new THREE.Vector3();
                     bounds.getCenter(center);
                     geometry.translate(-center.x, -center.y, -center.z);
+                    if (type === 'pistol') geometry.rotateX(-Math.PI / 2);
                     geometry.rotateY(Math.PI / 2);
                     geometry.computeBoundingBox();
                     const size = new THREE.Vector3();
@@ -607,6 +608,7 @@
             const weapon = new THREE.Mesh(geometry, material);
             weapon.scale.setScalar(weaponModelScales[weaponType] || 4);
             weapon.position.set(1.35, -1.05, -2.7);
+            if (weaponType === 'pistol') weapon.position.set(0.78, -0.95, -3.2);
             weapon.rotation.set(-0.08, -0.16, -0.06);
             weapon.renderOrder = 20;
             fps.weaponMesh = weapon;
