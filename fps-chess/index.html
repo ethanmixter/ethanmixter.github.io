@@ -16,6 +16,119 @@
     <style>
         body { margin: 0; overflow: hidden; background-color: #111; color: white; font-family: 'Inter', sans-serif; }
         body.duel-active, body.duel-active * { cursor: none !important; }
+
+        #intro-screen {
+            position: fixed; inset: 0; z-index: 100;
+            display: flex; align-items: center; justify-content: center;
+            overflow: hidden;
+            background:
+                radial-gradient(circle at 50% 32%, rgba(234,196,106,0.22), transparent 28%),
+                linear-gradient(145deg, rgba(9,12,19,0.94), rgba(22,25,35,0.98));
+        }
+        #intro-screen::before {
+            content: ''; position: absolute; inset: -15%; opacity: 0.13;
+            background:
+                linear-gradient(45deg, #eac46a 25%, transparent 25%, transparent 75%, #eac46a 75%),
+                linear-gradient(45deg, #eac46a 25%, transparent 25%, transparent 75%, #eac46a 75%);
+            background-size: 100px 100px;
+            background-position: 0 0, 50px 50px;
+            transform: perspective(500px) rotateX(58deg) translateY(38%);
+            mask-image: linear-gradient(to top, #000, transparent 72%);
+        }
+        .intro-content {
+            position: relative; z-index: 1; text-align: center; padding: 32px;
+            animation: intro-arrive 0.7s cubic-bezier(0.2, 0.8, 0.2, 1) both;
+        }
+        .intro-title {
+            margin: 0; font-size: clamp(4rem, 12vw, 9rem); line-height: 0.9;
+            font-weight: 900; letter-spacing: 0.04em; text-transform: uppercase;
+            color: #f4d475; text-shadow: 0 5px 0 #6b4518, 0 16px 38px rgba(0,0,0,0.75);
+        }
+        .intro-subtitle {
+            margin: 20px 0 14px; color: #d5d8e0; font-size: clamp(0.9rem, 2vw, 1.15rem);
+            letter-spacing: 0.28em; text-transform: uppercase;
+        }
+        #trophy-total {
+            display: inline-flex; align-items: center; gap: 8px; margin-bottom: 28px; padding: 7px 14px;
+            border: 1px solid rgba(244,212,117,0.48); border-radius: 999px; color: #f4d475;
+            background: rgba(8,10,16,0.65); font-weight: 800; letter-spacing: 0.08em; text-transform: uppercase;
+        }
+        .intro-buttons { display: flex; flex-wrap: wrap; justify-content: center; gap: 12px; }
+        #intro-play, #intro-achievements, #intro-settings {
+            min-width: 190px; padding: 15px 42px; border: 2px solid #f5d87e; border-radius: 999px;
+            font-size: 1.25rem; font-weight: 900; letter-spacing: 0.12em; text-transform: uppercase;
+            cursor: pointer; box-shadow: 0 10px 30px rgba(220,166,62,0.3);
+            transition: transform 0.18s ease, filter 0.18s ease, box-shadow 0.18s ease;
+        }
+        #intro-play { color: #17120a; background: linear-gradient(135deg, #ffe699, #dca63e); }
+        #intro-achievements, #intro-settings { color: #f5d87e; background: rgba(11,14,22,0.75); }
+        #intro-play:hover, #intro-achievements:hover, #intro-settings:hover { transform: translateY(-3px) scale(1.04); filter: brightness(1.08); box-shadow: 0 15px 38px rgba(220,166,62,0.42); }
+        #intro-play:active, #intro-achievements:active, #intro-settings:active { transform: translateY(0) scale(0.98); }
+        #home-profile {
+            display: none; align-items: center; justify-content: center; gap: 9px; margin: -14px 0 22px;
+            color: #e8eaf0; font-weight: 700;
+        }
+        #home-profile.visible { display: flex; }
+        #home-profile-icon {
+            display: grid; place-items: center; width: 34px; height: 34px; border: 1px solid #f4d475;
+            border-radius: 50%; color: #f4d475; background: rgba(8,10,16,0.78);
+        }
+        #achievements-panel, #settings-panel {
+            position: absolute; z-index: 3; width: min(92vw, 760px); max-height: min(82vh, 720px);
+            display: none; flex-direction: column; padding: 24px; border: 1px solid rgba(245,216,126,0.5);
+            border-radius: 20px; background: rgba(10,13,21,0.97); box-shadow: 0 24px 70px rgba(0,0,0,0.75);
+        }
+        #settings-panel { width: min(92vw, 600px); }
+        #achievements-panel.open, #settings-panel.open { display: flex; }
+        .achievements-heading { display: flex; align-items: center; justify-content: space-between; gap: 16px; margin-bottom: 18px; }
+        .achievements-heading h2 { margin: 0; color: #f4d475; font-size: clamp(1.7rem, 5vw, 2.5rem); }
+        #achievements-close, #settings-close { border: 0; color: #d9dce5; background: transparent; font-size: 2rem; cursor: pointer; }
+        #achievement-progress { margin: 0 0 16px; color: #aeb4c2; }
+        #achievements-list { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; overflow-y: auto; padding-right: 4px; }
+        .achievement-card { display: flex; gap: 13px; align-items: center; padding: 14px; text-align: left; border: 1px solid #3a3f4e; border-radius: 12px; background: #171b26; }
+        .achievement-card i { width: 32px; color: #707786; font-size: 1.5rem; text-align: center; }
+        .achievement-card h3 { margin: 0 0 3px; font-size: 1rem; }
+        .achievement-card p { margin: 0; color: #9299a9; font-size: 0.82rem; line-height: 1.35; }
+        .achievement-card.unlocked { border-color: rgba(245,216,126,0.7); background: linear-gradient(135deg, rgba(96,66,20,0.55), #171b26); }
+        .achievement-card.unlocked i { color: #f4d475; filter: drop-shadow(0 0 7px rgba(244,212,117,0.5)); }
+        .achievement-card.locked { filter: saturate(0.35); opacity: 0.62; }
+        .settings-label { margin: 0 0 8px; color: #d9dce5; font-weight: 800; text-align: left; }
+        #account-name {
+            width: 100%; padding: 12px 14px; border: 1px solid #4a5060; border-radius: 10px;
+            color: white; background: #171b26; outline: none;
+        }
+        #account-name:focus { border-color: #f4d475; box-shadow: 0 0 0 3px rgba(244,212,117,0.12); }
+        #avatar-options { display: grid; grid-template-columns: repeat(auto-fill, minmax(54px, 1fr)); gap: 9px; margin: 9px 0 20px; max-height: 190px; overflow-y: auto; }
+        .avatar-option {
+            aspect-ratio: 1; border: 1px solid #424858; border-radius: 12px; color: #c5cad5;
+            background: #171b26; font-size: 1.35rem; cursor: pointer;
+        }
+        .avatar-option:hover, .avatar-option.selected { border-color: #f4d475; color: #f4d475; background: rgba(96,66,20,0.5); }
+        .settings-actions { display: flex; flex-wrap: wrap; gap: 10px; }
+        #account-save, #account-guest {
+            flex: 1; min-width: 160px; padding: 11px 16px; border-radius: 999px; font-weight: 800; cursor: pointer;
+        }
+        #account-save { border: 1px solid #f4d475; color: #17120a; background: #f4d475; }
+        #account-guest { border: 1px solid #555d70; color: #d5d8e0; background: #1b202c; }
+        #account-message { min-height: 1.5em; margin: 12px 0 0; color: #9ee6ae; text-align: center; }
+        #achievement-toast {
+            position: fixed; z-index: 150; top: 24px; left: 50%; transform: translate(-50%, -20px);
+            display: flex; gap: 12px; align-items: center; padding: 13px 20px; border: 1px solid #f4d475;
+            border-radius: 12px; color: #fff1bc; background: rgba(12,15,23,0.96); opacity: 0; pointer-events: none;
+            transition: opacity 0.25s ease, transform 0.25s ease;
+        }
+        #achievement-toast.show { opacity: 1; transform: translate(-50%, 0); }
+        #achievement-toast i { color: #f4d475; }
+        #intro-screen.intro-leaving { animation: intro-fade 0.4s ease forwards; pointer-events: none; }
+        @keyframes intro-arrive { from { opacity: 0; transform: translateY(24px) scale(0.96); } to { opacity: 1; transform: none; } }
+        @keyframes intro-fade { to { opacity: 0; visibility: hidden; } }
+        @media (prefers-reduced-motion: reduce) {
+            .intro-content, #intro-screen.intro-leaving { animation-duration: 0.01ms; }
+        }
+        @media (max-width: 620px) {
+            #achievements-list { grid-template-columns: 1fr; }
+            #achievements-panel { padding: 18px; }
+        }
         
         /* Angled 3D chess board */
         #chess-phase {
@@ -113,6 +226,8 @@
             background: rgba(0,0,0,0.6); padding: 15px 25px; border-radius: 8px;
             border: 1px solid rgba(255,255,255,0.1); backdrop-filter: blur(4px);
         }
+        #combat-profile { display: flex; align-items: center; gap: 8px; margin-bottom: 9px; color: #f4d475; font-size: 0.82rem; font-weight: 800; }
+        #combat-profile-icon { display: grid; place-items: center; width: 25px; height: 25px; border: 1px solid #f4d475; border-radius: 50%; }
         .hp-bar-container { width: 200px; height: 12px; background: rgba(255,0,0,0.3); border-radius: 6px; overflow: hidden; margin-top: 5px; }
         .hp-bar-fill { height: 100%; background: #4ade80; transition: width 0.2s; }
         .enemy-hp-bar-fill { background: #ef4444; }
@@ -131,6 +246,51 @@
     </style>
 </head>
 <body>
+
+    <div id="intro-screen">
+        <div class="intro-content">
+            <h1 class="intro-title">FPS<br>Chess</h1>
+            <p class="intro-subtitle">Every capture becomes a battle</p>
+            <div><span id="trophy-total"><i class="fa-solid fa-trophy" aria-hidden="true"></i> 0 Trophies</span></div>
+            <div id="home-profile">
+                <span id="home-profile-icon"><i class="fa-solid fa-user" aria-hidden="true"></i></span>
+                <span id="home-profile-name">Guest</span>
+            </div>
+            <div class="intro-buttons">
+                <button id="intro-play" type="button">Play</button>
+                <button id="intro-achievements" type="button">Achievements</button>
+                <button id="intro-settings" type="button">Settings</button>
+            </div>
+        </div>
+        <section id="achievements-panel" aria-label="Achievements" aria-hidden="true">
+            <div class="achievements-heading">
+                <h2>Achievements</h2>
+                <button id="achievements-close" type="button" aria-label="Close achievements">&times;</button>
+            </div>
+            <p id="achievement-progress">0 trophies · 0 of 25 achievements</p>
+            <div id="achievements-list"></div>
+        </section>
+        <section id="settings-panel" aria-label="Account settings" aria-hidden="true">
+            <div class="achievements-heading">
+                <h2>Settings</h2>
+                <button id="settings-close" type="button" aria-label="Close settings">&times;</button>
+            </div>
+            <label class="settings-label" for="account-name">Account name</label>
+            <input id="account-name" type="text" maxlength="20" placeholder="Choose a name" autocomplete="nickname">
+            <p class="settings-label" style="margin-top: 20px;">Profile icon</p>
+            <div id="avatar-options" aria-label="Profile icon choices"></div>
+            <div class="settings-actions">
+                <button id="account-save" type="button">Save Account</button>
+                <button id="account-guest" type="button">Continue as Guest</button>
+            </div>
+            <p id="account-message" role="status"></p>
+        </section>
+    </div>
+
+    <div id="achievement-toast" role="status" aria-live="polite">
+        <i class="fa-solid fa-trophy" aria-hidden="true"></i>
+        <span id="achievement-toast-text">Achievement unlocked!</span>
+    </div>
 
     <!-- Chess Phase -->
     <div id="chess-phase">
@@ -160,6 +320,7 @@
         
         <!-- Player HUD (Bottom Left) -->
         <div class="absolute bottom-8 left-8 hud-panel">
+            <div id="combat-profile"><span id="combat-profile-icon"><i class="fa-solid fa-user" aria-hidden="true"></i></span><span id="combat-profile-name">Guest</span></div>
             <h2 id="player-name" class="text-xl font-bold text-white">Player</h2>
             <div class="hp-bar-container">
                 <div id="player-health-bar" class="hp-bar-fill w-full"></div>
@@ -223,6 +384,48 @@
             'magnum': { damage: 50, fireRate: 600, name: 'Royal Magnum' }
         };
 
+        const ACHIEVEMENTS = [
+            { id: 'first_blood', icon: 'fa-burst', name: 'First Blood', description: 'Win your first combat duel.' },
+            { id: 'king_slayer', icon: 'fa-crown', name: 'King Slayer', description: 'Destroy the enemy king.' },
+            { id: 'first_victory', icon: 'fa-trophy', name: 'First Victory', description: 'Win a full match of FPS Chess.' },
+            { id: 'pawn_power', icon: 'fa-chess-pawn', name: 'Pawn Power', description: 'Win a match using only pawns in combat.' },
+            { id: 'ten_or_less', icon: 'fa-crosshairs', name: 'Ten or Less', description: 'Win while firing no more than 10 shots with each piece type used.' },
+            { id: 'untouchable', icon: 'fa-shield-halved', name: 'Untouchable', description: 'Win a match without losing one of your pieces.' },
+            { id: 'hat_trick', icon: 'fa-3', name: 'Hat Trick', description: 'Win three combat duels in one match.' },
+            { id: 'battle_tested', icon: 'fa-medal', name: 'Battle Tested', description: 'Win 10 combat duels across your games.' },
+            { id: 'veteran', icon: 'fa-star', name: 'Veteran', description: 'Win 25 combat duels across your games.' },
+            { id: 'champion', icon: 'fa-award', name: 'Champion', description: 'Win five full matches.' },
+            { id: 'grandmaster', icon: 'fa-chess-king', name: 'Grandmaster', description: 'Win 10 full matches.' },
+            { id: 'trigger_happy', icon: 'fa-gun', name: 'Trigger Happy', description: 'Fire 100 shots across your games.' },
+            { id: 'sharpshooter', icon: 'fa-bullseye', name: 'Sharpshooter', description: 'Win a duel without missing a shot.' },
+            { id: 'pistolero', icon: 'fa-chess-pawn', name: 'Pistolero', description: 'Win a combat duel as a pawn.' },
+            { id: 'knight_rider', icon: 'fa-chess-knight', name: 'Knight Rider', description: 'Win a combat duel as a knight.' },
+            { id: 'long_shot', icon: 'fa-chess-bishop', name: 'Long Shot', description: 'Win a combat duel as a bishop.' },
+            { id: 'fortress', icon: 'fa-chess-rook', name: 'Fortress', description: 'Win a combat duel as a rook.' },
+            { id: 'royal_power', icon: 'fa-chess-queen', name: 'Royal Power', description: 'Win a combat duel as a queen.' },
+            { id: 'his_majesty', icon: 'fa-chess-king', name: 'His Majesty', description: 'Win a combat duel as the king.' },
+            { id: 'comeback', icon: 'fa-arrow-rotate-left', name: 'Comeback', description: 'Win a match after losing at least three pieces.' },
+            { id: 'clean_sweep', icon: 'fa-broom-ball', name: 'Clean Sweep', description: 'Win three duels in a match without losing a piece.' },
+            { id: 'quick_victory', icon: 'fa-stopwatch', name: 'Quick Victory', description: 'Win a full match in under 10 minutes.' },
+            { id: 'mixed_arsenal', icon: 'fa-layer-group', name: 'Mixed Arsenal', description: 'Use three different piece types in one match.' },
+            { id: 'full_roster', icon: 'fa-users', name: 'Full Roster', description: 'Use all six piece types across your games.' },
+            { id: 'trophy_hunter', icon: 'fa-trophy', name: 'Trophy Hunter', description: 'Unlock 10 other achievements.' }
+        ];
+
+        function createMatchStats() {
+            return {
+                shotsByType: {}, usedPieceTypes: {}, combatWins: 0, lostPieces: 0,
+                duelShots: 0, duelHits: 0, startedAt: Date.now()
+            };
+        }
+
+        function createCareerStats() {
+            return {
+                matchesWon: 0, duelsWon: 0, duelsLost: 0, shotsFired: 0,
+                usedPieceTypes: {}, duelWinsByType: {}
+            };
+        }
+
         const INITIAL_BOARD = [
             ['r', 'n', 'b', 'q', 'k', 'b', 'n', 'r'],
             ['p', 'p', 'p', 'p', 'p', 'p', 'p', 'p'],
@@ -245,11 +448,35 @@
             combatDefenderSquare: null,
             aiThinking: false,
             gameOver: false,
-            pendingMoveAnimation: null
+            pendingMoveAnimation: null,
+            matchStats: createMatchStats()
         };
 
         // DOM Elements
         const ui = {
+            introScreen: document.getElementById('intro-screen'),
+            introPlay: document.getElementById('intro-play'),
+            trophyTotal: document.getElementById('trophy-total'),
+            introAchievements: document.getElementById('intro-achievements'),
+            introSettings: document.getElementById('intro-settings'),
+            homeProfile: document.getElementById('home-profile'),
+            homeProfileIcon: document.getElementById('home-profile-icon'),
+            homeProfileName: document.getElementById('home-profile-name'),
+            combatProfileIcon: document.getElementById('combat-profile-icon'),
+            combatProfileName: document.getElementById('combat-profile-name'),
+            achievementsPanel: document.getElementById('achievements-panel'),
+            achievementsClose: document.getElementById('achievements-close'),
+            achievementsList: document.getElementById('achievements-list'),
+            achievementProgress: document.getElementById('achievement-progress'),
+            achievementToast: document.getElementById('achievement-toast'),
+            achievementToastText: document.getElementById('achievement-toast-text'),
+            settingsPanel: document.getElementById('settings-panel'),
+            settingsClose: document.getElementById('settings-close'),
+            accountName: document.getElementById('account-name'),
+            avatarOptions: document.getElementById('avatar-options'),
+            accountSave: document.getElementById('account-save'),
+            accountGuest: document.getElementById('account-guest'),
+            accountMessage: document.getElementById('account-message'),
             chessPhase: document.getElementById('chess-phase'),
             boardUI: document.getElementById('chess-board-ui'),
             chessCanvas: document.getElementById('chess-canvas'),
@@ -272,6 +499,159 @@
             resultDesc: document.getElementById('result-desc'),
             btnContinue: document.getElementById('btn-continue')
         };
+
+        function loadAchievements() {
+            try {
+                const saved = JSON.parse(localStorage.getItem('fpsChessAchievements') || '[]');
+                return Array.isArray(saved) ? saved : [];
+            } catch (error) {
+                return [];
+            }
+        }
+
+        function loadCareerStats() {
+            try {
+                const saved = JSON.parse(localStorage.getItem('fpsChessCareerStats') || 'null');
+                return saved ? Object.assign(createCareerStats(), saved) : createCareerStats();
+            } catch (error) {
+                return createCareerStats();
+            }
+        }
+
+        function saveCareerStats() {
+            try {
+                localStorage.setItem('fpsChessCareerStats', JSON.stringify(careerStats));
+            } catch (error) {
+                // Career tracking continues for this session if storage is unavailable.
+            }
+        }
+
+        function loadLocalProfile() {
+            try {
+                const saved = JSON.parse(localStorage.getItem('fpsChessProfile') || 'null');
+                return saved && typeof saved.name === 'string' ? saved : null;
+            } catch (error) {
+                return null;
+            }
+        }
+
+        let unlockedAchievementIds = loadAchievements();
+        let careerStats = loadCareerStats();
+        let localProfile = loadLocalProfile();
+        let selectedAvatarId = localProfile?.avatarAchievementId || 'default';
+        let achievementToastTimer = null;
+
+        function getProfileIcon(avatarId) {
+            if (avatarId === 'default') return 'fa-user';
+            const achievement = ACHIEVEMENTS.find((item) => item.id === avatarId);
+            return achievement && unlockedAchievementIds.includes(avatarId) ? achievement.icon : 'fa-user';
+        }
+
+        function renderProfile() {
+            if (!localProfile) {
+                ui.homeProfile.classList.add('visible');
+                ui.homeProfileName.textContent = 'Guest';
+                ui.homeProfileIcon.innerHTML = '<i class="fa-solid fa-user" aria-hidden="true"></i>';
+                ui.combatProfileName.textContent = 'Guest';
+                ui.combatProfileIcon.innerHTML = '<i class="fa-solid fa-user" aria-hidden="true"></i>';
+                return;
+            }
+            ui.homeProfile.classList.add('visible');
+            ui.homeProfileName.textContent = localProfile.name;
+            const profileIcon = getProfileIcon(localProfile.avatarAchievementId);
+            ui.homeProfileIcon.innerHTML = `<i class="fa-solid ${profileIcon}" aria-hidden="true"></i>`;
+            ui.combatProfileName.textContent = localProfile.name;
+            ui.combatProfileIcon.innerHTML = `<i class="fa-solid ${profileIcon}" aria-hidden="true"></i>`;
+        }
+
+        function renderAccountSettings() {
+            ui.accountName.value = localProfile?.name || '';
+            selectedAvatarId = localProfile?.avatarAchievementId || 'default';
+            const avatarChoices = [
+                { id: 'default', icon: 'fa-user', label: 'Default profile icon' },
+                ...ACHIEVEMENTS.filter((achievement) => unlockedAchievementIds.includes(achievement.id))
+                    .map((achievement) => ({ id: achievement.id, icon: achievement.icon, label: achievement.name }))
+            ];
+            ui.avatarOptions.innerHTML = avatarChoices.map((avatar) =>
+                `<button type="button" class="avatar-option ${selectedAvatarId === avatar.id ? 'selected' : ''}" data-avatar-id="${avatar.id}" aria-label="${avatar.label}" title="${avatar.label}"><i class="fa-solid ${avatar.icon}" aria-hidden="true"></i></button>`
+            ).join('');
+            ui.avatarOptions.querySelectorAll('.avatar-option').forEach((button) => {
+                button.addEventListener('click', () => {
+                    selectedAvatarId = button.dataset.avatarId;
+                    ui.avatarOptions.querySelectorAll('.avatar-option').forEach((option) => option.classList.toggle('selected', option === button));
+                });
+            });
+            ui.accountMessage.textContent = localProfile ? 'Your account is saved on this device.' : 'Account creation is optional. You can keep playing as a guest.';
+        }
+
+        function getTrophyTotal() {
+            const unlockedCount = ACHIEVEMENTS.filter((achievement) => unlockedAchievementIds.includes(achievement.id)).length;
+            return (unlockedCount * 3) + (careerStats.matchesWon * 2);
+        }
+
+        function renderAchievements() {
+            const unlockedCount = ACHIEVEMENTS.filter((achievement) => unlockedAchievementIds.includes(achievement.id)).length;
+            const trophyTotal = getTrophyTotal();
+            ui.trophyTotal.innerHTML = `<i class="fa-solid fa-trophy" aria-hidden="true"></i> ${trophyTotal} ${trophyTotal === 1 ? 'Trophy' : 'Trophies'}`;
+            ui.achievementProgress.textContent = `${trophyTotal} trophies · ${unlockedCount} of ${ACHIEVEMENTS.length} achievements · ${careerStats.matchesWon} match wins`;
+            ui.achievementsList.innerHTML = ACHIEVEMENTS.map((achievement) => {
+                const unlocked = unlockedAchievementIds.includes(achievement.id);
+                return `<article class="achievement-card ${unlocked ? 'unlocked' : 'locked'}">
+                    <i class="fa-solid ${unlocked ? achievement.icon : 'fa-lock'}" aria-hidden="true"></i>
+                    <div><h3>${achievement.name}</h3><p>${achievement.description}</p></div>
+                </article>`;
+            }).join('');
+        }
+
+        function unlockAchievement(id) {
+            if (unlockedAchievementIds.includes(id)) return;
+            const achievement = ACHIEVEMENTS.find((item) => item.id === id);
+            if (!achievement) return;
+            unlockedAchievementIds.push(id);
+            try {
+                localStorage.setItem('fpsChessAchievements', JSON.stringify(unlockedAchievementIds));
+            } catch (error) {
+                // Achievements still work for this session if storage is unavailable.
+            }
+            renderAchievements();
+            ui.achievementToastText.textContent = `Achievement unlocked: ${achievement.name} · +3 trophies`;
+            ui.achievementToast.classList.add('show');
+            if (achievementToastTimer) clearTimeout(achievementToastTimer);
+            achievementToastTimer = setTimeout(() => ui.achievementToast.classList.remove('show'), 2600);
+            if (id !== 'trophy_hunter' && unlockedAchievementIds.length >= 10) unlockAchievement('trophy_hunter');
+        }
+
+        function awardDuelAchievements(pieceType) {
+            const pieceAchievement = {
+                pawn: 'pistolero', knight: 'knight_rider', bishop: 'long_shot',
+                rook: 'fortress', queen: 'royal_power', king: 'his_majesty'
+            };
+            unlockAchievement('first_blood');
+            unlockAchievement(pieceAchievement[pieceType]);
+            if (gameState.matchStats.duelShots > 0 && gameState.matchStats.duelShots === gameState.matchStats.duelHits) {
+                unlockAchievement('sharpshooter');
+            }
+            if (gameState.matchStats.combatWins >= 3) unlockAchievement('hat_trick');
+            if (gameState.matchStats.combatWins >= 3 && gameState.matchStats.lostPieces === 0) unlockAchievement('clean_sweep');
+            if (careerStats.duelsWon >= 10) unlockAchievement('battle_tested');
+            if (careerStats.duelsWon >= 25) unlockAchievement('veteran');
+        }
+
+        function awardMatchWinAchievements() {
+            const usedTypes = Object.keys(gameState.matchStats.usedPieceTypes);
+            const shotCounts = Object.values(gameState.matchStats.shotsByType);
+            unlockAchievement('king_slayer');
+            unlockAchievement('first_victory');
+            if (usedTypes.length > 0 && usedTypes.every((type) => type === 'pawn')) unlockAchievement('pawn_power');
+            if (shotCounts.length > 0 && shotCounts.every((shots) => shots <= 10)) unlockAchievement('ten_or_less');
+            if (gameState.matchStats.lostPieces === 0) unlockAchievement('untouchable');
+            if (gameState.matchStats.lostPieces >= 3) unlockAchievement('comeback');
+            if (Date.now() - gameState.matchStats.startedAt <= 10 * 60 * 1000) unlockAchievement('quick_victory');
+            if (usedTypes.length >= 3) unlockAchievement('mixed_arsenal');
+            if (Object.keys(careerStats.usedPieceTypes).length >= 6) unlockAchievement('full_roster');
+            if (careerStats.matchesWon >= 5) unlockAchievement('champion');
+            if (careerStats.matchesWon >= 10) unlockAchievement('grandmaster');
+        }
 
         // --- CHESS LOGIC ---
         function renderBoard() {
@@ -496,7 +876,12 @@
         let fps = {
             scene: null, camera: null, renderer: null,
             boardGroup: null,
+            combatObstacles: [],
             weaponMesh: null,
+            muzzleFlash: null,
+            muzzleFlashTimer: null,
+            weaponRecoilTime: 0,
+            weaponRecoilDuration: 0.5,
             player: { hp: 100, maxHp: 100, weapon: null, pieceData: null },
             enemy: { hp: 100, maxHp: 100, mesh: null, pieceData: null, lastFire: 0, aiTimer: 0, aiState: 'rush', weapon: null },
             isLocked: false, active: false, duelEnded: false,
@@ -510,7 +895,9 @@
             animationId: null,
             killcamActive: false,
             killcamTimer: 0,
-            killcamVictim: null
+            killcamVictim: null,
+            playerCollisionRadius: 3.2,
+            enemyCollisionRadius: 5.8
         };
 
         const pieceModelBase = window.location.protocol === 'file:'
@@ -609,6 +996,14 @@
                 fps.camera.remove(fps.weaponMesh);
                 fps.weaponMesh = null;
             }
+            if (fps.muzzleFlash) {
+                fps.camera.remove(fps.muzzleFlash);
+                fps.muzzleFlash = null;
+            }
+            if (fps.muzzleFlashTimer) {
+                clearTimeout(fps.muzzleFlashTimer);
+                fps.muzzleFlashTimer = null;
+            }
 
             const geometry = await loadWeaponGeometry(weaponType);
             if (!geometry || gameState.phase === 'chess') return;
@@ -624,9 +1019,49 @@
             if (weaponType === 'pistol') weapon.position.set(0.78, -0.95, -3.2);
             if (weaponType === 'machinegun') weapon.position.set(0.85, -1.05, -3.4);
             weapon.rotation.set(-0.08, -0.16, -0.06);
+            const recoilDistances = {
+                pistol: 0.16,
+                magnum: 0.26,
+                shotgun: 0.24,
+                sniper: 0.2,
+                machinegun: 0.1,
+                rocket: 0.23
+            };
+            weapon.userData.basePosition = weapon.position.clone();
+            weapon.userData.baseRotation = weapon.rotation.clone();
+            weapon.userData.recoilDistance = recoilDistances[weaponType] || 0.18;
             weapon.renderOrder = 20;
             fps.weaponMesh = weapon;
             fps.camera.add(weapon);
+
+            const flash = new THREE.Group();
+            const flashCore = new THREE.Mesh(
+                new THREE.SphereGeometry(0.16, 8, 6),
+                new THREE.MeshBasicMaterial({ color: 0xfff4b0, transparent: true })
+            );
+            const flashBurst = new THREE.Mesh(
+                new THREE.ConeGeometry(0.3, 0.8, 8),
+                new THREE.MeshBasicMaterial({ color: 0xff7a18, transparent: true, opacity: 0.9 })
+            );
+            flashBurst.rotation.x = -Math.PI / 2;
+            flash.add(flashCore, flashBurst);
+            flash.add(new THREE.PointLight(0xff9a38, 0, 7));
+            flash.position.set(weapon.position.x, weapon.position.y, weapon.position.z - 0.65);
+            const muzzleProfiles = {
+                pistol: { scale: 1.25, intensity: 2.8 },
+                magnum: { scale: 1.15, intensity: 2.5 },
+                shotgun: { scale: 0.82, intensity: 1.8 },
+                sniper: { scale: 0.72, intensity: 1.5 },
+                machinegun: { scale: 0.62, intensity: 1.35 },
+                rocket: { scale: 0.7, intensity: 1.4 }
+            };
+            const muzzleProfile = muzzleProfiles[weaponType] || { scale: 0.9, intensity: 1.8 };
+            flash.scale.setScalar(muzzleProfile.scale);
+            flash.userData.lightIntensity = muzzleProfile.intensity;
+            flash.visible = false;
+            flash.renderOrder = 21;
+            fps.muzzleFlash = flash;
+            fps.camera.add(flash);
         }
 
         const pieceGeometriesReady = Promise.all(
@@ -697,13 +1132,25 @@
             chess3d.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 1.5));
             chess3d.renderer.outputEncoding = THREE.sRGBEncoding;
             chess3d.renderer.setClearColor(0x000000, 0);
+            chess3d.renderer.shadowMap.enabled = true;
+            chess3d.renderer.shadowMap.type = THREE.PCFSoftShadowMap;
             resetChessCamera();
 
-            chess3d.scene.add(new THREE.HemisphereLight(0xeaf6ff, 0x5b321d, 0.72));
-            const keyLight = new THREE.DirectionalLight(0xfff1d2, 0.9);
+            chess3d.scene.add(new THREE.HemisphereLight(0xeaf6ff, 0x5b321d, 0.64));
+            const keyLight = new THREE.DirectionalLight(0xfff1d2, 0.82);
             keyLight.position.set(45, 100, 65);
+            keyLight.castShadow = true;
+            keyLight.shadow.mapSize.set(2048, 2048);
+            keyLight.shadow.camera.left = -70;
+            keyLight.shadow.camera.right = 70;
+            keyLight.shadow.camera.top = 70;
+            keyLight.shadow.camera.bottom = -70;
+            keyLight.shadow.camera.near = 20;
+            keyLight.shadow.camera.far = 220;
+            keyLight.shadow.bias = -0.00035;
+            keyLight.shadow.normalBias = 0.03;
             chess3d.scene.add(keyLight);
-            const fillLight = new THREE.DirectionalLight(0x8dbdff, 0.28);
+            const fillLight = new THREE.DirectionalLight(0x8dbdff, 0.3);
             fillLight.position.set(-70, 45, -30);
             chess3d.scene.add(fillLight);
 
@@ -760,6 +1207,8 @@
                 chess3d.materials.base
             );
             base.position.y = -1.9;
+            base.castShadow = true;
+            base.receiveShadow = true;
             chess3d.boardGroup.add(base);
 
             let movingMesh = null;
@@ -776,6 +1225,7 @@
 
                     const tile = new THREE.Mesh(chess3d.tileGeometry, tileMaterial);
                     tile.position.set(pos.x, 0, pos.z);
+                    tile.receiveShadow = true;
                     tile.userData.r = r;
                     tile.userData.c = c;
                     chess3d.tiles.push(tile);
@@ -793,6 +1243,8 @@
                     const pieceHeight = CHESS_PIECE_HEIGHTS[pieceData.type];
                     pieceMesh.scale.setScalar(pieceHeight);
                     pieceMesh.position.set(pos.x, 0.45, pos.z);
+                    pieceMesh.castShadow = true;
+                    pieceMesh.receiveShadow = true;
                     if (pieceData.color === 'black') pieceMesh.rotation.y = Math.PI;
                     chess3d.boardGroup.add(pieceMesh);
 
@@ -930,19 +1382,38 @@
                 fps.renderer.outputEncoding = THREE.sRGBEncoding;
                 fps.renderer.toneMapping = THREE.ACESFilmicToneMapping;
                 fps.renderer.toneMappingExposure = 0.82;
+                fps.renderer.shadowMap.enabled = true;
+                fps.renderer.shadowMap.type = THREE.PCFSoftShadowMap;
 
                 // Bright, soft daylight keeps both piece colors readable.
-                const ambient = new THREE.AmbientLight(0xffffff, 0.28);
+                const ambient = new THREE.AmbientLight(0xffffff, 0.38);
                 fps.scene.add(ambient);
 
-                const hemisphere = new THREE.HemisphereLight(0xe9f7ff, 0x5b3424, 0.48);
+                const hemisphere = new THREE.HemisphereLight(0xe9f7ff, 0x5b3424, 0.5);
                 fps.scene.add(hemisphere);
                 
-                const spotLight = new THREE.SpotLight(0xfff1cf, 0.85);
-                spotLight.position.set(0, 150, 0); 
-                spotLight.angle = Math.PI / 3;
-                spotLight.penumbra = 0.8;
-                fps.scene.add(spotLight);
+                // A single warm sun gives every piece a consistent light
+                // direction and creates soft shadows across the board.
+                const sunLight = new THREE.DirectionalLight(0xffedc2, 0.78);
+                sunLight.position.set(95, 155, 70);
+                sunLight.castShadow = true;
+                sunLight.shadow.mapSize.set(2048, 2048);
+                sunLight.shadow.camera.left = -105;
+                sunLight.shadow.camera.right = 105;
+                sunLight.shadow.camera.top = 105;
+                sunLight.shadow.camera.bottom = -105;
+                sunLight.shadow.camera.near = 20;
+                sunLight.shadow.camera.far = 350;
+                sunLight.shadow.bias = -0.0003;
+                sunLight.shadow.normalBias = 0.045;
+                fps.scene.add(sunLight);
+
+                const sun = new THREE.Mesh(
+                    new THREE.SphereGeometry(11, 24, 16),
+                    new THREE.MeshBasicMaterial({ color: 0xfff1ad, fog: false })
+                );
+                sun.position.copy(sunLight.position).multiplyScalar(1.35);
+                fps.scene.add(sun);
 
                 window.addEventListener('resize', () => {
                     fps.camera.aspect = window.innerWidth / window.innerHeight;
@@ -1062,6 +1533,7 @@
             if (fps.boardGroup) fps.scene.remove(fps.boardGroup);
             fps.boardGroup = new THREE.Group();
             fps.scene.add(fps.boardGroup);
+            fps.combatObstacles = [];
 
             const TILE_SIZE = 20;
             const getPos = (r, c) => ({ x: (c - 3.5) * TILE_SIZE, z: (r - 3.5) * TILE_SIZE });
@@ -1078,6 +1550,7 @@
                     const tile = new THREE.Mesh(tileGeo, isLight ? lightMat : darkMat);
                     const pos = getPos(r, c);
                     tile.position.set(pos.x, 0, pos.z);
+                    tile.receiveShadow = true;
                     fps.boardGroup.add(tile);
 
                     // Create standing pieces as obstacles
@@ -1097,7 +1570,10 @@
                         const height = (pieceDef.hp / 10) + 10; 
                         const obs = createCombatPieceMesh(pieceDef, height, obsMat, 5, 7);
                         obs.position.set(pos.x, obs.userData.groundY, pos.z);
+                        obs.castShadow = true;
+                        obs.receiveShadow = true;
                         fps.boardGroup.add(obs);
+                        fps.combatObstacles.push({ mesh: obs, radius: 6.5 });
                     }
                 }
             }
@@ -1111,12 +1587,17 @@
             const rBot = new THREE.Mesh(rimGeo1, rimMat); rBot.position.set(0, 5, TILE_SIZE*4 + 2.5); fps.boardGroup.add(rBot);
             const rLeft = new THREE.Mesh(rimGeo2, rimMat); rLeft.position.set(-TILE_SIZE*4 - 2.5, 5, 0); fps.boardGroup.add(rLeft);
             const rRight = new THREE.Mesh(rimGeo2, rimMat); rRight.position.set(TILE_SIZE*4 + 2.5, 5, 0); fps.boardGroup.add(rRight);
+            [rTop, rBot, rLeft, rRight].forEach((rim) => {
+                rim.castShadow = true;
+                rim.receiveShadow = true;
+            });
 
             const tableGeo = new THREE.PlaneGeometry(1000, 1000);
             tableGeo.rotateX(-Math.PI / 2);
             const tableMat = new THREE.MeshLambertMaterial({ color: 0x4a2a1c });
             const table = new THREE.Mesh(tableGeo, tableMat);
             table.position.y = -2;
+            table.receiveShadow = true;
             fps.boardGroup.add(table);
 
             if (fps.enemy.mesh) fps.scene.remove(fps.enemy.mesh);
@@ -1130,6 +1611,8 @@
             const enemyHeight = 12;
             fps.enemy.mesh = createCombatPieceMesh(enemyData, enemyHeight, enemyMat, 3, 4);
             fps.enemy.mesh.position.set(ePos.x, fps.enemy.mesh.userData.groundY, ePos.z);
+            fps.enemy.mesh.castShadow = true;
+            fps.enemy.mesh.receiveShadow = true;
 
             const enemyGlow = new THREE.Mesh(
                 fps.enemy.mesh.geometry,
@@ -1167,6 +1650,13 @@
             fps.player.hp = playerData.hp;
             fps.player.maxHp = playerData.hp;
             fps.player.weapon = WEAPONS[playerData.weapon];
+            gameState.matchStats.usedPieceTypes[playerData.type] = true;
+            gameState.matchStats.duelShots = 0;
+            gameState.matchStats.duelHits = 0;
+            careerStats.usedPieceTypes[playerData.type] = true;
+            saveCareerStats();
+            if (Object.keys(gameState.matchStats.usedPieceTypes).length >= 3) unlockAchievement('mixed_arsenal');
+            if (Object.keys(careerStats.usedPieceTypes).length >= 6) unlockAchievement('full_roster');
             
             fps.enemy.pieceData = enemyData;
             fps.enemy.hp = enemyData.hp;
@@ -1234,12 +1724,34 @@
             if (now - fps.lastFireTime < fps.player.weapon.fireRate) return;
             fps.lastFireTime = now;
             updateReloadUI(now);
+            const firingPieceType = fps.player.pieceData.type;
+            gameState.matchStats.shotsByType[firingPieceType] = (gameState.matchStats.shotsByType[firingPieceType] || 0) + 1;
+            gameState.matchStats.duelShots += 1;
+            careerStats.shotsFired += 1;
+            saveCareerStats();
+            if (careerStats.shotsFired >= 100) unlockAchievement('trigger_happy');
+
+            if (fps.muzzleFlash) {
+                fps.muzzleFlash.visible = true;
+                const flashLight = fps.muzzleFlash.children[2];
+                if (flashLight) flashLight.intensity = fps.muzzleFlash.userData.lightIntensity || 1.8;
+                if (fps.muzzleFlashTimer) clearTimeout(fps.muzzleFlashTimer);
+                fps.muzzleFlashTimer = setTimeout(() => {
+                    if (!fps.muzzleFlash) return;
+                    fps.muzzleFlash.visible = false;
+                    if (flashLight) flashLight.intensity = 0;
+                    fps.muzzleFlashTimer = null;
+                }, 65);
+            }
+
+            fps.weaponRecoilTime = fps.weaponRecoilDuration;
 
             const raycaster = new THREE.Raycaster();
             raycaster.setFromCamera(new THREE.Vector2(0, 0), fps.camera);
 
             const intersects = raycaster.intersectObject(fps.enemy.mesh);
             if (intersects.length > 0) {
+                gameState.matchStats.duelHits += 1;
                 fps.enemy.hp -= fps.player.weapon.damage;
                 showHitMarker();
                 updateFPSUI();
@@ -1253,7 +1765,69 @@
                 }
             }
 
-            fps.camera.rotation.x += 0.05; // Visual recoil
+        }
+
+        function updateWeaponRecoil(delta) {
+            if (!fps.weaponMesh) return;
+            const weapon = fps.weaponMesh;
+            const basePosition = weapon.userData.basePosition;
+            const baseRotation = weapon.userData.baseRotation;
+            if (!basePosition || !baseRotation) return;
+
+            fps.weaponRecoilTime = Math.max(0, fps.weaponRecoilTime - delta);
+            const progress = 1 - (fps.weaponRecoilTime / fps.weaponRecoilDuration);
+            const kick = progress > 0 && progress < 1 ? Math.sin(progress * Math.PI) : 0;
+            weapon.position.copy(basePosition);
+            weapon.rotation.copy(baseRotation);
+            weapon.position.y += kick * weapon.userData.recoilDistance;
+            weapon.rotation.x += kick * 0.08;
+        }
+
+        function keepCombatBodiesApart() {
+            if (!fps.camera || !fps.enemy.mesh) return;
+
+            const separation = new THREE.Vector3(
+                fps.camera.position.x - fps.enemy.mesh.position.x,
+                0,
+                fps.camera.position.z - fps.enemy.mesh.position.z
+            );
+            const distance = separation.length();
+            const minimumDistance = fps.playerCollisionRadius + fps.enemyCollisionRadius;
+            if (distance >= minimumDistance) return;
+
+            if (distance < 0.0001) {
+                separation.set(-Math.sin(fps.camera.rotation.y), 0, -Math.cos(fps.camera.rotation.y));
+                if (separation.lengthSq() < 0.0001) separation.set(0, 0, 1);
+                separation.normalize();
+            } else {
+                separation.multiplyScalar(1 / distance);
+            }
+
+            const overlap = minimumDistance - Math.max(distance, 0.0001);
+            // The player is an immovable body from the enemy's perspective.
+            // Resolve all overlap by moving the enemy away, so it cannot push
+            // or slide the first-person camera backward.
+            fps.enemy.mesh.position.x -= separation.x * overlap;
+            fps.enemy.mesh.position.z -= separation.z * overlap;
+        }
+
+        function keepBodyOutOfBoardPieces(body, radius) {
+            if (!body || !fps.combatObstacles.length) return;
+            for (const obstacle of fps.combatObstacles) {
+                const separation = new THREE.Vector3(
+                    body.position.x - obstacle.mesh.position.x,
+                    0,
+                    body.position.z - obstacle.mesh.position.z
+                );
+                const distance = separation.length();
+                const minimumDistance = radius + obstacle.radius;
+                if (distance >= minimumDistance) continue;
+                if (distance < 0.0001) separation.set(0, 0, 1);
+                else separation.multiplyScalar(1 / distance);
+                const overlap = minimumDistance - Math.max(distance, 0.0001);
+                body.position.x += separation.x * overlap;
+                body.position.z += separation.z * overlap;
+            }
         }
 
         function enemyAI(delta) {
@@ -1286,6 +1860,8 @@
             fps.enemy.mesh.position.x = Math.max(-75, Math.min(75, fps.enemy.mesh.position.x));
             fps.enemy.mesh.position.z = Math.max(-75, Math.min(75, fps.enemy.mesh.position.z));
             fps.enemy.mesh.position.y = fps.enemy.mesh.userData.groundY;
+            keepBodyOutOfBoardPieces(fps.enemy.mesh, fps.enemyCollisionRadius);
+            keepCombatBodiesApart();
             // Turn toward the player only around the vertical axis. Looking at
             // the camera's eye height would pitch the whole chess piece over.
             fps.enemy.mesh.lookAt(
@@ -1336,6 +1912,7 @@
             const delta = Math.min((time - fps.lastTime) / 1000, 0.05);
             fps.lastTime = time;
             updateReloadUI(time);
+            updateWeaponRecoil(delta);
 
             if (fps.killcamActive) {
                 fps.killcamTimer += delta;
@@ -1392,6 +1969,10 @@
             if(fps.camera.position.x < -75) fps.camera.position.x = -75;
             if(fps.camera.position.z > 75) fps.camera.position.z = 75;
             if(fps.camera.position.z < -75) fps.camera.position.z = -75;
+
+            // The enemy piece is a solid combat obstacle.
+            keepBodyOutOfBoardPieces(fps.camera, fps.playerCollisionRadius);
+            keepCombatBodiesApart();
             
             fps.verticalVelocity -= 45 * delta;
             fps.camera.position.y += fps.verticalVelocity * delta;
@@ -1418,6 +1999,12 @@
             let message = "";
             
             if (playerWon) {
+                gameState.matchStats.combatWins += 1;
+                careerStats.duelsWon += 1;
+                const winningPieceType = fps.player.pieceData.type;
+                careerStats.duelWinsByType[winningPieceType] = (careerStats.duelWinsByType[winningPieceType] || 0) + 1;
+                saveCareerStats();
+                awardDuelAchievements(winningPieceType);
                 ui.resultTitle.innerText = "VICTORY";
                 ui.resultTitle.style.color = "#4ade80"; // Green
                 
@@ -1429,6 +2016,9 @@
                     gameState.board[gameState.combatAttackerSquare.r][gameState.combatAttackerSquare.c] = ''; // Attacker dies
                 }
             } else {
+                gameState.matchStats.lostPieces += 1;
+                careerStats.duelsLost += 1;
+                saveCareerStats();
                 ui.resultTitle.innerText = "DEFEAT";
                 ui.resultTitle.style.color = "#ef4444"; // Red
                 
@@ -1444,22 +2034,50 @@
             const remainingPieces = gameState.board.flat();
             if (!remainingPieces.includes('k')) {
                 gameState.gameOver = true;
+                careerStats.matchesWon += 1;
+                saveCareerStats();
+                awardMatchWinAchievements();
                 ui.resultTitle.innerText = "YOU WIN";
                 ui.resultTitle.style.color = "#facc15";
-                message = "The black king has been destroyed. You won the match!";
-                ui.btnContinue.innerText = "Play Again";
+                message = "The black king has been destroyed. You won the match and earned 2 trophies!";
+                ui.btnContinue.innerText = "Return to Home";
             } else if (!remainingPieces.includes('K')) {
                 gameState.gameOver = true;
                 ui.resultTitle.innerText = "GAME OVER";
                 ui.resultTitle.style.color = "#ef4444";
                 message = "Your king has been destroyed.";
-                ui.btnContinue.innerText = "Play Again";
+                ui.btnContinue.innerText = "Return to Home";
             } else {
                 ui.btnContinue.innerText = "Return to Chessboard";
             }
             
             ui.resultDesc.innerText = message;
             ui.matchResultScreen.style.display = 'flex';
+        }
+
+        function resetFullMatch() {
+            gameState.board = JSON.parse(JSON.stringify(INITIAL_BOARD));
+            gameState.turn = 'white';
+            gameState.selectedSquare = null;
+            gameState.validMoves = [];
+            gameState.combatAttackerSquare = null;
+            gameState.combatDefenderSquare = null;
+            gameState.aiThinking = false;
+            gameState.gameOver = false;
+            gameState.pendingMoveAnimation = null;
+            gameState.matchStats = createMatchStats();
+            renderBoard();
+        }
+
+        function showHomeScreen() {
+            ui.achievementsPanel.classList.remove('open');
+            ui.achievementsPanel.setAttribute('aria-hidden', 'true');
+            ui.settingsPanel.classList.remove('open');
+            ui.settingsPanel.setAttribute('aria-hidden', 'true');
+            ui.introScreen.style.display = 'flex';
+            ui.introScreen.classList.remove('intro-leaving');
+            renderAchievements();
+            renderProfile();
         }
 
         ui.btnContinue.addEventListener('click', () => {
@@ -1469,16 +2087,8 @@
             gameState.phase = 'chess';
 
             if (gameState.gameOver) {
-                gameState.board = JSON.parse(JSON.stringify(INITIAL_BOARD));
-                gameState.turn = 'white';
-                gameState.selectedSquare = null;
-                gameState.validMoves = [];
-                gameState.combatAttackerSquare = null;
-                gameState.combatDefenderSquare = null;
-                gameState.aiThinking = false;
-                gameState.gameOver = false;
-                gameState.pendingMoveAnimation = null;
-                renderBoard();
+                resetFullMatch();
+                showHomeScreen();
                 return;
             }
             
@@ -1487,6 +2097,67 @@
 
         // Initialize Game
         renderBoard();
+        renderAchievements();
+        renderProfile();
+        if (unlockedAchievementIds.length >= 10) unlockAchievement('trophy_hunter');
+        ui.introPlay.addEventListener('click', () => {
+            gameState.matchStats.startedAt = Date.now();
+            ui.achievementsPanel.classList.remove('open');
+            ui.achievementsPanel.setAttribute('aria-hidden', 'true');
+            ui.settingsPanel.classList.remove('open');
+            ui.settingsPanel.setAttribute('aria-hidden', 'true');
+            ui.introScreen.classList.add('intro-leaving');
+            window.setTimeout(() => {
+                ui.introScreen.style.display = 'none';
+            }, 400);
+        });
+        ui.introAchievements.addEventListener('click', () => {
+            renderAchievements();
+            ui.settingsPanel.classList.remove('open');
+            ui.settingsPanel.setAttribute('aria-hidden', 'true');
+            ui.achievementsPanel.classList.add('open');
+            ui.achievementsPanel.setAttribute('aria-hidden', 'false');
+        });
+        ui.achievementsClose.addEventListener('click', () => {
+            ui.achievementsPanel.classList.remove('open');
+            ui.achievementsPanel.setAttribute('aria-hidden', 'true');
+        });
+        ui.introSettings.addEventListener('click', () => {
+            renderAccountSettings();
+            ui.achievementsPanel.classList.remove('open');
+            ui.achievementsPanel.setAttribute('aria-hidden', 'true');
+            ui.settingsPanel.classList.add('open');
+            ui.settingsPanel.setAttribute('aria-hidden', 'false');
+        });
+        ui.settingsClose.addEventListener('click', () => {
+            ui.settingsPanel.classList.remove('open');
+            ui.settingsPanel.setAttribute('aria-hidden', 'true');
+        });
+        ui.accountSave.addEventListener('click', () => {
+            const name = ui.accountName.value.trim();
+            if (!name) {
+                ui.accountMessage.textContent = 'Enter a name before saving your account.';
+                return;
+            }
+            localProfile = { name: name.slice(0, 20), avatarAchievementId: selectedAvatarId };
+            try {
+                localStorage.setItem('fpsChessProfile', JSON.stringify(localProfile));
+            } catch (error) {
+                ui.accountMessage.textContent = 'The account works for this session, but this browser could not save it.';
+                renderProfile();
+                return;
+            }
+            renderProfile();
+            ui.accountMessage.textContent = `Account saved for ${localProfile.name}.`;
+        });
+        ui.accountGuest.addEventListener('click', () => {
+            localProfile = null;
+            selectedAvatarId = 'default';
+            try { localStorage.removeItem('fpsChessProfile'); } catch (error) {}
+            renderProfile();
+            renderAccountSettings();
+            ui.accountMessage.textContent = 'Guest mode selected. No account is required to play.';
+        });
 
     </script>
 </body>
