@@ -10,7 +10,7 @@ let equipped=0,combined=false,triggerHeld=false,nextShot=0,autoFireLatched=false
 const roster={'X-Shot':['Pocket 2','Insanity Manic','Mad Mega Barrel','Rage Fire','Hawkeye','Storm Scout · custom','Cyclone · custom','Thunderbolt · custom'],'Nerf':['Pocket 2','Elite 2.0 Echo','Rival Kronos','Rival Prometheus','Elite 2.0 Turbine','Thunder Scout · custom','Volt Runner · custom','Dome Defender · custom','Ultra Nerf MOAB']};
 let turretEnabled=false,turretNext=0,turretAmmo=20,turretReloadUntil=0,turretBeam=null;
 let questLevel=1,questUnlocked=1,questWon=false;
-let abilityShots=0,laserUntil=0,specialFx=[];
+let abilityShots=0,laserUntil=0,specialFx=[],multiplayerHit=null;
 const questConfig=()=>({bots:8+(questLevel-1)*5,hp:questLevel+1,reward:questLevel*10,bonus:questLevel<=5?[80,120,180,240,320][questLevel-1]:320+(questLevel-5)*80,speed:1+Math.min(questLevel-1,4)*.15});
 const mainCosts=[0,100,300,600,125,200,275,400,10000],mainTier=[0,1,2,3,0,1,1,2,10],owned={'Nerf':[0],'X-Shot':[0]};
 let attachments={barrel:0,sight:0,holder:0,vest:0},purchased={barrel:[0],sight:[0],holder:[0],vest:[0]};
@@ -386,7 +386,7 @@ function drawBotBlaster(t,x,y,r){
  ctx.restore();
 }
 
-function damageBot(target,power,fromPlayer=false){if(fromPlayer)hits++;target.hp-=power;for(let i=0;i<12;i++)particles.push({x:target.x*W,y:target.y*H,vx:(Math.random()-.5)*250,vy:(Math.random()-.5)*250,life:.5,color:mode==='practice'?'#e8fc7c':'#ffa68d'});if(mode==='practice'){coins+=5;targets[targets.indexOf(target)]=practiceRespawn(target);}else if(target.hp<=0){coins+=questConfig().reward;kills++;$('objective').textContent=`Tag ${questConfig().bots} bots · ${kills} / ${questConfig().bots}`;if(kills===questConfig().bots){questSeconds=(Date.now()-questStarted)/1000;earnedTimeBonus=timeBonus(questSeconds);coins+=questConfig().bonus+earnedTimeBonus;active=false;targets=[];questUnlocked=Math.max(questUnlocked,questLevel+1);showVictory();}else{targets.splice(targets.indexOf(target),1);if(kills+targets.length<questConfig().bots)targets.push(spawn(Math.floor(Math.random()*8)));}}}
+function damageBot(target,power,fromPlayer=false){if(fromPlayer)hits++;target.hp-=power;for(let i=0;i<12;i++)particles.push({x:target.x*W,y:target.y*H,vx:(Math.random()-.5)*250,vy:(Math.random()-.5)*250,life:.5,color:mode==='practice'?'#e8fc7c':'#ffa68d'});if(mode==='practice'){coins+=5;targets[targets.indexOf(target)]=practiceRespawn(target);if(multiplayerHit)multiplayerHit();}else if(target.hp<=0){coins+=questConfig().reward;kills++;$('objective').textContent=`Tag ${questConfig().bots} bots · ${kills} / ${questConfig().bots}`;if(kills===questConfig().bots){questSeconds=(Date.now()-questStarted)/1000;earnedTimeBonus=timeBonus(questSeconds);coins+=questConfig().bonus+earnedTimeBonus;active=false;targets=[];questUnlocked=Math.max(questUnlocked,questLevel+1);showVictory();}else{targets.splice(targets.indexOf(target),1);if(kills+targets.length<questConfig().bots)targets.push(spawn(Math.floor(Math.random()*8)));}}}
 
 function turretStats(){const profile=brand==='X-Shot'?{levels,attachments}:profiles['X-Shot'];return {damage:1+profile.levels.spring,capacity:capacityFor(3,profile.levels,profile.attachments),reload:reloadSeconds(profile.levels.prime)};}
 function updateTurretUI(){const stats=turretStats();$('turretStats').textContent=stats.damage+' damage · '+stats.capacity+' darts · '+stats.reload.toFixed(2)+'s reload · uses X-Shot upgrades';const available=owned['X-Shot'].includes(3);$('turretToggle').disabled=!available;$('turretToggle').textContent=turretEnabled?'Disable Rage Fire turret':available?'Enable Rage Fire turret':'Unlock Rage Fire to use turret';$('turretToggle').setAttribute('aria-pressed',String(turretEnabled));}
@@ -423,3 +423,4 @@ function drawMoab(){
  ctx.fillStyle='#203c54';ctx.font='bold 11px sans-serif';ctx.fillText('ULTRA / 500-DART FEED',-77,-96);
 }
 function hideHeavyReceiver(){if(isMoab()||(brand==='X-Shot'&&equipped===3))rect(-64,-174,120,61,'#294955');}
+const multiplayerScript=document.createElement('script');multiplayerScript.src='multiplayer.js';multiplayerScript.defer=true;document.body.append(multiplayerScript);
