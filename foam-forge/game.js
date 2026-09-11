@@ -39,14 +39,13 @@ function drawAbilityHUD(){
   for(const p of fx.points){const to=worldToScreen(p),from=fx.type==='thunder'?{x:to.x*W,y:0}:worldToScreen(fx.from);ctx.beginPath();ctx.moveTo(fx.type==='thunder'?from.x:from.x*W,fx.type==='thunder'?from.y:from.y*H);if(fx.type==='thunder'){ctx.lineTo(to.x*W-12,to.y*H*.45);ctx.lineTo(to.x*W+10,to.y*H*.7);}ctx.lineTo(to.x*W,to.y*H);ctx.stroke();}
   ctx.restore();
  }
+ if(mode!=='forge')return;
  const info=specialInfo();
- $('specialName').textContent=info[0];$('specialDescription').textContent=info[1];
- $('specialCard').style.borderColor=laserUntil>clock?'#ff665d':'#456057';
+ const width=Math.min(370,W-32),height=64,x=W-width-18,y=20,activeLaser=laserUntil>clock;
+ ctx.save();ctx.fillStyle='#102427ed';ctx.strokeStyle=activeLaser?'#ff665d':'#d6f76c';ctx.lineWidth=2;ctx.fillRect(x,y,width,height);ctx.strokeRect(x,y,width,height);
+ ctx.fillStyle=activeLaser?'#ff8b82':'#d6f76c';ctx.font='800 11px sans-serif';ctx.textAlign='left';ctx.fillText('BLASTER SPECIAL · '+info[0],x+14,y+23);
+ ctx.fillStyle='#e7f1ed';ctx.font='12px sans-serif';ctx.fillText(info[1],x+14,y+46);ctx.restore();
 }
-const specialCard=document.createElement('section');
-specialCard.id='specialCard';specialCard.className='quest-card';
-specialCard.innerHTML='<span class="eyebrow">BLASTER SPECIAL</span><h3 id="specialName">STANDARD BLASTER</h3><p id="specialDescription">No unique ability equipped</p>';
-document.querySelector('.blaster-roster').after(specialCard);
 function update(){updateTurretUI();updateQuestPicker();saveProgress();updateAccessories(); $('coins').textContent=coins;$('ammo').textContent=`${ammo} / ${cap()}`;$('reloadLabel').textContent=reloading>0?'RELOADING…':'RELOAD [R]';$('health').textContent=mode==='quest'?'♥ '+health+' / '+maxHealth()+' lives':'FREE PLAY';$('stats').textContent=`${hits} hits · ${shots} shots`;$('blasterName').textContent=brand+' · '+(combined?'Full Insanity':roster[brand][equipped]);$('fireHint').textContent=combined?'HOLD TO AUTO FIRE · 3-DART MULTI-SHOT':automatic()?'HOLD CLICK / TOUCH TO AUTO FIRE':equipped===7?'CLICK / TAP · 4-DART MULTI-SHOT':'CLICK / TAP TO SHOOT';for(let i=1;i<=8;i++){const button=$('blaster'+i),have=owned[brand].includes(i);button.hidden=i>=roster[brand].length;if(button.hidden)continue;button.textContent=roster[brand][i]+(have?' · Equip':' · ◈ '+mainCosts[i]+(buildTier()<mainTier[i]?' · Tier '+mainTier[i]:''));button.disabled=!have&&(buildTier()<mainTier[i]||coins<mainCosts[i]);button.classList.toggle('selected',equipped===i&&!combined);} $('combine').hidden=brand!=='X-Shot';$('combine').disabled=turretEnabled||!ultimate()||!fullSet()||combined;$('combine').textContent=turretEnabled?'Turn off turret to combine':combined?'FULL INSANITY EQUIPPED':'Combine all three → Full Insanity';$('unlockHint').textContent=unlocked()===3?(brand==='Nerf'?'Core mains unlocked. MOAB needs 10 upgrades in every part.':'All core mains unlocked. Keep upgrading!'):'Upgrade all three parts to '+['II','III','IV'][unlocked()]+' to open tier '+(unlocked()+1)+' mains'+'.';$('dream').textContent=brand==='Nerf'?'Ultra Nerf MOAB · Tier 10':'X-Shot · Full Insanity';$('progress').style.width=Math.min(9,Object.values(levels).reduce((a,b)=>a+Math.min(b,3),0))/9*100+'%';for(const k of Object.keys(levels)){ $(k+'Level').textContent='Lv '+(levels[k]+1);$(k+'Buy').textContent='◈ '+price(k);$(k+'Buy').disabled=coins<price(k);} }
 function spawn(i){return {slot:i,coverY:.44+Math.floor(i/4)*.16,exposure:0,fired:false,cycle:Math.random()*2,x:.14+(i%4)*.23,y:.34+Math.floor(i/4)*.19,base:.14+(i%4)*.23,r:.035+Math.random()*.01,hp:mode==='quest'?questConfig().hp:1,max:mode==='quest'?questConfig().hp:1,phase:Math.random()*6,age:0,deadline:7+Math.random()*4};}
 function practiceRespawn(oldTarget){const used=new Set(targets.filter(t=>t!==oldTarget).map(t=>t.slot)),open=[];for(let i=0;i<8;i++)if(!used.has(i))open.push(i);return spawn(open[Math.floor(Math.random()*open.length)]??oldTarget.slot??0);}
@@ -110,7 +109,7 @@ function frame(ms){let dt=Math.min((ms-last)/1000,.05);last=ms;clock+=dt;const f
 var music;
 const SAVE_KEY='foam-forge-progress-v1';
 loadProgress();
-coins=300000;
+installSaveButton();
 initMovement();
 initAccessories();
 for(const kind of Object.keys(attachments))$(kind+'Select').value=String(attachments[kind]);
@@ -175,7 +174,25 @@ function saveProgress(){
   rememberBrand();
   localStorage.setItem(SAVE_KEY,JSON.stringify({version:2,coins,brand,owned,profiles,questUnlocked,questLevel,turretEnabled}));
   $('saveStatus').textContent='Progress saved in this browser.';
- }catch{ $('saveStatus').textContent='Saving is unavailable in this browser. Keep this page open to retain your progress.'; }
+  return true;
+ }catch{ $('saveStatus').textContent='Saving is unavailable in this browser. Keep this page open to retain your progress.';return false; }
+}
+function installSaveButton(){
+ const button=document.createElement('button');button.id='saveGame';button.className='back';button.textContent='▣ Save game';button.setAttribute('aria-label','Save all game progress on this device');document.querySelector('.wallet').before(button);
+ button.onclick=()=>{const saved=saveProgress();button.textContent=saved?'✓ Game saved':'Save unavailable';if(saved)toast('Game saved on this device.');setTimeout(()=>button.textContent='▣ Save game',1800);};
+ installSettingsPanel(button);
+}
+function installSettingsPanel(saveButton){
+ const settingsButton=document.createElement('button');settingsButton.id='settingsButton';settingsButton.className='back';settingsButton.textContent='⚙ Settings';settingsButton.setAttribute('aria-expanded','false');saveButton.after(settingsButton);
+ const panel=document.createElement('section');panel.id='settingsPanel';panel.className='settings-panel';panel.hidden=true;panel.setAttribute('aria-label','Game settings and save guide');
+ panel.innerHTML='<button id="settingsClose" class="settings-close" aria-label="Close settings">×</button><span class="eyebrow">GAME SETTINGS</span><h2>Settings</h2><label for="brightnessSetting">Game brightness <output id="brightnessValue">100%</output></label><input id="brightnessSetting" type="range" min="50" max="140" step="5" value="100"><div class="save-guide"><span class="eyebrow">PROTECT YOUR PROGRESS</span><h3>Save before you leave</h3><p>Press <strong>Save game</strong> after playing. Your progress stays on this device when you close the tab.</p><ul><li>Do not clear browser or site data.</li><li>Private browsing may erase the save when it closes.</li><li>Another browser will have a separate save.</li><li>A copied or differently located game may have a separate save.</li></ul></div>';
+ document.body.append(panel);
+ let brightness=100;try{const saved=Number(localStorage.getItem('foam-forge-brightness'));if(saved>=50&&saved<=140)brightness=saved;}catch{}
+ const slider=$('brightnessSetting'),value=$('brightnessValue');slider.value=brightness;value.textContent=brightness+'%';document.documentElement.style.setProperty('--game-brightness',brightness/100);
+ slider.oninput=()=>{const amount=Number(slider.value);value.textContent=amount+'%';document.documentElement.style.setProperty('--game-brightness',amount/100);try{localStorage.setItem('foam-forge-brightness',String(amount));}catch{}};
+ const close=()=>{panel.hidden=true;settingsButton.setAttribute('aria-expanded','false');};
+ settingsButton.onclick=()=>{const opening=panel.hidden;panel.hidden=!opening;settingsButton.setAttribute('aria-expanded',String(opening));};
+ $('settingsClose').onclick=close;window.addEventListener('keydown',event=>{if(event.key==='Escape')close();});
 }
 function loadProgress(){
  try{
