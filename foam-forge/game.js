@@ -181,11 +181,12 @@ function installSaveButton(){
  const button=document.createElement('button');button.id='saveGame';button.className='back';button.textContent='▣ Save game';button.setAttribute('aria-label','Save all game progress on this device');document.querySelector('.wallet').before(button);
  button.onclick=()=>{const saved=saveProgress();button.textContent=saved?'✓ Game saved':'Save unavailable';if(saved)toast('Game saved on this device.');setTimeout(()=>button.textContent='▣ Save game',1800);};
  installSettingsPanel(button);
+ installTutorial();
 }
 function installSettingsPanel(saveButton){
  const settingsButton=document.createElement('button');settingsButton.id='settingsButton';settingsButton.className='back';settingsButton.textContent='⚙ Settings';settingsButton.setAttribute('aria-expanded','false');saveButton.after(settingsButton);
  const panel=document.createElement('section');panel.id='settingsPanel';panel.className='settings-panel';panel.hidden=true;panel.setAttribute('aria-label','Game settings and save guide');
- panel.innerHTML='<button id="settingsClose" class="settings-close" aria-label="Close settings">×</button><span class="eyebrow">GAME SETTINGS</span><h2>Settings</h2><label for="brightnessSetting">Game brightness <output id="brightnessValue">100%</output></label><input id="brightnessSetting" type="range" min="50" max="140" step="5" value="100"><div class="save-guide"><span class="eyebrow">PROTECT YOUR PROGRESS</span><h3>Save before you leave</h3><p>Press <strong>Save game</strong> after playing. Your progress stays on this device when you close the tab.</p><ul><li>Do not clear browser or site data.</li><li>Private browsing may erase the save when it closes.</li><li>Another browser will have a separate save.</li><li>A copied or differently located game may have a separate save.</li></ul></div>';
+ panel.innerHTML='<button id="settingsClose" class="settings-close" aria-label="Close settings">×</button><span class="eyebrow">GAME SETTINGS</span><h2>Settings</h2><label for="brightnessSetting">Game brightness <output id="brightnessValue">100%</output></label><input id="brightnessSetting" type="range" min="50" max="140" step="5" value="100"><button id="replayTutorial" class="tutorial-replay">Replay tutorial</button><div class="save-guide"><span class="eyebrow">PROTECT YOUR PROGRESS</span><h3>Save before you leave</h3><p>Press <strong>Save game</strong> after playing. Your progress stays on this device when you close the tab.</p><ul><li>Do not clear browser or site data.</li><li>Private browsing may erase the save when it closes.</li><li>Another browser will have a separate save.</li><li>A copied or differently located game may have a separate save.</li></ul></div>';
  document.body.append(panel);
  let brightness=100;try{const saved=Number(localStorage.getItem('foam-forge-brightness'));if(saved>=50&&saved<=140)brightness=saved;}catch{}
  const slider=$('brightnessSetting'),value=$('brightnessValue');slider.value=brightness;value.textContent=brightness+'%';document.documentElement.style.setProperty('--game-brightness',brightness/100);
@@ -193,6 +194,23 @@ function installSettingsPanel(saveButton){
  const close=()=>{panel.hidden=true;settingsButton.setAttribute('aria-expanded','false');};
  settingsButton.onclick=()=>{const opening=panel.hidden;panel.hidden=!opening;settingsButton.setAttribute('aria-expanded',String(opening));};
  $('settingsClose').onclick=close;window.addEventListener('keydown',event=>{if(event.key==='Escape')close();});
+}
+function installTutorial(){
+ const steps=[
+  ['WELCOME TO FOAM FORGE','Build your blaster in the Thunderdome, then take it into Target Practice or a Bot Quest.'],
+  ['BUILD YOUR BLASTER','Spend coins on Power Spring, Dart Capacity, and Quick Prime. Higher balanced upgrade tiers unlock more blasters.'],
+  ['EQUIP & CUSTOMIZE','Choose a blaster under Your Blasters. Attach barrels, sights, dart holders, and protective vests in the workshop.'],
+  ['USE SPECIAL ABILITIES','Some blasters have lasers, thunder strikes, ricochets, bonus capacity, or attachment boosts. Their ability appears in the top-right of the Thunderdome.'],
+  ['PRACTICE & QUESTS','Target Practice earns coins with no danger. Bot Quests add enemies, rewards, unlockable levels, and limited lives.'],
+  ['CONTROLS','Click or tap to shoot. Press R to reload. In Bot Quests, use WASD, arrow keys, or the movement pad to dodge. Right-click toggles hands-free fire.'],
+  ['SAVE YOUR PROGRESS','Press Save game before leaving. Your coins, upgrades, blasters, attachments, and unlocked quest levels stay on this browser and device.']
+ ];
+ const overlay=document.createElement('div');overlay.id='tutorialOverlay';overlay.className='tutorial-overlay';overlay.hidden=true;overlay.innerHTML='<section class="tutorial-dialog" role="dialog" aria-modal="true" aria-labelledby="tutorialTitle"><span id="tutorialCount" class="eyebrow"></span><h2 id="tutorialTitle"></h2><p id="tutorialText"></p><div class="tutorial-actions"><button id="tutorialSkip">Skip</button><button id="tutorialBack">Back</button><button id="tutorialNext">Next</button></div></section>';document.body.append(overlay);
+ let step=0;const render=()=>{$('tutorialCount').textContent='TUTORIAL · '+(step+1)+' / '+steps.length;$('tutorialTitle').textContent=steps[step][0];$('tutorialText').textContent=steps[step][1];$('tutorialBack').disabled=step===0;$('tutorialNext').textContent=step===steps.length-1?'Start playing':'Next';};
+ const show=()=>{step=0;render();overlay.hidden=false;$('tutorialNext').focus();};
+ const finish=()=>{overlay.hidden=true;try{localStorage.setItem('foam-forge-tutorial-seen','yes');}catch{}};
+ $('tutorialBack').onclick=()=>{if(step>0){step--;render();}};$('tutorialNext').onclick=()=>{if(step<steps.length-1){step++;render();}else finish();};$('tutorialSkip').onclick=finish;$('replayTutorial').onclick=()=>{$('settingsPanel').hidden=true;$('settingsButton').setAttribute('aria-expanded','false');show();};
+ let seen=false;try{seen=localStorage.getItem('foam-forge-tutorial-seen')==='yes';}catch{}if(!seen)show();
 }
 function loadProgress(){
  try{
