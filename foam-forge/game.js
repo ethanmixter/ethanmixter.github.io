@@ -30,7 +30,7 @@ function toast(t){$('toast').textContent=t;toastUntil=clock+3;$('toast').style.o
 function specialKind(){if((brand==='Nerf'&&equipped===6)||(brand==='X-Shot'&&equipped===6))return 'laser';if((brand==='Nerf'&&equipped===5)||(brand==='X-Shot'&&equipped===5))return 'thunder';if(brand==='Nerf'&&equipped===2)return 'ricochet';if(brand==='X-Shot'&&equipped===4)return 'hawkeye';if(brand==='X-Shot'&&equipped===2)return 'mega';if(brand==='X-Shot'&&equipped===1)return 'manic';return 'standard';}
 function specialInfo(){const kind=specialKind(),remaining=Math.max(0,laserUntil-clock);if(kind==='laser')return ['VOLT LASER',remaining?remaining.toFixed(1)+'s active · one-hit shots':(10-abilityShots%10)+' shots until 5-second laser'];if(kind==='thunder')return ['THUNDER STRIKE',(7-abilityShots%7)+' shots until all exposed targets are struck'];if(kind==='ricochet')return ['RICOCHET','35% chance for a hit to bounce to another target'];if(kind==='hawkeye')return ['HAWKEYE','Equipped barrel performs one tier higher'];if(kind==='mega')return ['MEGA CAPACITY','72 base darts plus capacity upgrades'];if(kind==='manic')return ['MANIC CAPACITY','20 base darts plus capacity upgrades'];return ['STANDARD BLASTER','No unique ability equipped'];}
 function visibleTargets(){return targets.filter(t=>mode!=='quest'||(t.exposure>.4&&t.y<t.coverY));}
-function triggerSpecialShot(){const kind=specialKind();if(kind!=='laser'&&kind!=='thunder')return;abilityShots++;if(kind==='laser'&&abilityShots%10===0){laserUntil=clock+5;toast('VOLT LASER ACTIVE · one-hit shots for 5 seconds!');}if(kind==='thunder'&&abilityShots%7===0){const struck=visibleTargets().slice();specialFx.push({type:'thunder',points:struck.map(t=>({x:t.x,y:t.y})),until:clock+.55});toast('THUNDER STRIKE · '+struck.length+' exposed target'+(struck.length===1?'':'s')+' hit!');for(const target of struck){if(!active)break;if(targets.includes(target))damageBot(target,damage(),true);}}}
+function triggerSpecialShot(){const kind=specialKind();if(kind!=='laser'&&kind!=='thunder')return;abilityShots++;if(kind==='laser'&&abilityShots%10===0){laserUntil=clock+5;toast('VOLT LASER ACTIVE · one-hit shots for 5 seconds!');}if(kind==='thunder'&&abilityShots%7===0){const struck=visibleTargets().slice();playThunder();specialFx.push({type:'thunder',points:struck.map(t=>({x:t.x,y:t.y})),until:clock+.55});toast('THUNDER STRIKE · '+struck.length+' exposed target'+(struck.length===1?'':'s')+' hit!');for(const target of struck){if(!active)break;if(targets.includes(target))damageBot(target,damage(),true);}}}
 function ricochetFrom(target){if(specialKind()!=='ricochet'||Math.random()>=.35||!active)return;const next=visibleTargets().find(t=>t!==target&&Math.hypot(t.x-target.x,t.y-target.y)>.04);if(!next)return;specialFx.push({type:'ricochet',from:{x:target.x,y:target.y},points:[{x:next.x,y:next.y}],until:clock+.3});toast('RICOCHET! Another target was hit.');damageBot(next,damage(),true);}
 function drawAbilityHUD(){
  specialFx=specialFx.filter(f=>f.until>clock);
@@ -273,6 +273,16 @@ function soundPop(){
  gain.gain.setValueAtTime(.001,now);gain.gain.exponentialRampToValueAtTime(.16,now+.004);gain.gain.exponentialRampToValueAtTime(.001,now+.085);
  osc.connect(gain);gain.connect(shotAudio.destination);osc.start(now);osc.stop(now+.09);
  osc.onended=()=>{osc.disconnect();gain.disconnect();};
+}
+function playThunder(){
+ try{
+  if(!music?.enabled||!music.context||music.context.state!=='running')return;
+  const c=music.context,now=c.currentTime,duration=1.45,buffer=c.createBuffer(1,Math.floor(c.sampleRate*duration),c.sampleRate),data=buffer.getChannelData(0);
+  for(let i=0;i<data.length;i++){const t=i/data.length,envelope=Math.pow(1-t,2.2);data[i]=(Math.random()*2-1)*envelope*(.7+.3*Math.sin(i*.013));}
+  const noise=c.createBufferSource(),filter=c.createBiquadFilter(),gain=c.createGain();noise.buffer=buffer;filter.type='lowpass';filter.frequency.setValueAtTime(1200,now);filter.frequency.exponentialRampToValueAtTime(180,now+duration);gain.gain.setValueAtTime(.0001,now);gain.gain.exponentialRampToValueAtTime(.85,now+.018);gain.gain.exponentialRampToValueAtTime(.18,now+.22);gain.gain.exponentialRampToValueAtTime(.0001,now+duration);noise.connect(filter);filter.connect(gain);gain.connect(music.bus);noise.start(now);noise.stop(now+duration);
+  const rumble=c.createOscillator(),rumbleGain=c.createGain();rumble.type='sine';rumble.frequency.setValueAtTime(74,now);rumble.frequency.exponentialRampToValueAtTime(28,now+.7);rumbleGain.gain.setValueAtTime(.5,now);rumbleGain.gain.exponentialRampToValueAtTime(.0001,now+1.05);rumble.connect(rumbleGain);rumbleGain.connect(music.bus);rumble.start(now);rumble.stop(now+1.06);
+  noise.onended=()=>{noise.disconnect();filter.disconnect();gain.disconnect();};rumble.onended=()=>{rumble.disconnect();rumbleGain.disconnect();};
+ }catch{ /* Thunder audio must never interrupt gameplay. */ }
 }
 
 music={context:null,bus:null,timer:null,mode,step:0,next:0,enabled:true,voices:new Set()};
