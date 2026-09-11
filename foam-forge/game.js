@@ -286,6 +286,12 @@ function playThunder(){
   noise.onended=()=>{noise.disconnect();filter.disconnect();gain.disconnect();};rumble.onended=()=>{rumble.disconnect();rumbleGain.disconnect();};
  }catch{ /* Thunder audio must never interrupt gameplay. */ }
 }
+function playTurretShot(){
+ try{
+  if(!music?.enabled||!music.context||music.context.state!=='running')return;
+  const c=music.context,now=c.currentTime,osc=c.createOscillator(),gain=c.createGain();osc.type='square';osc.frequency.setValueAtTime(720,now);osc.frequency.exponentialRampToValueAtTime(170,now+.065);gain.gain.setValueAtTime(.0001,now);gain.gain.exponentialRampToValueAtTime(.12,now+.004);gain.gain.exponentialRampToValueAtTime(.0001,now+.075);osc.connect(gain);gain.connect(music.bus);osc.start(now);osc.stop(now+.08);osc.onended=()=>{osc.disconnect();gain.disconnect();};
+ }catch{ /* Turret audio must never interrupt gameplay. */ }
+}
 
 music={context:null,bus:null,timer:null,mode,step:0,next:0,enabled:true,voices:new Set()};
 try{music.enabled=localStorage.getItem('foam-forge-music')!=='off';}catch{}
@@ -390,7 +396,7 @@ function updateTurret(){
  if(turretReloadUntil){if(clock<turretReloadUntil)return;turretReloadUntil=0;turretAmmo=turretStats().capacity;}
  if(clock<turretNext)return;
  const target=targets.find(t=>(mode==='practice'||t.exposure>.65)&&t.hp>0);if(!target)return;
- turretNext=clock+.6;turretAmmo--;turretBeam={x:target.x,y:target.y,until:clock+.15};
+ turretNext=clock+.6;turretAmmo--;turretBeam={x:target.x,y:target.y,until:clock+.15};playTurretShot();
  damageBot(target,turretStats().damage);if(!turretAmmo)turretReloadUntil=clock+turretStats().reload;update();
 }
 function drawTurret(){
