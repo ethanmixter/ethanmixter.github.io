@@ -110,6 +110,7 @@ var music;
 const SAVE_KEY='foam-forge-progress-v1';
 loadProgress();
 installSaveButton();
+installAutosave();
 initMovement();
 initAccessories();
 for(const kind of Object.keys(attachments))$(kind+'Select').value=String(attachments[kind]);
@@ -177,6 +178,7 @@ function saveProgress(){
   return true;
  }catch{ $('saveStatus').textContent='Saving is unavailable in this browser. Keep this page open to retain your progress.';return false; }
 }
+function installAutosave(){setInterval(saveProgress,5000);document.addEventListener('visibilitychange',()=>{if(document.hidden)saveProgress();});window.addEventListener('pagehide',saveProgress);}
 function installSaveButton(){
  const button=document.createElement('button');button.id='saveGame';button.className='back';button.textContent='▣ Save game';button.setAttribute('aria-label','Save all game progress on this device');document.querySelector('.wallet').before(button);
  button.onclick=()=>{const saved=saveProgress();button.textContent=saved?'✓ Game saved':'Save unavailable';if(saved)toast('Game saved on this device.');setTimeout(()=>button.textContent='▣ Save game',1800);};
