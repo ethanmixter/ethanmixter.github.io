@@ -218,7 +218,7 @@ function loadProgress(){
   if(!data||![1,2,3,4].includes(data.version))return;
   const integer=(n,max)=>Number.isSafeInteger(n)&&n>=0&&n<=max;
   const validList=(list,max)=>[...new Set([0,...(Array.isArray(list)?list.filter(n=>integer(n,max)):[])])];
-  if(integer(data.coins,Number.MAX_SAFE_INTEGER))coins=data.version<4?0:data.coins;
+  if(integer(data.coins,Number.MAX_SAFE_INTEGER))coins=data.version<4&&data.coins===300000?0:data.coins;
   if(integer(data.questUnlocked,Number.MAX_SAFE_INTEGER)&&data.questUnlocked>=1)questUnlocked=data.questUnlocked;
   if(integer(data.questLevel,questUnlocked)&&data.questLevel>=1)questLevel=data.questLevel;
   if(Object.hasOwn(roster,data.brand))brand=data.brand;
