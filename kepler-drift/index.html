@@ -355,6 +355,11 @@ const B = [
   {id:'dyson', name:'Dyson Segment', desc:'A slice of shell around the star', cost:70000, mw:900, tur:3, dmg:6, hull:300, col:'#FFD08A'},
   {id:'gate', name:'Warp Trade Gate', desc:'Opens a lane to the core worlds', cost:450000, cr:650, use:320, tur:4, dmg:9, hull:420, col:'#B38CFF'},
   {id:'ring', name:'Ringworld Arc', desc:'Habitat arc with millions of customers', cost:5e6, cr:6000, use:2500, tur:5, dmg:14, hull:600, col:'#FFE9C7'},
+  {id:'antimatter', name:'Antimatter Plant', desc:'Bottled antimatter, handle with care', cost:2.5e7, mw:12000, tur:5, dmg:20, hull:800, col:'#FF6BD6'},
+  {id:'datacore', name:'Quantum Data Core', desc:'Sells predictions to the core worlds', cost:8e7, cr:40000, use:9000, tur:6, dmg:28, hull:1000, col:'#5CF2FF'},
+  {id:'forge', name:'Stellar Forge', desc:'Melts asteroids with focused starlight', cost:3e8, cr:180000, use:40000, tur:6, dmg:40, hull:1300, col:'#FF7A2E'},
+  {id:'singularity', name:'Singularity Tap', desc:'Pulls power from a tiny black hole', cost:1.2e9, mw:260000, tur:7, dmg:55, hull:1700, col:'#A98BFF'},
+  {id:'citadel', name:'Star Citadel', desc:'Fortress capital of your colony', cost:5e9, cr:1.2e6, use:200000, tur:8, dmg:80, hull:2400, col:'#FFD24A'},
 ];
 const T = [
   {id:'t1', name:'Diamond Drill Bits', desc:'Asteroid Drills produce x2', cost:200, need:['drill',5], eff:{drill:2}},
@@ -399,7 +404,7 @@ document.querySelectorAll('svg-coin,svg-bolt,svg-dust,svg-shield,svg-skull,svg-b
 const IMG = {};
 function sprite(n){ let i=IMG[n]; if(!i){ i=new Image(); i.src='sprites/'+n+'.webp'; IMG[n]=i; } return i; }
 const ready = i => i && i.complete && i.naturalWidth>0;
-['solar','drill','refinery','fusion','yard','dyson','gate','ring','drill_orbit','refinery_orbit','fusion_orbit','yard_orbit','gate_orbit','ring_orbit','pirate','ship_raider','ship_corsair','ship_boss','cannon_base','cannon_gun1','cannon_gun2','cannon_gun3','cannon_gun4','cannon_gun5'].forEach(sprite);
+['solar','drill','refinery','fusion','yard','dyson','gate','ring','antimatter','datacore','forge','singularity','citadel','antimatter_orbit','datacore_orbit','forge_orbit','singularity_orbit','citadel_orbit','drill_orbit','refinery_orbit','fusion_orbit','yard_orbit','gate_orbit','ring_orbit','pirate','ship_raider','ship_corsair','ship_boss','cannon_base','cannon_gun1','cannon_gun2','cannon_gun3','cannon_gun4','cannon_gun5'].forEach(sprite);
 let S = fresh();
 try{ const raw = localStorage.getItem('kepler-drift'); if(raw) S = Object.assign(fresh(), JSON.parse(raw)); }catch(e){}
 if(!PLANET_TYPES[S.planet]) S.planet=newPlanet();
@@ -603,7 +608,9 @@ const orbitDef = {
   solar:{r:1.7,s:.42,sz:.5,tilt:.18,flat:.34,c:'98,210,255'}, refinery:{r:2.1,s:.3,sz:.5,tilt:-.22,flat:.3,c:'255,162,74'},
   fusion:{r:2.5,s:.23,sz:.52,tilt:.32,flat:.4,c:'201,243,255'}, yard:{r:2.9,s:.17,sz:.62,tilt:-.1,flat:.36,c:'255,208,138'},
   drill:{r:3.3,s:.11,sz:.5,tilt:.04,flat:.42,c:'170,180,200'}, gate:{r:3.75,s:.075,sz:.7,tilt:-.28,flat:.33,c:'179,140,255'},
-  ring:{r:4.2,s:.045,sz:.85,tilt:.12,flat:.28,c:'255,233,199'}};
+  ring:{r:4.2,s:.045,sz:.85,tilt:.12,flat:.28,c:'255,233,199'},
+  antimatter:{r:1.95,s:.36,sz:.5,tilt:.45,flat:.32,c:'255,107,214'}, datacore:{r:2.7,s:.2,sz:.5,tilt:-.42,flat:.36,c:'92,242,255'},
+  forge:{r:3.55,s:.1,sz:.6,tilt:.36,flat:.3,c:'255,122,46'}, singularity:{r:4.55,s:.035,sz:.8,tilt:-.16,flat:.3,c:'169,139,255'}, citadel:{r:4.9,s:.028,sz:.85,tilt:.22,flat:.27,c:'255,210,74'}};
 function orbitPos(d,R,a){ const lx=Math.cos(a)*R, ly=Math.sin(a)*R*d.flat, ct=Math.cos(d.tilt), st=Math.sin(d.tilt);
   return {x:planet.x+lx*ct-ly*st, y:planet.y+lx*st+ly*ct}; }
 function drawStars(t, speed){
@@ -843,6 +850,7 @@ function startCombat(bid){
   for(let k=0;k<nr;k++){ q.push('raider'); if(k%3===2 && q.filter(x=>x==='corsair').length<nc) q.push('corsair'); }
   while(q.filter(x=>x==='corsair').length<nc) q.push('corsair');
   if(i>=4) q.push('boss');
+  if(i>=10) q.push('boss');   // the biggest stations draw two dreadnoughts
   const hull=b.hull*mult('hull');
   C={b, hull, max:hull, dmg:b.dmg*mult('dmg'), armor:Math.sqrt(mult('dmg')*mult('rof')), tur:b.tur, rate:(2+b.tur*1.6)*mult('rof'), sysM,
      ships:[], shots:[], bolts:[], parts:[], rings:[], queue:q, total:q.length, spawnT:1.2,
@@ -1294,7 +1302,7 @@ const G = {ok:false};
 
   // station models from Blender
   const loader=new THREE.GLTFLoader(), templates={};
-  const SIZE={solar:1.35,refinery:0.95,fusion:1.05,yard:1.2,drill:1.0,gate:1.35,ring:2.1,pirate_ship:0.9};
+  const SIZE={solar:1.35,refinery:0.95,fusion:1.05,yard:1.2,drill:1.0,gate:1.35,ring:2.1,antimatter:1.3,datacore:1.15,forge:1.45,singularity:1.9,citadel:1.9,pirate_ship:0.9};
   const TURN={gate:-Math.PI/2, pirate_ship:-Math.PI/2};   // models whose nose points along Blender +Y
   const fixMat=(m)=>{ const n=(m.name||'');
     if(/Rock/.test(n)){ m.color.set('#5b4a3f'); m.roughness=.95; m.metalness=0; }
@@ -1326,7 +1334,7 @@ const G = {ok:false};
   }));
 
   // orbits: each station type has its own inclined plane
-  const ORB={solar:[1.8,.42,.18,0.3], refinery:[2.2,.3,-.22,1.7], fusion:[2.6,.23,.32,3.1], yard:[3.0,.17,-.12,4.4], drill:[3.4,.11,.06,5.5], gate:[3.85,.075,-.28,2.2], ring:[4.3,.045,.14,0.9]};
+  const ORB={solar:[1.8,.42,.18,0.3], refinery:[2.2,.3,-.22,1.7], fusion:[2.6,.23,.32,3.1], yard:[3.0,.17,-.12,4.4], drill:[3.4,.11,.06,5.5], gate:[3.85,.075,-.28,2.2], ring:[4.3,.045,.14,0.9], antimatter:[2.0,.36,.75,2.6], datacore:[2.8,.2,-.7,0.4], forge:[3.6,.1,.62,3.9], singularity:[4.6,.035,-.2,5.0], citadel:[4.95,.028,.3,1.9]};
   const orbitBasis=(inc,node)=>{ const e1=V(Math.cos(node),0,Math.sin(node)), n=V(0,1,0).applyAxisAngle(e1,inc), e2=V(0,0,0).crossVectors(n,e1); return {e1,e2,n}; };
   const pools={}, orbitLines={};
   for(const id in ORB){ const [rm,,inc,node]=ORB[id], b=orbitBasis(inc,node), pts=[];
