@@ -90,6 +90,8 @@ body.combat .views{display:none}
 .btn:hover:not([disabled]){border-color:var(--ion)}
 .btn[disabled]{opacity:.4;cursor:not-allowed}
 .btn.warp{border-color:var(--ion-dim);color:var(--ion)}
+.wipe-warn{margin:0;font-size:11.5px;line-height:1.4;color:#FF8FA3;border:1px solid rgba(255,92,122,.35);background:rgba(255,92,122,.08);border-radius:4px;padding:7px 9px}
+.wipe-warn b{color:var(--bad)}
 .btn.danger{border-color:#7a2a3a;color:var(--bad)}
 .small{font-size:12px;color:var(--muted)}
 .log{padding:10px 14px;font-family:var(--mono);font-size:11.5px;color:var(--muted);display:grid;gap:4px}
@@ -201,14 +203,14 @@ button{touch-action:manipulation}
   .item{padding:9px 12px;grid-template-columns:44px 1fr auto;gap:0 10px} .item .ico{width:44px;height:44px}
   .item.tech{grid-template-columns:1fr auto}
   .foot{padding:8px 12px;gap:6px;grid-template-columns:1fr auto;align-items:center}
-  .foot .btn{padding:8px 10px;font-size:12px} #warpInfo{grid-column:1/-1;font-size:11px}
+  .foot .btn{padding:8px 10px;font-size:12px} #warpInfo{grid-column:1/-1;font-size:11px} .wipe-warn{grid-column:1/-1}
   .raid{left:8px;right:8px;top:8px;padding:8px 10px} .raid span{font-size:12px}
   .toast{top:auto;bottom:12px;font-size:12px}
 }
 @media (max-width:900px) and (orientation:landscape) and (max-height:560px){
   .app{grid-template-columns:minmax(0,1fr) 300px;grid-template-rows:auto minmax(0,1fr)}
   .left{grid-column:1/-1} .stage{grid-row:2} .right{grid-row:2}
-  .foot{grid-template-columns:1fr 1fr;padding:6px 8px} #warpInfo{display:none}
+  .foot{grid-template-columns:1fr 1fr;padding:6px 8px} #warpInfo{display:none} .wipe-warn{grid-column:1/-1;font-size:10.5px;padding:4px 7px}
   .chint{display:none} .hud .hguns{display:none}
 }
 @media (max-width:700px){
@@ -324,7 +326,8 @@ button{touch-action:manipulation}
       <button class="btn warp" id="warpBtn" disabled>Jump to new system</button>
       <span class="small" id="warpInfo">Earn 1M lifetime credits to unlock the jump. You keep Stardust, which boosts all output.</span>
       <button class="btn" id="acctBtn">Account & saves</button>
-      <button class="btn" id="resetBtn">Wipe save</button>
+      <button class="btn" id="resetBtn" aria-describedby="wipeWarn">Wipe save</button>
+      <p class="wipe-warn" id="wipeWarn"><b>Warning:</b> Wipe save deletes your whole colony: credits, stations, research and Stardust. It can’t be undone. Copy a save code first if you might want it back.</p>
     </div>
   </aside>
 </div>
@@ -508,14 +511,14 @@ const warpGain = () => Math.floor(Math.sqrt(S.runLife/1e6)*1.5);
 $('warpBtn').onclick=()=>{
   const btn=$('warpBtn');
   if(btn.dataset.armed!=='1'){ btn.dataset.armed='1'; btn.textContent=`Confirm jump (+${warpGain()} Stardust)`; setTimeout(()=>{btn.dataset.armed='';updStats()},4000); return; }
-  const g=warpGain(); S.dust+=g; S.sys+=1; S.cr=0; S.runLife=0; S.own={}; S.tech={}; S.planet=newPlanet(S.planet); sprite('planet_'+S.planet);
+  const g=warpGain(); S.dust+=g; S.sys+=1; S.cr=Math.ceil(S.cr/2); S.runLife=0; const kept={}; for(const k in S.own){ if(S.own[k]>0) kept[k]=Math.ceil(S.own[k]/2); } S.own=kept; S.tech={}; S.planet=newPlanet(S.planet); sprite('planet_'+S.planet);
   btn.dataset.armed=''; raid=null; $('raid').hidden=true; raidT=90;
-  logMsg(`Jumped to <b>KD-${S.sys}</b>, a ${PLANET_TYPES[S.planet].name.toLowerCase()}, with ${g} Stardust`); toast(`Welcome to KD-${S.sys}. Output +${Math.round(S.dust*10)}% from Stardust. Pirates here are tougher.`);
+  logMsg(`Jumped to <b>KD-${S.sys}</b>, a ${PLANET_TYPES[S.planet].name.toLowerCase()}, with ${g} Stardust`); toast(`Welcome to KD-${S.sys}. You kept half your credits and stations. Output +${Math.round(S.dust*10)}% from Stardust. Pirates here are tougher.`);
   initScene(); renderShop(true); save();
 };
 $('resetBtn').onclick=()=>{
   const btn=$('resetBtn');
-  if(btn.dataset.armed!=='1'){ btn.dataset.armed='1'; btn.textContent='Tap again to erase everything'; setTimeout(()=>{btn.dataset.armed='';btn.textContent='Wipe save'},4000); return; }
+  if(btn.dataset.armed!=='1'){ btn.dataset.armed='1'; btn.textContent='Tap again to delete everything'; setTimeout(()=>{btn.dataset.armed='';btn.textContent='Wipe save'},4000); return; }
   const oldP=S.planet; S=fresh(); S.planet=newPlanet(oldP); sprite('planet_'+S.planet); btn.dataset.armed=''; btn.textContent='Wipe save'; raid=null; $('raid').hidden=true; raidT=90; save(); initScene(); renderShop(true); toast(`Save wiped. New colony on a ${PLANET_TYPES[S.planet].name.toLowerCase()}.`);
 };
 
@@ -540,7 +543,7 @@ function updStats(){
   const need=warpNeed(), btn=$('warpBtn');
   btn.disabled = S.runLife<need;
   if(btn.dataset.armed!=='1') btn.textContent = S.runLife>=need ? `Jump to new system (+${warpGain()} Stardust)` : 'Jump to new system';
-  $('warpInfo').textContent = S.runLife>=need ? 'Resets buildings and research. Stardust stays and boosts everything by 10% each.'
+  $('warpInfo').textContent = S.runLife>=need ? 'Keeps half your credits and half of each station (rounded up). Research resets. Stardust boosts everything by 10% each.'
     : `Earn ${fmt(need)} Cr in this system to unlock the jump (${Math.floor(S.runLife/need*100)}%).`;
 }
 
