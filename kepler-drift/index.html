@@ -3,11 +3,17 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="description" content="Kepler Drift: Earth fell to space pirates. Brian Wilson escaped in a ship he built in his garage. Build a colony at the edge of the map and defend it in 3D turret battles.">
+<meta property="og:title" content="Kepler Drift">
+<meta property="og:description" content="A space colony tycoon with an animated story, a 3D planet view and 3D turret battles.">
+<meta name="theme-color" content="#06080E">
+<meta name="apple-mobile-web-app-capable" content="yes">
 <title>Kepler Drift Tycoon</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@500;700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
 <meta charset="utf-8">
 <style>
+body{margin:0}
 [hidden]{display:none!important}
 :root{
   color-scheme: dark;
@@ -823,9 +829,9 @@ function drawOrbiters(t,front){
 
 // ---------- Combat
 const SHIP={
-  raider:{name:'Raider', img:'ship_raider', px:3.0, r:7, hp:3, v:75, bolt:.07, fire:[1.8,3.0], c:'#FF3D7F'},
-  corsair:{name:'Corsair', img:'ship_corsair', px:2.9, r:12, hp:9, v:48, bolt:.11, fire:[1.4,2.4], c:'#FF8A3D'},
-  boss:{name:'Dreadnought', img:'ship_boss', px:2.7, r:26, hp:40, v:24, bolt:.16, fire:[0.9,1.5], c:'#C04BFF'},
+  raider:{name:'Raider', img:'ship_raider', px:3.0, r:7, hp:7, v:75, bolt:.07, fire:[1.8,3.0], c:'#FF3D7F'},
+  corsair:{name:'Corsair', img:'ship_corsair', px:2.9, r:12, hp:22, v:48, bolt:.11, fire:[1.4,2.4], c:'#FF8A3D'},
+  boss:{name:'Dreadnought', img:'ship_boss', px:2.7, r:26, hp:100, v:24, bolt:.16, fire:[0.9,1.5], c:'#C04BFF'},
 };
 let C=null;
 function startCombat(bid){
@@ -838,7 +844,7 @@ function startCombat(bid){
   while(q.filter(x=>x==='corsair').length<nc) q.push('corsair');
   if(i>=4) q.push('boss');
   const hull=b.hull*mult('hull');
-  C={b, hull, max:hull, dmg:b.dmg*mult('dmg'), tur:b.tur, rate:(2+b.tur*1.6)*mult('rof'), sysM,
+  C={b, hull, max:hull, dmg:b.dmg*mult('dmg'), armor:Math.sqrt(mult('dmg')*mult('rof')), tur:b.tur, rate:(2+b.tur*1.6)*mult('rof'), sysM,
      ships:[], shots:[], bolts:[], parts:[], rings:[], queue:q, total:q.length, spawnT:1.2,
      aim:null, firing:false, cd:0, barrel:0, shake:0, over:false, time:0, flash:0};
   document.body.classList.add('combat');
@@ -905,7 +911,7 @@ function barrelTip(k,nb){
 
 function spawnShip(type){
   const d=SHIP[type];
-  const hp=d.hp*C.b.dmg*C.sysM; // scaled to this station's base gun
+  const hp=d.hp*C.b.dmg*C.sysM*C.armor; // scaled to this station's base gun
   C.ships.push({type, xn:rand(-.85,.85), yn:rand(-.7,.35), z:470, hold:type==='boss'?150:rand(85,150),
     hp, max:hp, ph:rand(0,6.28), amp:rand(.15,.35), cd:rand(...d.fire)+1, flash:0, bank:0});
 }
@@ -1596,7 +1602,7 @@ G.combat3d=null;
     const side=Math.random()<.5?-1:1;
     const home= type==='boss'?V(0,30,-215): type==='corsair'?V(rnd(-65,65),rnd(4,34),rnd(-120,-155)):V(rnd(-70,70),rnd(0,40),rnd(-80,-120));
     const entry=home.clone().add(V(side*rnd(20,110),rnd(-10,30),type==='boss'?-320:-240));
-    const hp=SHIP[type].hp*C.b.dmg*C.sysM;
+    const hp=SHIP[type].hp*C.b.dmg*C.sysM*C.armor;
     const s={type,st,g,mats,eng,p:entry.clone(),v:home.clone().sub(entry).normalize().multiplyScalar(st.vmax*1.4),home,ph:rnd(0,6.28),hp,max:hp,t:0,
       mode:'warp',warp:0,cd:rnd(...SHIP[type].fire)+1.4,flash:0,bank:0,runT:rnd(4,8),smokeT:0,dead:false,salvo:0,pendingM:0,mT:0};
     g.position.copy(entry); g.scale.set(1,1,6); scene.add(g); C.ships.push(s);
@@ -2376,3 +2382,5 @@ window.addEventListener('pagehide',save);
 Account.wire();
 })();
 </script>
+
+</html>
