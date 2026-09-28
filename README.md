@@ -16,3 +16,12 @@ promotion, or match-ending king capture). Reload to start over. Internet access
 is required for the Three.js, Tailwind CSS, and Font Awesome CDN assets.
 
 The game is a static page at `fps-chess/index.html`, ready for GitHub Pages.
+
+## Kepler Drift
+
+A space colony tycoon at `kepler-drift/index.html`. It opens with an animated story
+(Earth falls to pirates and Brian Wilson escapes in his homemade ship), then you mine,
+build stations, balance power and fight pirate raids from a 3D turret. Serve it over
+HTTP (GitHub Pages or `python3 -m http.server`); opening the file directly won't load
+the 3D models. Internet access is required for the Three.js CDN and Google Fonts.
+The models and art were made in Blender; `models/`, `tex/` and `sprites/` hold the exports.
