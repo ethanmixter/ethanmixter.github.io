@@ -6,6 +6,8 @@
 <meta name="description" content="Kepler Drift: Earth fell to space pirates. Brian Wilson escaped in a ship he built in his garage. Build a colony at the edge of the map and defend it in 3D turret battles.">
 <meta property="og:title" content="Kepler Drift">
 <meta property="og:description" content="A space colony tycoon with an animated story, a 3D planet view and 3D turret battles.">
+<meta name="theme-color" content="#06080E">
+<meta name="apple-mobile-web-app-capable" content="yes">
 <title>Kepler Drift Tycoon</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@500;700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
@@ -125,6 +127,7 @@ body.combat .hint{display:none}
 /* story intro */
 .intro{position:fixed;inset:0;z-index:300;background:#000;overflow:hidden}
 .intro canvas{position:absolute;inset:0;width:100%;height:100%;cursor:default}
+@media (orientation:portrait){ .intro .lb{height:6vh!important} .intro .icap{bottom:calc(6vh + 5vh)!important} .intro .iskip{top:calc(6vh + 10px)!important} }
 .intro .lb{position:absolute;left:0;right:0;height:10.5vh;background:#000;z-index:2;pointer-events:none}
 .intro .lb.top{top:0} .intro .lb.bot{bottom:0}
 .intro .ifade{position:absolute;inset:0;background:#000;z-index:3;pointer-events:none}
@@ -158,14 +161,45 @@ body.combat .hint{display:none}
 .home .howto p{margin:0;color:var(--muted)} .home .howto b{color:var(--text);font-weight:600}
 .home .ver{position:absolute;right:16px;bottom:calc(env(safe-area-inset-bottom,0px) + 12px);font-family:var(--mono);font-size:11px;color:#4A5570}
 @media (max-width:700px){ .home .shade{background:linear-gradient(0deg,rgba(3,5,10,.95) 30%,rgba(3,5,10,.35) 70%,rgba(3,5,10,.1))} .home .menu{justify-content:flex-end;padding-block:24px 48px} }
+button{touch-action:manipulation}
 @media (max-width:900px){
-  html,body{height:auto}
-  .app{grid-template-columns:1fr;height:auto;padding-inline:16px}
-  .stage{height:62vw;min-height:300px}
-  .left .scroll,.right .scroll{max-height:none;overflow:visible}
-  .left .stats{display:grid;grid-template-columns:1fr 1fr}
+  html,body{height:100%;overflow:hidden}
+  .app{grid-template-columns:minmax(0,1fr);grid-template-rows:auto minmax(0,1fr) minmax(0,40%);height:100%;gap:8px;
+    padding:8px max(8px,env(safe-area-inset-right,0px)) max(8px,env(safe-area-inset-bottom,0px)) max(8px,env(safe-area-inset-left,0px))}
+  .left,.right,.stage{min-width:0}
+  .left{flex-direction:row;min-height:0}
+  .left .brand{display:none}
+  .left .scroll{overflow-x:auto;overflow-y:hidden;scrollbar-width:none}
+  .left .scroll::-webkit-scrollbar{display:none}
+  .left .stats{display:flex}
+  .stat{padding:7px 12px;border-bottom:0;border-right:1px solid var(--line);flex:none;gap:1px}
+  .stat .k{font-size:10px} .stat .v{font-size:17px} .stat .v svg{width:17px;height:17px} .stat .s{font-size:10.5px}
+  .stat .meter{width:120px;margin-top:3px}
   .log{display:none}
+  .stage{min-height:0}
+  .hint{display:none}
+  .views{right:8px;bottom:8px} .views button{padding:7px 10px}
+  .tabs button{padding:9px 0}
+  .item{padding:9px 12px;grid-template-columns:44px 1fr auto;gap:0 10px} .item .ico{width:44px;height:44px}
+  .item.tech{grid-template-columns:1fr auto}
+  .foot{padding:8px 12px;gap:6px;grid-template-columns:1fr auto;align-items:center}
+  .foot .btn{padding:8px 10px;font-size:12px} #warpInfo{grid-column:1/-1;font-size:11px}
+  .raid{left:8px;right:8px;top:8px;padding:8px 10px} .raid span{font-size:12px}
+  .toast{top:auto;bottom:12px;font-size:12px}
 }
+@media (max-width:900px) and (orientation:landscape) and (max-height:560px){
+  .app{grid-template-columns:minmax(0,1fr) 300px;grid-template-rows:auto minmax(0,1fr)}
+  .left{grid-column:1/-1} .stage{grid-row:2} .right{grid-row:2}
+  .foot{grid-template-columns:1fr 1fr;padding:6px 8px} #warpInfo{display:none}
+  .chint{display:none} .hud .hguns{display:none}
+}
+@media (max-width:700px){
+  .hud{gap:6px 12px;padding:calc(env(safe-area-inset-top,0px) + 8px) 10px 8px}
+  .hud .who b{font-size:15px} .hud .hguns{display:none} .hullbox{min-width:120px}
+  .hud .btn{padding:6px 9px;font-size:11px}
+  .chint{display:none}
+}
+@media (pointer:coarse){ .home .big kbd,.hud .btn kbd{display:none} }
 @media (prefers-reduced-motion:reduce){ .meter i,.toast,.hull i{transition:none} }
 </style>
 
@@ -233,7 +267,7 @@ body.combat .hint{display:none}
       <div class="who"><span class="k">Defending</span><b id="hudName">Solar Array</b></div>
       <div class="hullbox"><span class="k">Hull</span> <span class="num" id="hullTxt"></span><div class="hull" id="hull"><i id="hullFill"></i></div></div>
       <div><span class="k">Pirates left</span><div class="num" id="foesTxt"></div></div>
-      <div><span class="k">Guns</span><div class="num" id="gunsTxt"></div></div>
+      <div class="hguns"><span class="k">Guns</span><div class="num" id="gunsTxt"></div></div>
       <button class="btn od" id="odBtn" disabled>Overdrive <kbd>Q</kbd></button>
       <button class="btn" id="sndBtn">Sound on</button>
       <button class="btn danger" id="retreat">Abandon station</button>
@@ -328,6 +362,9 @@ sprite('planet_'+S.planet);
 const save = () => { S.t = Date.now(); try{ localStorage.setItem('kepler-drift', JSON.stringify(S)); }catch(e){} };
 
 const $ = id => document.getElementById(id);
+const TOUCH = window.matchMedia && matchMedia('(pointer:coarse)').matches;
+// keep the horizontal field of view when the screen is narrower than the shot was framed for
+function adaptFov(base, aspect, ref=16/9, cap=100){ if(aspect>=ref) return base; const h=2*Math.atan(Math.tan(base*Math.PI/360)*ref/aspect)*180/Math.PI; return Math.min(cap,h); }
 const own = id => S.own[id]||0;
 const price = b => Math.ceil(b.cost * Math.pow(1.15, own(b.id)));
 const mult = id => T.reduce((m,t)=> S.tech[t.id] && t.eff[id] ? m*t.eff[id] : m, 1);
@@ -1042,10 +1079,11 @@ function combatDraw(t){
 
 // ---------- Input
 function localPt(ev){ const r=cv.getBoundingClientRect(); return {x:ev.clientX-r.left, y:ev.clientY-r.top}; }
-cv.addEventListener('pointermove',ev=>{ if(C) C.aim=localPt(ev); });
+const aimAt=ev=>{ const p=localPt(ev); if(ev.pointerType==='touch') p.y=Math.max(0,p.y-72); return p; };
+cv.addEventListener('pointermove',ev=>{ if(C) C.aim=aimAt(ev); });
 cv.addEventListener('pointerdown',ev=>{
   const {x:mx,y:my}=localPt(ev);
-  if(C){ if(C.over) return; C.aim={x:mx,y:my}; C.firing=true; try{cv.setPointerCapture(ev.pointerId)}catch(e){} ev.preventDefault(); return; }
+  if(C){ if(C.over) return; C.aim=aimAt(ev); C.firing=true; try{cv.setPointerCapture(ev.pointerId)}catch(e){} ev.preventDefault(); return; }
   if(comet && Math.hypot(mx-comet.x,my-comet.y)<40){
     const e=econ(); const v=Math.max(50, e.crs*30)*(S.tech.t7?3:1);
     earn(v); floaters.push({x:mx,y:my,txt:'+'+fmt(v)+' Cr',c:'#C9F3FF',life:90});
@@ -1131,7 +1169,7 @@ const G = {ok:false};
   if(!window.THREE || !THREE.GLTFLoader || !THREE.OrbitControls) return;
   const glc=$('gl'); let renderer;
   try{ renderer=new THREE.WebGLRenderer({canvas:glc, antialias:true}); }catch(e){ return; }
-  renderer.setPixelRatio(Math.min(2,window.devicePixelRatio||1));
+  renderer.setPixelRatio(Math.min(TOUCH?1.5:2,window.devicePixelRatio||1));
   renderer.outputEncoding=THREE.sRGBEncoding;
   renderer.toneMapping=THREE.ACESFilmicToneMapping; renderer.toneMappingExposure=1.1;
   renderer.shadowMap.enabled=true; renderer.shadowMap.type=THREE.PCFSoftShadowMap;
@@ -1155,7 +1193,7 @@ const G = {ok:false};
   scene.add(new THREE.AmbientLight(0x2a3550,0.55));
   scene.add(new THREE.HemisphereLight(0x3a4a70,0x0a0608,0.25));
   const key=new THREE.DirectionalLight(0xfff1dc,2.6); key.position.copy(SUN).setLength(60); key.target.position.set(0,0,0);
-  key.castShadow=true; key.shadow.mapSize.set(2048,2048); Object.assign(key.shadow.camera,{left:-18,right:18,top:18,bottom:-18,near:20,far:110});
+  key.castShadow=true; key.shadow.mapSize.set(TOUCH?1024:2048,TOUCH?1024:2048); Object.assign(key.shadow.camera,{left:-18,right:18,top:18,bottom:-18,near:20,far:110});
   key.shadow.bias=-0.0005; key.shadow.normalBias=0.02; scene.add(key,key.target);
 
   // stars
@@ -1293,7 +1331,7 @@ const G = {ok:false};
     if(planetMesh && ray.intersectObject(planetMesh).length){ const v=clickValue(econ()); earn(v); G.pulse=1;
       floaters.push({x:mx+(Math.random()*20-10),y:my,txt:'+'+fmt(v),c:'#FFA24A',life:60}); } });
 
-  new ResizeObserver(()=>{ const r=glc.getBoundingClientRect(); if(!r.width) return; renderer.setSize(r.width,r.height,false); camera.aspect=r.width/r.height; camera.updateProjectionMatrix(); }).observe(glc);
+  new ResizeObserver(()=>{ const r=glc.getBoundingClientRect(); if(!r.width) return; renderer.setSize(r.width,r.height,false); camera.aspect=r.width/r.height; camera.fov=adaptFov(45,camera.aspect,1.3,80); camera.updateProjectionMatrix(); }).observe(glc);
 
   G.pulse=0;
   G.render=(t)=>{
@@ -1570,7 +1608,7 @@ G.combat3d=null;
       if(C.od>0) C.od-=realDt;
       // camera aim
       const cw=R.domElement.clientWidth||W, ch=R.domElement.clientHeight||H; cam.aspect=cw/ch;
-      const fovT=C.od>0?69:C.slow>0?56:62; cam.fov+=(fovT-cam.fov)*Math.min(1,realDt*5); cam.updateProjectionMatrix();
+      const fovT=adaptFov(C.od>0?69:C.slow>0?56:62,cam.aspect,1.5,98); cam.fov+=(fovT-cam.fov)*Math.min(1,realDt*5); cam.updateProjectionMatrix();
       FX.mat.uniforms.scale.value=SMOKE.mat.uniforms.scale.value=R.domElement.height/(2*Math.tan(cam.fov*Math.PI/360));
       const sh=C.shake*.5; cam.position.set(rnd(-sh,sh),.25+rnd(-sh,sh),rnd(-sh,sh)*.4); C.shake=Math.max(0,C.shake-realDt*1.8);
       ndc.set(C.aim.x/W*2-1, -(C.aim.y/H)*2+1); ray.setFromCamera(ndc,cam);
@@ -1712,7 +1750,7 @@ G.combat3d=null;
     { const w=Math.min(300,W*.5), x=W/2-w/2, y=H-(W<700?92:70); ctx.fillStyle='rgba(8,12,22,.7)'; ctx.fillRect(x-2,y-2,w+4,12);
       const full=C.odMeter>=1&&C.od<=0; ctx.fillStyle=C.od>0?'#FFC46B':full?((Math.floor(t/200)%2)?'#FFC46B':'#FFE7B0'):'#8A6A3A'; ctx.fillRect(x,y,w*(C.od>0?C.od/6:C.odMeter),8);
       ctx.font='600 11px "IBM Plex Mono", monospace'; ctx.textAlign='center'; ctx.fillStyle=full||C.od>0?'#FFC46B':'#7D8BA8';
-      ctx.fillText(C.od>0?'OVERDRIVE ACTIVE':full?'OVERDRIVE READY · PRESS Q':'OVERDRIVE · CHARGE WITH KILLS',W/2,y-7); }
+      ctx.fillText(C.od>0?'OVERDRIVE ACTIVE':full?(TOUCH?'OVERDRIVE READY · TAP THE BUTTON':'OVERDRIVE READY · PRESS Q'):'OVERDRIVE · CHARGE WITH KILLS',W/2,y-7); }
     // banner
     if(C.banner){ const b=C.banner, u=1-b.life/b.max, a=Math.min(1,u*6,b.life*2.5), y=Math.max(120,H*.2);
       ctx.globalAlpha=a; if(b.danger){ ctx.fillStyle='rgba(60,8,18,.75)'; ctx.fillRect(0,y-44,W,78); ctx.save(); ctx.beginPath(); ctx.rect(0,y-44,W,6); ctx.rect(0,y+28,W,6); ctx.clip();
@@ -2106,9 +2144,9 @@ const Intro=(function(){
       hum(){ noiseAt(3.4,.08,200,400,'lowpass'); toneAt('sine',55,90,3.4,.08); }, roar(){ noiseAt(4,.4,2500,200); toneAt('sawtooth',45,30,3,.12); } }; }
 
   function build(){ shots=[shotEarth(),shotNasa(),shotFleet(),shotGarage(),shotAttack(),shotPad(),shotLaunch(),shotEscape(),shotArrive()]; }
-  function ensureRenderer(){ if(R) return; R=new THREE.WebGLRenderer({canvas:glc,antialias:true}); R.setPixelRatio(Math.min(2,window.devicePixelRatio||1)); R.outputEncoding=THREE.sRGBEncoding;
+  function ensureRenderer(){ if(R) return; R=new THREE.WebGLRenderer({canvas:glc,antialias:true}); R.setPixelRatio(Math.min(TOUCH?1.5:2,window.devicePixelRatio||1)); R.outputEncoding=THREE.sRGBEncoding;
     R.toneMapping=THREE.ACESFilmicToneMapping; R.toneMappingExposure=1.1; R.shadowMap.enabled=true; R.shadowMap.type=THREE.PCFSoftShadowMap; }
-  function resize(cam){ const w=glc.clientWidth||innerWidth, h=glc.clientHeight||innerHeight; if(R.domElement.width!==Math.round(w*R.getPixelRatio())||R.domElement.height!==Math.round(h*R.getPixelRatio())) R.setSize(w,h,false); cam.aspect=w/h; cam.updateProjectionMatrix(); }
+  function resize(cam){ const w=glc.clientWidth||innerWidth, h=glc.clientHeight||innerHeight; if(R.domElement.width!==Math.round(w*R.getPixelRatio())||R.domElement.height!==Math.round(h*R.getPixelRatio())) R.setSize(w,h,false); cam.aspect=w/h; const base=cam.userData.base||(cam.userData.base=cam.fov); cam.fov=adaptFov(base,cam.aspect,16/9,96); cam.updateProjectionMatrix(); }
   function renderAt(time,dt){ let acc=0, i=0; while(i<shots.length && time>=acc+shots[i].dur){ acc+=shots[i].dur; i++; }
     if(i>=shots.length) return false; const sh=shots[i], lt=time-acc;
     if(i!==cur){ cur=i; sh.fired={}; }
