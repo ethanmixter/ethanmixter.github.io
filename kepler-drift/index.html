@@ -3,17 +3,11 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<meta name="description" content="Kepler Drift: Earth fell to space pirates. Brian Wilson escaped in a ship he built in his garage. Build a colony at the edge of the map and defend it in 3D turret battles.">
-<meta property="og:title" content="Kepler Drift">
-<meta property="og:description" content="A space colony tycoon with an animated story, a 3D planet view and 3D turret battles.">
-<meta name="theme-color" content="#06080E">
-<meta name="apple-mobile-web-app-capable" content="yes">
 <title>Kepler Drift Tycoon</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@500;700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
 <meta charset="utf-8">
 <style>
-body{margin:0}
 [hidden]{display:none!important}
 :root{
   color-scheme: dark;
@@ -90,8 +84,11 @@ body.combat .views{display:none}
 .btn:hover:not([disabled]){border-color:var(--ion)}
 .btn[disabled]{opacity:.4;cursor:not-allowed}
 .btn.warp{border-color:var(--ion-dim);color:var(--ion)}
-.wipe-warn{margin:0;font-size:11.5px;line-height:1.4;color:#FF8FA3;border:1px solid rgba(255,92,122,.35);background:rgba(255,92,122,.08);border-radius:4px;padding:7px 9px}
-.wipe-warn b{color:var(--bad)}
+.wipe-warn{display:grid;gap:8px;margin:0;font-size:11.5px;line-height:1.4;color:#FF8FA3;border:1px solid rgba(255,92,122,.35);background:rgba(255,92,122,.08);border-radius:4px;padding:7px 9px}
+.wipe-warn b{color:var(--bad)} .wipe-warn p{margin:0} .wipe-warn .tip{color:var(--muted);font-size:11px}
+.wipe-warn .row{display:flex;gap:8px} .wipe-warn .row .btn{flex:1;padding:8px}
+.wipe-warn:not([hidden]){animation:drop .18s ease-out} @keyframes drop{from{opacity:0;transform:translateY(-6px)}to{opacity:1;transform:none}}
+@media (prefers-reduced-motion:reduce){.wipe-warn:not([hidden]){animation:none}}
 .btn.danger{border-color:#7a2a3a;color:var(--bad)}
 .small{font-size:12px;color:var(--muted)}
 .log{padding:10px 14px;font-family:var(--mono);font-size:11.5px;color:var(--muted);display:grid;gap:4px}
@@ -203,14 +200,15 @@ button{touch-action:manipulation}
   .item{padding:9px 12px;grid-template-columns:44px 1fr auto;gap:0 10px} .item .ico{width:44px;height:44px}
   .item.tech{grid-template-columns:1fr auto}
   .foot{padding:8px 12px;gap:6px;grid-template-columns:1fr auto;align-items:center}
-  .foot .btn{padding:8px 10px;font-size:12px} #warpInfo{grid-column:1/-1;font-size:11px} .wipe-warn{grid-column:1/-1}
+  .foot .btn{padding:8px 10px;font-size:12px} #warpInfo{grid-column:1/-1;font-size:11px}
+  .wipe-warn{position:fixed;z-index:60;left:12px;right:12px;bottom:calc(12px + env(safe-area-inset-bottom,0px));max-width:440px;margin:0 auto;background:#1B0F1A;border-color:rgba(255,92,122,.6);box-shadow:0 10px 30px rgba(0,0,0,.7)}
   .raid{left:8px;right:8px;top:8px;padding:8px 10px} .raid span{font-size:12px}
   .toast{top:auto;bottom:12px;font-size:12px}
 }
 @media (max-width:900px) and (orientation:landscape) and (max-height:560px){
   .app{grid-template-columns:minmax(0,1fr) 300px;grid-template-rows:auto minmax(0,1fr)}
   .left{grid-column:1/-1} .stage{grid-row:2} .right{grid-row:2}
-  .foot{grid-template-columns:1fr 1fr;padding:6px 8px} #warpInfo{display:none} .wipe-warn{grid-column:1/-1;font-size:10.5px;padding:4px 7px}
+  .foot{grid-template-columns:1fr 1fr;padding:6px 8px} #warpInfo{display:none} .wipe-warn{font-size:11px;padding:7px 9px}
   .chint{display:none} .hud .hguns{display:none}
 }
 @media (max-width:700px){
@@ -326,9 +324,12 @@ button{touch-action:manipulation}
     <div class="foot">
       <button class="btn warp" id="warpBtn" disabled>Jump to new system</button>
       <span class="small" id="warpInfo">Earn 1M lifetime credits to unlock the jump. You keep Stardust, which boosts all output.</span>
-      <button class="btn" id="acctBtn">Account & saves</button>
-      <button class="btn" id="resetBtn" aria-describedby="wipeWarn">Wipe save</button>
-      <p class="wipe-warn" id="wipeWarn"><b>Warning:</b> Wipe save deletes your whole colony: credits, stations, research and Stardust. It can’t be undone. Copy a save code first if you might want it back.</p>
+      <button class="btn" id="resetBtn" aria-expanded="false" aria-controls="wipeWarn">Wipe save ▾</button>
+      <div class="wipe-warn" id="wipeWarn" hidden role="alertdialog" aria-labelledby="wipeTitle">
+        <p id="wipeTitle"><b>Delete your whole colony?</b> Credits, stations, research and Stardust are all erased. This can’t be undone.</p>
+        <p class="tip">Want a backup first? Save codes are under Account &amp; saves on the home screen.</p>
+        <div class="row"><button class="btn danger" id="wipeYes">Delete everything</button><button class="btn" id="wipeNo">Cancel</button></div>
+      </div>
     </div>
   </aside>
 </div>
@@ -517,10 +518,12 @@ $('warpBtn').onclick=()=>{
   logMsg(`Jumped to <b>KD-${S.sys}</b>, a ${PLANET_TYPES[S.planet].name.toLowerCase()}, with ${g} Stardust`); toast(`Welcome to KD-${S.sys}. You kept half your credits and stations. Output +${Math.round(S.dust*10)}% from Stardust. Pirates here are tougher.`);
   initScene(); renderShop(true); save();
 };
-$('resetBtn').onclick=()=>{
-  const btn=$('resetBtn');
-  if(btn.dataset.armed!=='1'){ btn.dataset.armed='1'; btn.textContent='Tap again to delete everything'; setTimeout(()=>{btn.dataset.armed='';btn.textContent='Wipe save'},4000); return; }
-  const oldP=S.planet; S=fresh(); S.planet=newPlanet(oldP); sprite('planet_'+S.planet); btn.dataset.armed=''; btn.textContent='Wipe save'; raid=null; $('raid').hidden=true; raidT=90; save(); initScene(); renderShop(true); toast(`Save wiped. New colony on a ${PLANET_TYPES[S.planet].name.toLowerCase()}.`);
+const wipeToggle=open=>{ $('wipeWarn').hidden=!open; $('resetBtn').setAttribute('aria-expanded',open); $('resetBtn').textContent=open?'Wipe save ▴':'Wipe save ▾'; if(open) $('wipeNo').focus(); };
+$('resetBtn').onclick=()=>wipeToggle($('wipeWarn').hidden);
+$('wipeNo').onclick=()=>{ wipeToggle(false); $('resetBtn').focus(); };
+$('wipeYes').onclick=()=>{
+  const oldP=S.planet; S=fresh(); S.planet=newPlanet(oldP); sprite('planet_'+S.planet); raid=null; $('raid').hidden=true; raidT=90; save(); initScene(); renderShop(true); wipeToggle(false);
+  toast(`Save wiped. New colony on a ${PLANET_TYPES[S.planet].name.toLowerCase()}.`);
 };
 
 function updStats(){
@@ -2339,7 +2342,7 @@ const Account=(()=>{
     el('loadCode').onclick=()=>{ const btn=el('loadCode'); let data; try{ data=decode(el('codeIn').value); }catch(e){ status=e.message; render(); return; }
       if(btn.dataset.armed!=='1'){ btn.dataset.armed='1'; btn.textContent='Tap again to replace this device’s save'; status=`This loads: ${summary(data)}`; render(); setTimeout(()=>{ btn.dataset.armed=''; btn.textContent='Load save code'; },5000); return; }
       btn.dataset.armed=''; btn.textContent='Load save code'; applySave(data); el('codeIn').value=''; el('acctDevice').textContent=summary(S); status='Save loaded.'; render(); if(user) pushNow(); };
-    ['homeAcct','acctBtn'].forEach(id=>{ const b=el(id); if(b) b.onclick=open; });
+    ['homeAcct'].forEach(id=>{ const b=el(id); if(b) b.onclick=open; });
     document.addEventListener('visibilitychange',()=>{ if(document.hidden && user) pushNow(); });
     if(cfg) initFirebase().catch(e=>{ status=niceError(e); render(); });
     render(); }
@@ -2373,5 +2376,3 @@ window.addEventListener('pagehide',save);
 Account.wire();
 })();
 </script>
-
-</html>
