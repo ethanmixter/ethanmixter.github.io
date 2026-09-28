@@ -124,6 +124,24 @@ body.combat .hint{display:none}
 .endcard h3{font-family:var(--display);font-size:28px;margin:0;letter-spacing:.04em}
 .endcard p{margin:0;color:var(--muted)}
 
+/* account panel */
+.acct{position:fixed;inset:0;z-index:400;background:rgba(3,5,10,.72);display:grid;place-items:center;padding:16px;overflow:auto}
+.acct-card{width:min(460px,100%);background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:18px;display:grid;gap:16px;max-height:calc(100% - 8px);overflow:auto}
+.acct-head{display:flex;justify-content:space-between;align-items:center;gap:12px}
+.acct h2{font-family:var(--display);font-size:22px;margin:0;letter-spacing:.02em}
+.acct h3{font-family:var(--display);font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);margin:0 0 6px;font-weight:500}
+.acct section{display:grid;gap:8px;border-top:1px solid var(--line);padding-top:14px}
+.acct p{margin:0} .acct .muted{color:var(--muted);font-size:13px}
+.acct .save-sum{font-family:var(--mono);font-size:12.5px;color:var(--text)}
+.acct textarea{width:100%;box-sizing:border-box;background:var(--panel2);border:1px solid var(--line);border-radius:4px;color:var(--text);font-family:var(--mono);font-size:12px;padding:8px;resize:vertical}
+.acct textarea:focus-visible,.acct .btn:focus-visible{outline:2px solid var(--cyan);outline-offset:1px}
+.acct .lbl{font-size:12px;color:var(--muted)} .acct .sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
+.acct .row{display:flex;gap:8px;flex-wrap:wrap}
+.acct .google{display:flex;align-items:center;gap:10px;justify-content:center;background:#fff;color:#1f1f1f;border-color:#fff;font-family:var(--body);font-weight:600;letter-spacing:0}
+.acct .google svg{width:18px;height:18px}
+.acct .who{display:flex;gap:10px;align-items:center} .acct .who img{width:36px;height:36px;border-radius:50%} .acct .who small{display:block;color:var(--muted);font-size:12px}
+.acct .pick{display:grid;gap:2px;text-align:left} .acct .pick small{font-family:var(--mono);font-size:11.5px;color:var(--muted);letter-spacing:0}
+.acct-status{font-size:13px;color:var(--ion);margin:0}
 /* story intro */
 .intro{position:fixed;inset:0;z-index:300;background:#000;overflow:hidden}
 .intro canvas{position:absolute;inset:0;width:100%;height:100%;cursor:default}
@@ -203,6 +221,19 @@ button{touch-action:manipulation}
 @media (prefers-reduced-motion:reduce){ .meter i,.toast,.hull i{transition:none} }
 </style>
 
+<div class="acct" id="acct" hidden role="dialog" aria-modal="true" aria-labelledby="acctTitle">
+  <div class="acct-card">
+    <div class="acct-head"><h2 id="acctTitle">Account & saves</h2><button class="btn" id="acctClose" aria-label="Close">Close</button></div>
+    <section><h3>On this device</h3><p class="muted">Your colony saves automatically in this browser every few seconds.</p><p class="save-sum" id="acctDevice"></p></section>
+    <section><h3>Across your devices</h3><div id="acctCloud"></div></section>
+    <section><h3>Save codes</h3><p class="muted">Copy a code here, then load it on another device. No account needed.</p>
+      <button class="btn" id="copyCode">Copy save code</button>
+      <label for="codeOut" class="sr">Your save code</label><textarea id="codeOut" rows="2" readonly placeholder="Your code appears here"></textarea>
+      <label for="codeIn" class="lbl">Load a save code</label><textarea id="codeIn" rows="2" placeholder="Paste a code that starts with KD1:"></textarea>
+      <button class="btn" id="loadCode">Load save code</button></section>
+    <p class="acct-status" id="acctStatus" role="status" hidden></p>
+  </div>
+</div>
 <div class="intro" id="intro" hidden>
   <canvas id="introGl" aria-label="Opening story animation"></canvas>
   <div class="lb top"></div><div class="lb bot"></div>
@@ -224,6 +255,7 @@ button{touch-action:manipulation}
       <button class="btn big primary" id="homePlay">Continue <kbd>Enter</kbd></button>
       <button class="btn big" id="homeNew">New colony</button>
       <button class="btn big" id="homeStory">Watch the story</button>
+      <button class="btn big" id="homeAcct">Account & saves </button>
       <button class="btn big" id="homeHow">How to play</button>
     </div>
     <div class="howto" id="howto" hidden>
@@ -291,11 +323,13 @@ button{touch-action:manipulation}
     <div class="foot">
       <button class="btn warp" id="warpBtn" disabled>Jump to new system</button>
       <span class="small" id="warpInfo">Earn 1M lifetime credits to unlock the jump. You keep Stardust, which boosts all output.</span>
+      <button class="btn" id="acctBtn">Account & saves</button>
       <button class="btn" id="resetBtn">Wipe save</button>
     </div>
   </aside>
 </div>
 
+<script src="firebase-config.js" onerror="void 0"></script>
 <script src="https://cdn.jsdelivr.net/npm/three@0.147.0/build/three.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/three@0.147.0/examples/js/loaders/GLTFLoader.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/three@0.147.0/examples/js/controls/OrbitControls.js"></script>
@@ -359,7 +393,7 @@ let S = fresh();
 try{ const raw = localStorage.getItem('kepler-drift'); if(raw) S = Object.assign(fresh(), JSON.parse(raw)); }catch(e){}
 if(!PLANET_TYPES[S.planet]) S.planet=newPlanet();
 sprite('planet_'+S.planet);
-const save = () => { S.t = Date.now(); try{ localStorage.setItem('kepler-drift', JSON.stringify(S)); }catch(e){} };
+const save = () => { S.t = Date.now(); try{ localStorage.setItem('kepler-drift', JSON.stringify(S)); }catch(e){} if(window.__kdAcct) window.__kdAcct.schedulePush(); };
 
 const $ = id => document.getElementById(id);
 const TOUCH = window.matchMedia && matchMedia('(pointer:coarse)').matches;
@@ -2177,6 +2211,84 @@ const Intro=(function(){
   };
 })();
 
+// ================= Accounts: saves on this device, save codes, Google cloud sync =================
+const Account=(()=>{
+  const cfg = window.KD_FIREBASE_CONFIG && window.KD_FIREBASE_CONFIG.apiKey && !/PASTE/.test(window.KD_FIREBASE_CONFIG.apiKey) ? window.KD_FIREBASE_CONFIG : null;
+  const inArtifact = /claude\.ai|claudeusercontent|anthropic/.test(location.hostname) || location.protocol==='file:';
+  let fb=null, auth=null, db=null, user=null, lastSync=0, pushT=null, syncing=false, pending=null, status='';
+  const el=id=>document.getElementById(id);
+  const summary=s=>`KD-${s.sys||1} · ${(PLANET_TYPES[s.planet]||{name:'Unknown world'}).name} · ${fmt(s.cr||0)} Cr · ${Object.values(s.own||{}).reduce((a,b)=>a+b,0)} stations · ${fmt(s.life||0)} lifetime`;
+  const ago=t=>{ const s=Math.round((Date.now()-t)/1000); return s<5?'just now':s<60?`${s}s ago`:s<3600?`${Math.round(s/60)} min ago`:`${Math.round(s/3600)} h ago`; };
+  function applySave(data){ S=Object.assign(fresh(),data); if(!PLANET_TYPES[S.planet]) S.planet=newPlanet(); sprite('planet_'+S.planet);
+    raid=null; const r=el('raid'); if(r) r.hidden=true; raidT=90; initScene(); renderShop(true); updStats(); homeInfo(); try{ localStorage.setItem('kepler-drift',JSON.stringify(S)); }catch(e){} }
+  // ---------- save codes (work everywhere, no account needed)
+  const encode=o=>'KD1:'+btoa(unescape(encodeURIComponent(JSON.stringify(o))));
+  const decode=c=>{ c=(c||'').trim(); if(!c.startsWith('KD1:')) throw new Error('That isn’t a Kepler Drift save code. Codes start with KD1:'); const o=JSON.parse(decodeURIComponent(escape(atob(c.slice(4))))); if(typeof o!=='object'||!o.own) throw new Error('That save code is damaged. Copy it again from the other device.'); return o; };
+  // ---------- Firebase (loaded only when the site has a config)
+  const load=src=>new Promise((res,rej)=>{ const s=document.createElement('script'); s.src=src; s.onload=res; s.onerror=()=>rej(new Error('Could not load '+src)); document.head.appendChild(s); });
+  async function initFirebase(){ if(fb||!cfg) return !!fb; const V='10.12.2', base=`https://cdn.jsdelivr.net/npm/firebase@${V}/`;
+    await load(base+'firebase-app-compat.js'); await load(base+'firebase-auth-compat.js'); await load(base+'firebase-firestore-compat.js');
+    fb=firebase.initializeApp(cfg); auth=firebase.auth(); db=firebase.firestore();
+    auth.getRedirectResult().catch(e=>{ status=niceError(e); render(); });
+    auth.onAuthStateChanged(u=>{ user=u; render(); if(u) pullOnSignIn(); });
+    return true; }
+  const niceError=e=>{ const c=(e&&e.code)||''; if(/popup-closed|cancelled-popup/.test(c)) return 'Sign-in was closed before it finished.';
+    if(/unauthorized-domain/.test(c)) return 'This website isn’t on the Firebase list of allowed domains yet. Add it under Authentication → Settings → Authorized domains.';
+    if(/permission-denied/.test(c)) return 'Firebase refused the save. Check the Firestore rules from the setup checklist.';
+    if(/network/.test(c)) return 'No connection to Google right now. Your progress is still saved on this device.'; return (e&&e.message)||'Something went wrong.'; };
+  async function signIn(){ status=''; render(); try{ await initFirebase(); const p=new firebase.auth.GoogleAuthProvider();
+      try{ await auth.signInWithPopup(p); } catch(e){ if(/popup-blocked|operation-not-supported/.test(e.code||'')) await auth.signInWithRedirect(p); else throw e; } }
+    catch(e){ status=niceError(e); render(); } }
+  async function signOut(){ if(auth){ await pushNow(); await auth.signOut(); } status='Signed out. Progress still saves on this device.'; render(); }
+  const docRef=()=>db.collection('saves').doc(user.uid);
+  async function pullOnSignIn(){ try{ syncing=true; render(); const snap=await docRef().get(); syncing=false;
+      if(!snap.exists){ await pushNow(); status='Cloud save created. This colony now follows your Google account.'; render(); return; }
+      const cloud=JSON.parse(snap.data().save||'{}'); const localFresh=(S.life||0)===0&&Object.keys(S.own||{}).length===0;
+      if(localFresh || (cloud.t||0)===(S.t||0)){ applySave(cloud); lastSync=Date.now(); status='Loaded your colony from the cloud.'; render(); return; }
+      pending={cloud,local:JSON.parse(JSON.stringify(S))}; render(); open(); }
+    catch(e){ syncing=false; status=niceError(e); render(); } }
+  async function pushNow(){ if(!user||!db||pending) return; try{ syncing=true; render();
+      await docRef().set({save:JSON.stringify(S),life:S.life||0,sys:S.sys||1,planet:S.planet,updated:firebase.firestore.FieldValue.serverTimestamp(),name:user.displayName||''});
+      lastSync=Date.now(); syncing=false; render(); } catch(e){ syncing=false; status=niceError(e); render(); } }
+  function schedulePush(){ if(!user||pending) return; if(pushT) return; const wait=Math.max(4000,20000-(Date.now()-lastSync)); pushT=setTimeout(()=>{ pushT=null; pushNow(); },wait); }
+  // ---------- panel
+  function render(){ const box=el('acctCloud'); if(!box) return;
+    if(!cfg){ box.innerHTML= inArtifact
+        ? `<p class="muted">Google sign-in works on the website version of the game. Here, use a save code to move your colony between devices.</p>`
+        : `<p class="muted">Google sign-in isn’t switched on for this copy of the game yet. Until it is, use a save code to move your colony between devices.</p>`; }
+    else if(pending){ box.innerHTML=`<p><b>Two different saves found.</b> Pick the one to keep. The other is replaced everywhere.</p>
+        <button class="btn pick" id="pickCloud"><span>Keep the cloud save</span><small>${summary(pending.cloud)}</small></button>
+        <button class="btn pick" id="pickLocal"><span>Keep this device’s save</span><small>${summary(pending.local)}</small></button>`;
+      el('pickCloud').onclick=()=>{ applySave(pending.cloud); pending=null; lastSync=Date.now(); status='Loaded the cloud save.'; render(); };
+      el('pickLocal').onclick=async()=>{ pending=null; await pushNow(); status='Uploaded this device’s save to the cloud.'; render(); }; }
+    else if(user){ box.innerHTML=`<div class="who">${user.photoURL?`<img src="${user.photoURL}" alt="" referrerpolicy="no-referrer">`:''}<div><b>${(user.displayName||'Signed in').replace(/</g,'&lt;')}</b><small>${(user.email||'').replace(/</g,'&lt;')}</small></div></div>
+        <p class="muted">${syncing?'Syncing…':lastSync?`Synced ${ago(lastSync)}. Saves upload about every 20 seconds while you play.`:'Connected.'}</p>
+        <div class="row"><button class="btn" id="syncNow">Sync now</button><button class="btn" id="signOut">Sign out</button></div>`;
+      el('syncNow').onclick=()=>{ status=''; pushNow(); }; el('signOut').onclick=signOut; }
+    else { box.innerHTML=`<p class="muted">Sign in to keep one colony across your phone, tablet and computer.</p>
+        <button class="btn google" id="gSign"><svg viewBox="0 0 24 24" aria-hidden="true"><path fill="#EA4335" d="M12 10.2v3.9h5.5c-.2 1.3-1.6 3.9-5.5 3.9-3.3 0-6-2.7-6-6.1s2.7-6.1 6-6.1c1.9 0 3.1.8 3.8 1.5l2.6-2.5C16.8 3.3 14.6 2.3 12 2.3 6.6 2.3 2.3 6.6 2.3 12s4.3 9.7 9.7 9.7c5.6 0 9.3-3.9 9.3-9.5 0-.6-.1-1.1-.2-1.6H12z"/></svg>Sign in with Google</button>`;
+      el('gSign').onclick=signIn; }
+    const st=el('acctStatus'); if(st){ st.textContent=status; st.hidden=!status; }
+    const badge=el('acctBadge'); if(badge) badge.textContent=user?'Synced':'On this device';
+    const hb=el('homeAcct'); if(hb) hb.firstChild.textContent=user?`Account · ${(user.displayName||'').split(' ')[0]} `:'Account & saves '; }
+  function open(){ el('acct').hidden=false; el('acctDevice').textContent=summary(S); el('codeOut').value=''; render(); }
+  function close(){ el('acct').hidden=true; }
+  function wire(){ el('acctClose').onclick=close; el('acct').addEventListener('click',e=>{ if(e.target.id==='acct') close(); });
+    window.addEventListener('keydown',e=>{ if(e.key==='Escape' && !el('acct').hidden) close(); });
+    el('copyCode').onclick=()=>{ save(); const code=encode(S), out=el('codeOut'); out.value=code;
+      const done=()=>{ status='Save code copied. Paste it into “Load a save code” on your other device.'; render(); };
+      try{ navigator.clipboard.writeText(code).then(done,()=>{ out.focus(); out.select(); status='Select the code above and copy it.'; render(); }); }catch(e){ out.focus(); out.select(); } };
+    el('loadCode').onclick=()=>{ const btn=el('loadCode'); let data; try{ data=decode(el('codeIn').value); }catch(e){ status=e.message; render(); return; }
+      if(btn.dataset.armed!=='1'){ btn.dataset.armed='1'; btn.textContent='Tap again to replace this device’s save'; status=`This loads: ${summary(data)}`; render(); setTimeout(()=>{ btn.dataset.armed=''; btn.textContent='Load save code'; },5000); return; }
+      btn.dataset.armed=''; btn.textContent='Load save code'; applySave(data); el('codeIn').value=''; el('acctDevice').textContent=summary(S); status='Save loaded.'; render(); if(user) pushNow(); };
+    ['homeAcct','acctBtn'].forEach(id=>{ const b=el(id); if(b) b.onclick=open; });
+    document.addEventListener('visibilitychange',()=>{ if(document.hidden && user) pushNow(); });
+    if(cfg) initFirebase().catch(e=>{ status=niceError(e); render(); });
+    render(); }
+  return { wire, schedulePush, open };
+})();
+window.__kdAcct=Account;
+
 function captureComet(mx,my){
   const e=econ(); const v=Math.max(50, e.crs*30)*(S.tech.t7?3:1);
   earn(v); floaters.push({x:mx,y:my,txt:'+'+fmt(v)+' Cr',c:'#C9F3FF',life:90});
@@ -2200,6 +2312,7 @@ function loop(t){
 }
 renderShop(true); updStats(); requestAnimationFrame(loop);
 window.addEventListener('pagehide',save);
+Account.wire();
 })();
 </script>
 
