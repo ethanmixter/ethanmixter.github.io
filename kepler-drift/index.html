@@ -1398,7 +1398,7 @@ const G = {ok:false};
     if(!controls.autoRotate && t-lastTouch>12000 && !G.tween) controls.autoRotate=true;
     controls.update();
     // planet spin + tap pulse
-    if(planetMesh){ planetMesh.rotation.y=sec*0.03; if(cloudMesh) cloudMesh.rotation.y=sec*0.042; }
+    if(planetMesh){ planetMesh.rotation.y=sec*0.15; if(cloudMesh) cloudMesh.rotation.y=sec*0.19; }
     G.pulse*=0.88; planetRoot.scale.setScalar(1+G.pulse*0.025);
     // stations
     for(const id in ORB){
@@ -1753,7 +1753,7 @@ G.combat3d=null;
       rings=rings.filter(r=>{ if(r.life<=0){ scene.remove(r.m); r.m.material.dispose(); return false; } return true; });
       FX.update(dt); SMOKE.update(dt);
       // scenery
-      planet.rotation.y+=realDt*.004; clouds.rotation.y+=realDt*.002;
+      planet.rotation.y+=realDt*.03; clouds.rotation.y+=realDt*.012;
       if(stationObj){ stationObj.rotation.y+=realDt*.12; stationObj.position.y=-18+Math.sin(t*.0006)*3; }
       deckLights.forEach((d,i)=>{ d.m.visible=Math.sin(t*.003+d.ph*3)>-.2; });
       // outcome
@@ -2231,7 +2231,7 @@ const Intro=(function(){
     const H={scene:sc,cam,setPlanet,planetType:null,surf,
       upd(t){ const w=Math.sin(t*.07), w2=Math.cos(t*.05);
         const port=cam.aspect<1, back=port?9:8, c0=T.c||[BP[0]-D.x*back+RT.x*1.4, surf+(port?4.2:3.4), BP[1]-D.z*back+RT.z*1.4], l0=T.l||[BP[0]+D.x*40+LF.x*(port?2:14), surf+(port?-21:-4.5), BP[1]+D.z*40+LF.z*(port?2:14)]; cam.position.set(c0[0]+w*.25,c0[1]+w2*.15,c0[2]+w*.2); cam.lookAt(l0[0]+w*.6,l0[1],l0[2]);
-        if(P){ P.g.rotation.y=t*.012; if(P.cl) P.cl.rotation.y=t*.017; }
+        if(P){ P.g.rotation.y=t*.06; if(P.cl) P.cl.rotation.y=t*.08; }
         br.head.rotation.x=-.42+Math.sin(t*.4)*.03; br.head.rotation.y=Math.sin(t*.13)*.12; br.torso.scale.y=1+Math.sin(t*1.6)*.006;
         beacon.material.opacity=Math.sin(t*2.4)>.3?1:.12; shipNav.material.opacity=Math.sin(t*1.7+1)>.4?1:.1;
         ship.g.position.y=ship.y0+Math.sin(t*.6)*.08;
