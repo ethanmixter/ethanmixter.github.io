@@ -1154,8 +1154,9 @@ function buildRobot(d,pal){
  const root=new THREE.Group();const body=grp(root);
  const pelvis=grp(body,0,L,0);
  bx(.95*B,.3,.6*B,M.c,0,0,0,pelvis);
- bx(.34*B,.34,.14,M.a,0,-.08,.3*B,pelvis);bx(.18,.08,.05,M.gl,0,-.02,.3*B+.08,pelvis);
- for(const s of [1,-1]){bx(.16*B,.38,.52*B,M.a,s*.54*B,-.06,0,pelvis);rivet(pelvis,s*.63*B,.06,.18*B,M.chrome);rivet(pelvis,s*.63*B,.06,-.18*B,M.chrome);}
+ /* hip armor hangs from hinges so it can swing out of the way of the legs */
+ const fpl=grp(pelvis,0,.09,.3*B);bx(.34*B,.34,.14,M.a,0,-.17,0,fpl);bx(.18,.08,.05,M.gl,0,-.11,.08,fpl);const skirt={};
+ for(const s of [1,-1]){const sk=grp(pelvis,s*.54*B,.13,0);skirt[s]=sk;bx(.16*B,.38,.52*B,M.a,0,-.19,0,sk);rivet(sk,s*.09*B,-.07,.18*B,M.chrome);rivet(sk,s*.09*B,-.07,-.18*B,M.chrome);}
  const torso=grp(pelvis,0,.14,0);
  for(let i=0;i<3;i++)bx(TW*(.3+i*.1),TH*.12,.4*B-(i===1?.05:0),i%2?M.dk:M.c,0,TH*(.07+i*.13),0,torso);
  const chest=grp(torso,0,TH*.66,0);
@@ -1169,7 +1170,7 @@ function buildRobot(d,pal){
  const ctx={M,B,L,TW,TH,front,chest,torso,back,d,pal};
  cyl(.12,.22,M.dk,torso,0,TH*.98,0,null,10);
  const head=grp(torso,0,TH*1.03,0);ctx.head=head;
- const P={torso,head,body};
+ const P={torso,head,body,chest,fpl,skR:skirt[1],skL:skirt[-1]};chest.updateMatrix();P.chestInv=chest.matrix.clone().invert();P.cb={hx:TW/2+.12,hx2:TW*.3+.12,hy:TH*.42,lo:-TH*.95,hz:.4*B+.2};
  KIT[pk.chest].chest(ctx);KIT[pk.head].head(ctx);const ad=d.adds,addOn=(sl,...a)=>String(ad[sl]||'').split('+').forEach(n=>ADDON[sl][n](...a));if(ad){addOn('chest',ctx);addOn('head',ctx);}
  for(const s of [1,-1]){
   const kk=s>0?'R':'L';
@@ -1177,7 +1178,7 @@ function buildRobot(d,pal){
   cyl(.17*B,.22,M.chrome,sh,-s*.04,0,0,'x',12);
   bx(.26*B,.5,.26*B,M.c,0,-.3,0,sh);
   bx(.31*B,.26,.31*B,M.b,0,-.36,.01,sh);
-  KIT[pk.arms].pad(ctx,sh,s);
+  const pg=grp(sh,0,0,0);P['pad'+kk]=pg;KIT[pk.arms].pad(ctx,pg,s);
   const el=grp(sh,0,-.62,0);
   cyl(.13*B,.34*B,M.chrome,el,0,0,0,'x',12);
   bx(.3*B,.48,.32*B,M.c,0,-.3,0,el);
@@ -1188,7 +1189,7 @@ function buildRobot(d,pal){
   bx(.3*B,.18,.3*B,M.c,0,0,0,hd);
   for(let i=0;i<3;i++){const f=grp(hd,(i-1)*.09*B,-.09,.07*B);f.rotation.x=-.6;bx(.075*B,.16,.08*B,M.dk,0,-.08,0,f);}
   const th=grp(hd,-s*.15*B,-.02,.08*B);th.rotation.z=s*.5;bx(.07*B,.14,.08*B,M.dk,0,-.07,0,th);
-  KIT[pk.arms].fore(ctx,el,s);if(ad)addOn('arms',ctx,sh,el,s);
+  KIT[pk.arms].fore(ctx,el,s);if(ad)addOn('arms',ctx,pg,el,s);
   P['sh'+kk]=sh;P['el'+kk]=el;
   const hip=grp(body,s*.28*B,L,0);
   cyl(.15*B,.22,M.chrome,hip,0,0,0,'x',12);
@@ -1208,7 +1209,7 @@ function buildRobot(d,pal){
   bx(.38*B,.04,.05,M.dk,0,-L*.5+.1,.51*B,kn);
   KIT[pk.legs].leg(ctx,kn,s,hip);if(ad)addOn('legs',ctx,kn,s);
   P['hip'+kk]=hip;P['kn'+kk]=kn;
-  if(s<0){const em=new THREE.Mesh(new THREE.PlaneGeometry(.34*B,.34*B),sigil(d,pal));em.position.set(-.06-(ctx.padW||.3*B)-.015,.06,0);em.rotation.y=-Math.PI/2;sh.add(em);}
+  if(s<0){const em=new THREE.Mesh(new THREE.PlaneGeometry(.34*B,.34*B),sigil(d,pal));em.position.set(-.06-(ctx.padW||.3*B)-.015,.06,0);em.rotation.y=-Math.PI/2;P.padL.add(em);}
  }
  plating(ctx,P,d);
  const V=d.parts?buildVeh(d.parts,M):VEH[k](M);
@@ -1367,7 +1368,7 @@ const KIT={
    const cn=bx(TW*.7,TH*.36,.08,M.glass,0,TH*.08,front+.03,chest);cn.rotation.x=-.15;bx(TW*.74,.06,.1,M.b,0,TH*.28,front+.04,chest);
    bx(TW*.36,TH*.16,.14,M.b,0,-TH*.2,front+.05,chest);for(const s of [1,-1])bx(.12,.06,.05,M.white,s*TW*.3,-TH*.22,front+.06,chest);
    cyl(.07,.55,M.chrome,back,0,TH*.42,-.12*B,null,8);const rt=grp(back,0,TH*.42+.3,-.12*B);cyl(.13,.1,M.dk,rt,0,0,0,null,10);
-   for(let i=0;i<2;i++){const bl=bx(2.4,.03,.16,M.dk,0,.04,0,rt);bl.rotation.y=i*Math.PI/2+.4;bx(.1,.035,.17,M.gl,1.15,.04,0,bl);}
+   for(const a of [.38,-.38]){const g2=grp(rt,0,.04,0);g2.rotation.y=Math.PI/2+a;const bl=bx(1.5,.03,.16,M.dk,.78,0,0,g2);bx(.1,.035,.17,M.gl,.66,0,0,bl);}
    const tb=grp(back,0,-TH*.1,-.2*B);tb.rotation.x=.75;bx(.14,.14,1.1,M.a,0,0,-.55,tb);bx(.05,.36,.24,M.b,0,.14,-1.05,tb);cyl(.16,.03,M.dk,tb,.09,.14,-1.05,'x',10);
   },
   head(c){const{M,head}=c;bx(.46,.42,.5,M.a,0,.21,0,head);const v=bx(.4,.22,.14,M.glass,0,.3,.22,head);v.rotation.x=-.25;bx(.36,.06,.04,M.eye,0,.32,.28,head);
@@ -2607,7 +2608,21 @@ function poseFighter(f,dt){
  P.hipR.rotation.x=c.hR;P.hipL.rotation.x=c.hL;P.knR.rotation.x=c.kR;P.knL.rotation.x=c.kL;
  P.torso.rotation.set(c.lean,c.tw,0);
  f.body.position.y=c.bob;f.body.rotation.x=c.fall;
+ if(!(f.morph>0))unclip(P,c);
 }
+/* keep limbs and armor from passing through each other: joints stop before folding into themselves, arms swing wide of the chest, and armor plates hinge out of the way */
+const UC={v:new THREE.Vector3(),m:new THREE.Matrix4(),m2:new THREE.Matrix4()};
+function ucInside(v,cb){if(v.y>cb.hy||v.y<cb.lo||Math.abs(v.z)>cb.hz)return false;return Math.abs(v.x)<(v.y<-cb.hy?cb.hx2:cb.hx);}
+function unclip(P,c){
+ for(const k of ['R','L']){const e='e'+k,kn='k'+k;if(c[e]<-2.2){c[e]=-2.2;P['el'+k].rotation.x=c[e];}if(c[kn]>2.05){c[kn]=2.05;P['kn'+k].rotation.x=c[kn];}}
+ if(P.chestInv)for(const [k,s] of [['R',1],['L',-1]]){const sh=P['sh'+k],el=P['el'+k],zk='z'+k;
+  for(let it=0;it<8;it++){sh.updateMatrix();el.updateMatrix();UC.m.multiplyMatrices(P.chestInv,sh.matrix);UC.m2.multiplyMatrices(UC.m,el.matrix);let hit=false;
+   UC.v.set(0,-.35,0).applyMatrix4(UC.m);if(ucInside(UC.v,P.cb))hit=true;
+   if(!hit)for(const y of [-.2,-.5,-.85]){UC.v.set(0,y,0).applyMatrix4(UC.m2);if(ucInside(UC.v,P.cb)){hit=true;break;}}
+   if(!hit)break;c[zk]+=s*.1;sh.rotation.z=c[zk];}}
+ for(const [k,s] of [['R',1],['L',-1]]){const pd=P['pad'+k];if(pd){const u=Math.max(0,-c['s'+k]-.7);pd.rotation.x=u*.5;pd.rotation.z=-s*Math.min(.5,u*.3);}
+  const sk=P['sk'+k];if(sk){const h=c['h'+k];sk.rotation.x=Math.max(-1.6,Math.min(1,h))*.6;sk.rotation.z=s*Math.min(.6,Math.abs(h)*.35);}}
+ if(P.fpl)P.fpl.rotation.x=-Math.max(0,-Math.min(c.hR,c.hL))*.75;}
 function drawFighter(f,dt){
  f.root.position.set(f.x,f.y,f.state==='dodge'&&f.side?f.side*Math.sin(Math.PI*Math.min(1,f.t/.32))*1.5:0);
  const tr=f.showRot!==undefined?f.showRot:f.facing*.95;
