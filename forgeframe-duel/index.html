@@ -1091,12 +1091,33 @@ const rim=new THREE.PointLight(0x5fb8ff,1.1,40);rim.position.set(-9,6,6);scene.a
 /* ================= materials / helpers ================= */
 const lin=c=>new THREE.Color(c).convertSRGBToLinear();
 const MATS={};
-function glowMat(c,i){const k='g'+c+'_'+(i||2.2);return MATS[k]||(MATS[k]=new THREE.MeshStandardMaterial({color:lin(c),emissive:lin(c),emissiveIntensity:i||2.2,roughness:.4,metalness:0}));}
+function glowMat(c,i){const k='g'+c+'_'+(i||2.2);return MATS[k]||(MATS[k]=new THREE.MeshStandardMaterial({color:lin(c),emissive:lin(c),emissiveIntensity:i||2.2,roughness:.4,metalness:0,polygonOffset:true,polygonOffsetFactor:0,polygonOffsetUnits:-14}));}
 function basicMat(c,m){const k='b'+c+'_'+(m||1);if(MATS[k])return MATS[k];const col=lin(c).multiplyScalar(m||1);return MATS[k]=new THREE.MeshBasicMaterial({color:col});}
+/* no two pieces share a surface: boxes whose faces lie in the same plane are nudged apart so the renderer never has to guess which one is in front (that guessing is the flicker) */
+const UF={q:new THREE.Quaternion(),p:new THREE.Vector3(),s:new THREE.Vector3(),m3:new THREE.Matrix3(),m4:new THREE.Matrix4(),n:new THREE.Vector3(),bb:new THREE.Box3()};
+function unfight(root,eps){eps=eps||.004;for(let pass=0;pass<3;pass++){root.updateMatrixWorld(true);const L=[];
+ root.traverse(o=>{if(!o.isMesh||!o.visible||!o.geometry||o.geometry.type!=='BoxGeometry'||!o.parent)return;o.matrixWorld.decompose(UF.p,UF.q,UF.s);
+  const e=UF.m4.makeRotationFromQuaternion(UF.q).elements;for(let c=0;c<3;c++){const x=Math.abs(e[c*4]),y=Math.abs(e[c*4+1]),z=Math.abs(e[c*4+2]);if(Math.max(x,y,z)<.9999)return;}
+  if(!o.geometry.boundingBox)o.geometry.computeBoundingBox();const b=o.geometry.boundingBox.clone().applyMatrix4(o.matrixWorld);L.push({o,b,m:o.material&&o.material.uuid});});
+ const B=new Map(),key=(a,sd,d)=>a*2+sd+'|'+Math.round(d*1000);
+ L.forEach((it,i)=>{for(let a=0;a<3;a++)for(const sd of [0,1]){const k=['x','y','z'][a],d=sd?it.b.max[k]:it.b.min[k],kk=key(a,sd,d);if(!B.has(kk))B.set(kk,[]);B.get(kk).push([i,d]);}});
+ let moved=0;const done=new Set();
+ for(const [kk,arr] of B){const [ax2,]=kk.split('|');const a=(+ax2)>>1,sd=(+ax2)&1,ks=['x','y','z'].filter((_,j)=>j!==a);
+  const pool=arr.concat(B.get(ax2+'|'+(+kk.split('|')[1]+1))||[]);
+  for(let i=0;i<arr.length;i++)for(let j=0;j<pool.length;j++){const A=L[arr[i][0]],C=L[pool[j][0]];if(A===C||A.m===C.m||Math.abs(arr[i][1]-pool[j][1])>3e-4)continue;
+   let ov=1,areaA=1,areaC=1;for(const k of ks){const lo=Math.max(A.b.min[k],C.b.min[k]),hi=Math.min(A.b.max[k],C.b.max[k]);if(hi-lo<1e-3){ov=0;break;}areaA*=A.b.max[k]-A.b.min[k];areaC*=C.b.max[k]-C.b.min[k];}
+   if(!ov)continue;const T=areaA<=areaC?A:C,id=T.o.id+'_'+a;if(done.has(id))continue;done.add(id);
+   /* grow the smaller piece a hair along that axis so its face sits just in front */
+   T.o.matrixWorld.decompose(UF.p,UF.q,UF.s);const e=UF.m4.makeRotationFromQuaternion(UF.q).elements;let lc=0,bv=0;for(let c=0;c<3;c++){const v=Math.abs(e[c*4+a]);if(v>bv){bv=v;lc=c;}}
+   const k=['x','y','z'][a],ws=T.b.max[k]-T.b.min[k];if(ws<1e-5)continue;const f=(ws+2*eps)/ws;T.o.scale.setComponent(lc,T.o.scale.getComponent(lc)*f);T.b.min[k]-=eps;T.b.max[k]+=eps;moved++;}}
+ if(!moved)break;}
+ root.updateMatrixWorld(true);}
 function metal(c,m,r){return new THREE.MeshStandardMaterial({color:lin(c),metalness:m,roughness:r,flatShading:true});}
-const TIRE=metal(0x121417,.2,.85);
-function mkMats(p){return {a:metal(p[0],.72,.3),b:metal(p[1],.78,.27),c:metal(p[2],.95,.3),dk:metal(0x14171b,.9,.4),chrome:metal(0xc2ccd6,1,.16),
- glass:new THREE.MeshStandardMaterial({color:lin(0x1c3344),metalness:1,roughness:.06}),gl:p[4]?metal(p[1],.85,.28):glowMat(p[3]),eye:glowMat(p[4]?0xfff4dc:p[3],p[4]?2.4:undefined),red:glowMat(0xff2a2a,1.6),white:glowMat(0xfff4dc,2.4),tire:TIRE};}
+const TIRE=metal(0x121417,.2,.85);TIRE.polygonOffset=true;TIRE.polygonOffsetUnits=-1;
+function mkMats(p){return polyRank({a:metal(p[0],.72,.3),b:metal(p[1],.78,.27),c:metal(p[2],.95,.3),dk:metal(0x14171b,.9,.4),chrome:metal(0xc2ccd6,1,.16),
+ glass:new THREE.MeshStandardMaterial({color:lin(0x1c3344),metalness:1,roughness:.06}),gl:p[4]?metal(p[1],.85,.28):glowMat(p[3]),eye:glowMat(p[4]?0xfff4dc:p[3],p[4]?2.4:undefined),red:glowMat(0xff2a2a,1.6),white:glowMat(0xfff4dc,2.4),tire:TIRE});}
+/* a fixed front-to-back order for touching surfaces of different materials, as a backstop for shapes that are not boxes */
+function polyRank(M){const order=['c','a','b','dk','chrome','glass'];order.forEach((k,i)=>{const m=M[k];if(m&&i){m.polygonOffset=true;m.polygonOffsetFactor=0;m.polygonOffsetUnits=-i*2;}});return M;}
 const GEO={};
 function boxGeo(w,h,d){const k='b'+w.toFixed(3)+'_'+h.toFixed(3)+'_'+d.toFixed(3);return GEO[k]||(GEO[k]=new THREE.BoxGeometry(w,h,d));}
 function cylGeo(rt,rb,h,seg){const k='c'+[rt,rb,h].map(v=>(+v).toFixed(3)).join('_')+'_'+seg;return GEO[k]||(GEO[k]=new THREE.CylinderGeometry(rt,rb,h,seg));}
@@ -1194,6 +1215,7 @@ function buildRobot(d,pal){
  vehDetail(V.v,M,V.S||VSHAPE[k],hashStr('veh'+(d.id||'')+(d.parts?JSON.stringify(d.parts):'')));
  V.v.traverse(o=>{if(o.isMesh)o.castShadow=true;});
  root.traverse(o=>{if(o.isMesh&&o.material&&o.material.transparent)o.castShadow=false;});
+ unfight(root);unfight(V.v);
  return {root,body,P,mats:[M.a,M.b,M.c],veh:V.v,wheels:V.wheels,vehY:V.y||0};
 }
 /* layered armor shards over an exposed mechanical frame; the layout is seeded per robot so each one is consistent */
@@ -1522,7 +1544,7 @@ const VGEAR={
   bx(.06,.5,1.2,M.b,-1.55,H.top+.62,0,v);},
  jetbike(M,v,H,w){for(const s of [1,-1]){cyl(.16,1,M.c,v,-1.25,H.D+.3,s*.3,'x',12);cyl(.13,.05,M.gl,v,-1.77,H.D+.3,s*.3,'x',12);const f=bx(.5,.36,.04,M.b,-1.2,H.D+.6,s*.36,v);f.rotation.x=s*.35;}},
  heli(M,v,H,w){cyl(.08,.36,M.chrome,v,.25,H.top+.18,0,null,8);const rt=grp(v,.25,H.top+.4,0);rt.userData.wheel=true;rt.userData.rotor=true;rt.rotation.x=-Math.PI/2;cyl(.16,.12,M.dk,rt,0,0,0,'z',12);
-  for(let i=0;i<4;i++){const b=bx(1.9,.18,.035,M.dk,0,0,0,rt);b.rotation.z=i*Math.PI/2;b.position.set(Math.cos(i*Math.PI/2)*.95,Math.sin(i*Math.PI/2)*.95,0);bx(.12,.19,.04,M.gl,.9,0,0,b);}if(w)w.push(rt);for(const s of [1,-1]){cyl(.07,.5,M.c,v,.4,H.D+.2,s*.62,'x',8);cone(.07,.12,M.red,v,.71,H.D+.2,s*.62,0,-Math.PI/2,8);}},
+  for(let i=0;i<4;i++){const b=bx(1.9,.18,.035,M.dk,0,0,0,rt);b.rotation.z=i*Math.PI/2;b.position.set(Math.cos(i*Math.PI/2)*.95,Math.sin(i*Math.PI/2)*.95,0);bx(.13,.21,.05,M.gl,.9,0,0,b);}if(w)w.push(rt);for(const s of [1,-1]){cyl(.07,.5,M.c,v,.4,H.D+.2,s*.62,'x',8);cone(.07,.12,M.red,v,.71,H.D+.2,s*.62,0,-Math.PI/2,8);}},
  heavy(M,v,H){for(const s of [1,-1]){const z=s*(H.hw-.05);cyl(.07,1.2,M.chrome,v,.2,H.top+.5,z,null,10);cyl(.09,.08,M.gl,v,.2,H.top+1.12,z,null,10);cyl(.16,1.2,M.c,v,-.3,H.D+.1,s*(H.hw+.14),'x',10);}},
  swift(M,v,H){bx(.32,.08,H.hw*2+.3,M.c,-1.4,H.top+.36,0,v);for(const s of [1,-1]){bx(.08,.36,.08,M.c,-1.4,H.top+.18,s*H.hw*.7,v);bx(2.2,.04,.04,M.gl,0,H.D+.2,s*(H.hw+.03),v);}},
  jet(M,v,H){bx(1.3,.07,3.4,M.a,-.2,H.D+.3,0,v);for(const s of [1,-1]){bx(.1,.08,.1,M.gl,-.2,H.D+.3,s*1.7,v);cyl(.08,.9,M.c,v,-.1,H.D+.15,s*1.2,'x',8);const f=bx(.6,.7,.07,M.b,-1.4,H.top+.3,s*.25,v);f.rotation.x=s*.25;}},
@@ -2067,7 +2089,7 @@ G.rockMat=metal(0x6a4030,.05,.95);
  bx(2*ARENA+3.3,.5,.5,gm,0,7,-2.6,S);for(let x=-ARENA;x<=ARENA;x+=2.2)bx(.12,.9,.12,gm,x,6.4,-2.6,S);
  const lad=grp(S,-5,5.2,-2.6);cyl(1,1.3,metal(0x3a3027,.6,.6),lad,0,0,0,null,16,.8);cyl(.95,.06,glowMat(0xffa030,3),lad,0,.66,0,null,16);for(const s of [1,-1])cyl(.03,1.4,gm,lad,s*.7,1.2,0,null,6);
  A.update=(dt)=>{mt.offset.x+=dt*.04;accent.intensity=2.4+Math.sin(G.clock*3.1)*.3+Math.sin(G.clock*7.3)*.15;lad.rotation.y+=dt*.1;};
-})(ARENAS[0]);
+unfight(ARENAS[0].group,.006);})(ARENAS[0]);
 // ---- rooftop
 (function(A){const S=A.group;
  S.add(skyDome('#04050c','#0d0b22','#3a1640'));
@@ -2092,7 +2114,7 @@ G.rockMat=metal(0x6a4030,.05,.95);
  const neons=signs.map(([t,c,p])=>{const s=neonSign(t,c,6,1.5);s.position.set(...p);S.add(s);return s;});
  A.update=(dt)=>{fans.forEach(f=>f.rotation.y+=dt*6);bulbM.emissiveIntensity=Math.sin(G.clock*3)>0?4:.2;
   neons[1].material.emissiveIntensity=Math.random()<.02?.3:2.2;accent.intensity=2.2+Math.sin(G.clock*1.7)*.4;};
-})(ARENAS[1]);
+unfight(ARENAS[1].group,.006);})(ARENAS[1]);
 // ---- canyon
 (function(A){const S=A.group;
  S.add(skyDome('#2a1d4a','#c85a3a','#ffb46a'));
@@ -2110,7 +2132,7 @@ G.rockMat=metal(0x6a4030,.05,.95);
  const wreck=grp(S,17,0,-9);wreck.rotation.set(.3,-.6,.2);bx(4.2,3.4,4,rustM,0,1.2,0,wreck);bx(3.2,.6,.3,metal(0x111111,.4,.4),0,1.8,2.05,wreck);bx(3.4,.4,.2,glowMat(0x55ddff,.25),0,1.8,2.12,wreck);bx(.8,2,3,rust2,0,3.5,0,wreck);bx(4.6,1,1,rust2,0,.2,2.2,wreck);
  const arm=grp(S,-19,0,-8);arm.rotation.z=.9;bx(1.4,6,1.4,rustM,0,2,0,arm);bx(2,1.4,1.8,rust2,0,5.4,.1,arm);for(let i=0;i<3;i++){const fg=bx(.35,1.4,.4,rustM,(i-1)*.55,6.6,.4,arm);fg.rotation.x=.5;}
  for(const x of [-ARENA-1.8,ARENA+1.8]){const p=grp(S,x,0,-1.2);bx(1.1,3.5,1.1,rockM,0,1.75,0,p);bx(1.4,.4,1.4,rustM,0,3.6,0,p);bx(.1,1.5,.1,glowMat(0xff9a3c,1.5),.56,2.2,0,p);}
-})(ARENAS[2]);
+unfight(ARENAS[2].group,.006);})(ARENAS[2]);
 
 // ---- one map per campaign mission: shared builders + 17 more arenas, each built the first time it is shown
 function noiseFill(g,n,rgb,amp,a){for(let i=0;i<n;i++){const v=Math.random()*amp|0;g.fillStyle=`rgba(${rgb[0]+v},${rgb[1]+v},${rgb[2]+v},${a})`;g.fillRect(Math.random()*512,Math.random()*512,2,2);}}
@@ -2369,7 +2391,7 @@ function envFor(A){
  return envCache[A.id]=tex;
 }
 function applyArena(i){
- G.arena=i;const A=ARENAS[i];if(A.build&&!A.built){A.built=1;try{A.build(A,A.group);}catch(e){console.error(e);}}
+ G.arena=i;const A=ARENAS[i];if(A.build&&!A.built){A.built=1;try{A.build(A,A.group);unfight(A.group,.006);}catch(e){console.error(e);}}
  ARENAS.forEach((a,j)=>a.group.visible=j===i);
  scene.background=lin(A.bg);scene.fog=new THREE.Fog(lin(A.bg),A.fog[0],A.fog[1]);
  hemi.color=lin(A.hemi[0]);hemi.groundColor=lin(A.hemi[1]);hemi.intensity=A.hemi[2];
