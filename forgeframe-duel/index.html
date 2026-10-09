@@ -1226,23 +1226,26 @@ function plate(p,m,w,h,x,y,z,rx,ry,rz){const me=bx(w,h,.035,m,x,y,z,p);me.rotati
 function gear(p,M,rad,x,y,z){const g=grp(p,x,y,z);cyl(rad,.06,M.dk,g,0,0,0,'x',10);cyl(rad*.45,.09,M.chrome,g,0,0,0,'x',8);for(let i=0;i<8;i++){const a=i/8*6.283,t=bx(.06,rad*.3,rad*.3,M.dk,0,Math.cos(a)*rad,Math.sin(a)*rad,g);t.rotation.x=a;}return g;}
 function cable(p,M,a,b,rad){const A=new V3(...a),Bv=new V3(...b),dir=Bv.clone().sub(A),len=dir.length(),me=cyl(rad||.022,len,M.dk,p,0,0,0,null,5);me.position.copy(A).lerp(Bv,.5);me.quaternion.setFromUnitVectors(UP,dir.normalize());return me;}
 function plating(c,P,d){const{M,B,L,TW,TH,front,chest,torso,back,head}=c,R=rng(hashStr((d.id||'x')+(d.parts?JSON.stringify(d.parts)+JSON.stringify(d.adds||''):''))),pm=()=>R()<.6?M.a:M.b;
- for(let i=0;i<8;i++){const sd=i%2?1:-1,row=Math.floor(i/2);plate(chest,pm(),TW*(.2+R()*.14),TH*(.12+R()*.1),sd*TW*(.14+R()*.22),TH*(.2-row*.13)+R()*.04,front+.06+R()*.05,(R()-.5)*.3,sd*(.15+R()*.3),sd*(.2+R()*.5));}
+ /* random panels are designed for one side, then mirrored onto the other */
+ for(let row=0;row<4;row++){const m=pm(),w=TW*(.2+R()*.14),h=TH*(.12+R()*.1),rz=.2+R()*.5,x=Math.max(TW*(.14+R()*.22),w/2*Math.cos(rz)+h/2*Math.sin(rz)+.02),y=TH*(.2-row*.13)+R()*.04,z=front+.06+R()*.05,rx=(R()-.5)*.3,ry=.15+R()*.3;
+  for(const sd of [1,-1])plate(chest,m,w,h,sd*x,y,z,rx,sd*ry,sd*rz);}
  for(const sd of [1,-1]){plate(chest,M.b,TW*.3,TH*.2,sd*TW*.3,TH*.36,front-.1,-.5,sd*.3,sd*.5);plate(chest,M.a,.36*B,TH*.36,sd*(TW/2+.02),-TH*.02,.08*B,0,sd*1.4,sd*.12);}
  for(let i=0;i<4;i++)cyl(.08*B,.05,M.chrome,torso,0,TH*(.05+i*.09),0,null,8);
  for(const sd of [1,-1]){cable(torso,M,[sd*.1*B,TH*.02,.17*B],[sd*TW*.3,TH*.42,.3*B]);cable(torso,M,[sd*.16*B,TH*.02,-.14*B],[sd*TW*.28,TH*.4,-.3*B]);piston(torso,[sd*.2*B,TH*.04,0],[sd*TW*.36,TH*.36,0],.03,M);}
  for(const sd of [1,-1])for(let i=0;i<2;i++)plate(back,M.a,.5,.16,sd*(.3+i*.16),TH*(.2-i*.2),-.3*B,0,sd*.9,sd*(.5+i*.3));
  for(const sd of [1,-1]){plate(head,M.b,.16,.1,sd*.14,.43,.3,-.3,sd*.3,sd*.5);plate(head,M.c,.1,.2,sd*.2,.14,.27,0,sd*.5,sd*.25);plate(head,M.a,.24,.08,sd*.3,.36,-.02,0,sd*1.4,sd*.4);}
  cone(.05,.16,M.chrome,head,0,-.02,.26,Math.PI,0,4);
- for(const sd of [1,-1]){const k=sd>0?'R':'L',sh=P['sh'+k],el=P['el'+k],hip=P['hip'+k],kn=P['kn'+k];
+ const limbSeed=Math.floor(R()*1e9);
+ for(const sd of [1,-1]){const R=rng(limbSeed),pm=()=>R()<.6?M.a:M.b;const k=sd>0?'R':'L',sh=P['sh'+k],el=P['el'+k],hip=P['hip'+k],kn=P['kn'+k];
   gear(sh,M,.14*B,-sd*.02,0,0);
   for(let i=0;i<3;i++)plate(sh,pm(),.34*B,.22,sd*(.12+i*.07),.24+i*.1,(i-1)*.14*B,0,0,sd*(.5+i*.3));
   cable(sh,M,[0,-.1,-.12*B],[0,-.56,-.14*B],.02);
-  for(let i=0;i<3;i++)plate(el,pm(),.22*B,.24,sd*.18*B,-.14-i*.14,(i-1)*.09*B,0,sd*1.57,(R()-.5)*.5);
-  plate(el,pm(),.28*B,.34,0,-.3,.17*B+.02,.15,0,(R()-.5)*.2);
+  for(let i=0;i<3;i++)plate(el,pm(),.22*B,.24,sd*.18*B,-.14-i*.14,(i-1)*.09*B,0,sd*1.57,sd*(R()-.5)*.5);
+  plate(el,pm(),.28*B,.34,0,-.3,.17*B+.02,.15,0,sd*(R()-.5)*.2);
   gear(hip,M,.13*B,sd*.19*B,0,0);
-  for(let i=0;i<3;i++)plate(hip,pm(),.3*B,L*.16,sd*.03*i,-L*(.1+i*.11),.22*B+.012*i,-.15,sd*.2,(R()-.5)*.3);
+  for(let i=0;i<3;i++)plate(hip,pm(),.3*B,L*.16,sd*.03*i,-L*(.1+i*.11),.22*B+.012*i,-.15,sd*.2,sd*(R()-.5)*.3);
   plate(hip,M.b,.28*B,L*.3,sd*.2*B,-L*.24,0,0,sd*1.57,.1*sd);
-  for(let i=0;i<3;i++)plate(kn,pm(),.34*B,L*.14,0,-L*(.1+i*.11),.23*B+.015*i,-.2-i*.05,0,(R()-.5)*.25);
+  for(let i=0;i<3;i++)plate(kn,pm(),.34*B,L*.14,0,-L*(.1+i*.11),.23*B+.015*i,-.2-i*.05,0,sd*(R()-.5)*.25);
   for(const t of [1,-1])plate(kn,pm(),.3*B,L*.32,t*.19*B,-L*.24,-.02,0,t*1.57,t*.08);
   cone(.06*B,.34,M.chrome,kn,0,-L*.34,-.26*B,-2.2,0,4);
   for(const t of [-1,1])cone(.05*B,.26,M.chrome,kn,t*.12*B,-L*.5+.06,.6*B,1.57,0,4);
@@ -1251,7 +1254,8 @@ function plating(c,P,d){const{M,B,L,TW,TH,front,chest,torso,back,head}=c,R=rng(h
 /* vehicle detailing: layered side armor, panel lines, exhausts, grille, bumper teeth, frame rails and engine parts */
 const VSHAPE={heavy:{D:.7,top:1.56,hw:.86,x0:-2,x1:1.66},swift:{D:.4,top:.8,hw:.76,x0:-1.5,x1:1.5},jet:{D:-.25,top:.26,hw:.32,x0:-1.5,x1:1.6},brute:{D:.55,top:1.36,hw:.56,x0:-1.2,x1:1},stealth:{D:.63,top:.94,hw:.16,x0:-.7,x1:.7},guard:{D:.42,top:1.03,hw:.91,x0:-1.5,x1:1.5},boss:{D:.42,top:1.03,hw:.91,x0:-1.5,x1:1.5}};
 function vehDetail(v,M,S,seed){const R=rng(seed),len=S.x1-S.x0,h=Math.max(.2,S.top-S.D),mx=(S.x0+S.x1)/2,pm=()=>R()<.6?M.a:M.b;
- for(const sd of [1,-1]){const z=sd*(S.hw+.04);
+ const sideSeed=Math.floor(R()*1e9);
+ for(const sd of [1,-1]){const z=sd*(S.hw+.04),R=rng(sideSeed),pm=()=>R()<.6?M.a:M.b;
   for(let i=0;i<5;i++)plate(v,pm(),len*(.14+R()*.1),h*(.45+R()*.35),S.x0+len*(.1+i*.2)+R()*.08,S.D+h*(.45+R()*.15),z+sd*R()*.03,0,0,(R()-.5)*.35);
   bx(len*.86,.025,.03,M.dk,mx,S.D+h*.25,z+sd*.03,v);bx(len*.6,.02,.03,M.gl,mx+len*.05,S.D+h*.8,z+sd*.04,v);
   for(let i=0;i<6;i++)rivet(v,S.x0+len*(.1+i*.16),S.D+h*.12,z+sd*.04,M.chrome);
