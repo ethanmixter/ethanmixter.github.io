@@ -135,6 +135,10 @@ kbd{font-family:var(--f-label);font-weight:700;color:var(--text);border:1px soli
 .chals summary{cursor:pointer;font-family:var(--f-label);font-weight:700;font-size:13px;letter-spacing:.18em;text-transform:uppercase;color:var(--text)}
 #chalList{display:flex;flex-direction:column;gap:7px;margin-top:10px}
 .chp{grid-column:1 / 3;display:block;height:4px;margin-top:4px;background:rgba(255,255,255,.08);overflow:hidden}
+.weekly{display:flex;flex-direction:column;gap:8px}.weekly h4{margin:0}.weekly .hint{margin:0}
+.wk{display:grid;grid-template-columns:1fr auto;gap:2px 10px;align-items:center;padding:8px 10px;box-shadow:inset 0 0 0 1px var(--line)}
+.wk b{font-family:var(--f-label);font-weight:700;font-size:14px;letter-spacing:.03em}.wk em{font-style:normal;font-family:var(--f-label);font-weight:700;font-size:13px;color:var(--amber)}
+.wk span{font-size:12px;color:var(--muted)}.wk .buy{justify-self:end}.wk.done b,.wk.done em{color:var(--muted)}
 .chp i{display:block;height:100%;background:var(--volt);transform-origin:left}
 .savebox{border-top:1px solid var(--line);padding-top:12px;display:flex;flex-direction:column;gap:8px}
 .savebox h4{margin:0}
@@ -182,6 +186,8 @@ kbd{font-family:var(--f-label);font-weight:700;color:var(--text);border:1px soli
 .part em{font-style:normal;font-family:var(--f-label);font-weight:700;font-size:13px;letter-spacing:.06em;color:var(--amber);white-space:nowrap}
 .part span{grid-column:1 / 3;font-size:12.5px;line-height:1.35;color:var(--muted)}
 .part span.st{color:var(--volt)}
+.part span.sell{grid-column:1 / -1;justify-self:start;margin-top:4px;padding:4px 9px;border:1px dashed var(--amber);color:var(--amber);font-family:var(--f-label);font-weight:700;font-size:11.5px;letter-spacing:.1em;text-transform:uppercase;cursor:pointer}
+.part span.sell[data-arm]{background:var(--amber);color:#16110a}
 .part[aria-pressed="true"]{border-color:var(--amber);background:rgba(255,178,30,.09)}
 .part:disabled{opacity:.45;cursor:default}
 .plist{display:flex;flex-direction:column;gap:4px}
@@ -404,6 +410,21 @@ html{-webkit-text-size-adjust:100%;text-size-adjust:100%}
 @keyframes fade{from{opacity:1}to{opacity:0;transform:scale(.96)}}
 #movelist{position:absolute;left:16px;bottom:calc(env(safe-area-inset-bottom,0px) + 14px);display:grid;grid-template-columns:auto auto auto;gap:3px 10px;font-family:var(--f-label);font-size:13px;letter-spacing:.06em;background:var(--panel);padding:10px 12px;border-left:3px solid var(--amber)}
 #movelist .dim,#movelist .dim kbd{color:#56616d}
+#photo{position:fixed;inset:0;z-index:6;display:flex;flex-direction:column;justify-content:flex-end;padding:12px;padding-bottom:calc(env(safe-area-inset-bottom,0px) + 12px);pointer-events:auto}
+.phPanel{display:flex;flex-direction:column;gap:8px;max-width:900px;margin:0 auto;width:100%;box-sizing:border-box;background:var(--panel);border-top:2px solid var(--amber);padding:12px 14px;backdrop-filter:blur(6px)}
+.phPanel[hidden]{display:none}
+.phRow{display:flex;flex-wrap:wrap;align-items:center;gap:6px 10px}
+.phRow > b{font-family:var(--f-label);font-weight:700;font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:var(--muted)}
+.phRow input[type=range]{flex:1;min-width:90px;accent-color:#ffb21e}
+#phArena{font-family:var(--f-label);font-weight:700;font-size:14px;letter-spacing:.08em;min-width:9em;text-align:center}
+.phGap{flex:1}
+.phPrev{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;padding:16px;background:rgba(8,10,13,.86)}
+.phPrev[hidden]{display:none}
+.phCard{display:flex;flex-direction:column;gap:10px;align-items:center;max-width:min(900px,100%)}
+.phCard img{max-width:100%;max-height:70vh;border:2px solid var(--amber);display:block}
+.phCard .hint{margin:0;text-align:center;color:var(--muted)}
+#movelist2{position:absolute;right:16px;bottom:calc(env(safe-area-inset-bottom,0px) + 14px);display:grid;grid-template-columns:auto auto auto;gap:3px 10px;font-family:var(--f-label);font-size:13px;letter-spacing:.06em;background:var(--panel);padding:10px 12px;border-right:3px solid var(--volt)}
+#movelist2 em{font-style:normal;color:var(--volt);text-align:right}
 #movelist em{font-style:normal;color:var(--volt);text-align:right;font-variant-numeric:tabular-nums}
 #movelist .dim em{color:#3d4854}
 #pauseBtn{position:absolute;top:calc(env(safe-area-inset-top,0px) + 100px);left:50%;transform:translateX(-50%);pointer-events:auto;background:var(--panel);border:1px solid var(--line);font-family:var(--f-label);font-weight:800;letter-spacing:.2em;font-size:11px;padding:5px 10px;cursor:pointer}
@@ -484,6 +505,7 @@ html{-webkit-text-size-adjust:100%;text-size-adjust:100%}
       <span data-for="versus">Opponent</span><div class="seg" id="opp" data-for="versus"></div>
       <span data-for="arcade versus">Rounds</span><div class="seg" id="rounds" data-for="arcade versus"></div>
       <span data-for="arcade versus">Skill</span><div class="seg" id="diff" data-for="arcade versus"></div>
+      <span data-for="versus">Player 2</span><div class="seg" id="p2ctl" data-for="versus"></div>
       <span data-for="training">Dummy</span><div class="seg" id="dummy" data-for="training"></div>
     </div>
     </section>
@@ -495,6 +517,7 @@ html{-webkit-text-size-adjust:100%;text-size-adjust:100%}
     <section class="tabp" data-tab="workshop"><div class="detail" id="workshop"></div></section>
     <section class="tabp" data-tab="crates"><div class="boxes ups" id="boxes"></div></section>
     <section class="tabp" data-tab="progress">
+    <div class="weekly" id="weekly"></div>
     <div class="savebox"><h4>Progress</h4><p id="saveState" class="saveState"></p>
       <div class="seg"><button id="saveNow">Save now</button><button id="dailyBtn">Daily reward</button></div>
       <details><summary>Backup code</summary><p class="hint">Copy this code somewhere safe. Paste it here on any device to load this progress.</p>
@@ -527,7 +550,7 @@ html{-webkit-text-size-adjust:100%;text-size-adjust:100%}
 <div id="hud" hidden>
   <div class="bars">
     <div class="side p1">
-      <div class="nameRow"><span class="pname" id="n1"></span><span class="tag">YOU</span><span class="pips" id="w1"></span></div>
+      <div class="nameRow"><span class="pname" id="n1"></span><span class="tag" id="tag1">YOU</span><span class="pips" id="w1"></span></div>
       <div class="hp" id="hpb1"><i class="trail" id="t1"></i><i class="fill" id="h1"></i></div>
       <div class="en" id="enb1"><i id="e1"></i></div>
       <div class="enLabel" id="el1"></div>
@@ -535,7 +558,7 @@ html{-webkit-text-size-adjust:100%;text-size-adjust:100%}
     </div>
     <div class="clock"><div id="timer">60</div><div id="roundLbl">Round 1</div><div id="modeTag"></div></div>
     <div class="side p2">
-      <div class="nameRow"><span class="pname" id="n2"></span><span class="tag">CPU</span><span class="pips" id="w2"></span></div>
+      <div class="nameRow"><span class="pname" id="n2"></span><span class="tag" id="tag2">CPU</span><span class="pips" id="w2"></span></div>
       <div class="hp" id="hpb2"><i class="trail" id="t2"></i><i class="fill" id="h2"></i></div>
       <div class="en" id="enb2"><i id="e2"></i></div>
       <div class="enLabel" id="el2"></div>
@@ -548,6 +571,7 @@ html{-webkit-text-size-adjust:100%;text-size-adjust:100%}
   <div id="callout"></div>
   <div id="tut" hidden><div class="tutBox"><small id="tutN"></small><b id="tutT"></b><span id="tutD"></span></div><button id="tutSkip" class="btn small">Skip</button></div>
   <div id="movelist"></div>
+  <div id="movelist2" hidden></div>
 </div>
 
 <div id="touch">
@@ -561,6 +585,15 @@ html{-webkit-text-size-adjust:100%;text-size-adjust:100%}
   </div>
 </div>
 
+<section id="photo" class="screen" hidden>
+  <div class="phPanel" id="phPanel">
+    <div class="phRow"><b>Pose</b><div class="seg" id="phPose"></div></div>
+    <div class="phRow"><b>Angle</b><input type="range" id="phAng" min="-180" max="180" value="20" aria-label="Camera angle"><b>Zoom</b><input type="range" id="phZoom" min="35" max="140" value="75" aria-label="Zoom"><b>Height</b><input type="range" id="phH" min="2" max="70" value="22" aria-label="Camera height"></div>
+    <div class="phRow"><b>Arena</b><button class="btn small" id="phPrev" aria-label="Previous arena">◀</button><span id="phArena"></span><button class="btn small" id="phNext" aria-label="Next arena">▶</button>
+      <span class="phGap"></span><button class="btn small" id="phHide">Hide controls</button><button class="btn small" id="phDone">Done</button><button class="btn primary" id="phSnap">Take picture</button></div>
+  </div>
+  <div class="phPrev" id="phShot" hidden><div class="phCard"><img id="phImg" alt="Your picture"><p class="hint" id="phMsg"></p><div class="phRow"><button class="btn primary" id="phSave">Save picture</button><button class="btn small" id="phBack">Keep posing</button></div></div></div>
+</section>
 <section id="cs" class="screen" hidden>
   <button id="csSkip" class="btn small corner">Skip</button>
   <div class="csBox"><small id="csWho"></small><p id="csText"></p><span id="csHint">Tap or press Enter to continue</span></div>
@@ -676,14 +709,14 @@ function rankInfo(xp){let L=1;while(L<RANKS.length&&xp>=75*L*(L+1))L++;const lo=
 const KINDS=['heavy','swift','jet','brute','stealth','guard','boss'];
 const SLOTS=[['head','Head'],['chest','Torso'],['arms','Arms'],['legs','Legs']];
 const VTXT={
- head:{heli:'bubble canopy',heavy:'truck cab',swift:'glass canopy',jet:'jet cockpit',brute:'cage cab',stealth:'visor pod',guard:'tank cupola',boss:'crowned bridge'},
- chest:{heli:'helicopter cabin',heavy:'cargo hull',swift:'race body',jet:'jet fuselage',brute:'engine block',stealth:'wedge body',guard:'armored hull',boss:'fortress hull'},
- arms:{heli:'main rotor',heavy:'smokestacks',swift:'rear spoiler',jet:'wings',brute:'dozer blade',stealth:'side blades',guard:'twin cannons',boss:'siege guns'},
- legs:{heli:'landing skids (it flies)',heavy:'six truck wheels',swift:'four race wheels',jet:'jet engines (it flies)',brute:'dozer tracks',stealth:'three trike wheels',guard:'tank tracks',boss:'spiked tracks'}};
+ head:{hover:'wheelhouse',jetbike:'windscreen fairing',heli:'bubble canopy',heavy:'truck cab',swift:'glass canopy',jet:'jet cockpit',brute:'cage cab',stealth:'visor pod',guard:'tank cupola',boss:'crowned bridge'},
+ chest:{hover:'hovercraft deck',jetbike:'jet bike body',heli:'helicopter cabin',heavy:'cargo hull',swift:'race body',jet:'jet fuselage',brute:'engine block',stealth:'wedge body',guard:'armored hull',boss:'fortress hull'},
+ arms:{hover:'twin fans',jetbike:'rear jet engines',heli:'main rotor',heavy:'smokestacks',swift:'rear spoiler',jet:'wings',brute:'dozer blade',stealth:'side blades',guard:'twin cannons',boss:'siege guns'},
+ legs:{hover:'air skirt (it hovers)',jetbike:'thruster pods (it flies low)',heli:'landing skids (it flies)',heavy:'six truck wheels',swift:'four race wheels',jet:'jet engines (it flies)',brute:'dozer tracks',stealth:'three trike wheels',guard:'tank tracks',boss:'spiked tracks'}};
 const VNAME={
- arms:{heli:'Rotor',heavy:'Smokestack',swift:'Spoiler',jet:'Winged',brute:'Bladed',stealth:'Razor',guard:'Cannon',boss:'Siege'},
- chest:{heli:'Gunship',heavy:'Cargo',swift:'Street',jet:'Aero',brute:'Diesel',stealth:'Stealth',guard:'Armored',boss:'Fortress'},
- legs:{heli:'Chopper',heavy:'Hauler',swift:'Racer',jet:'Jet',brute:'Crawler',stealth:'Trike',guard:'Tank',boss:'Juggernaut'}};
+ arms:{hover:'Fan',jetbike:'Afterburner',heli:'Rotor',heavy:'Smokestack',swift:'Spoiler',jet:'Winged',brute:'Bladed',stealth:'Razor',guard:'Cannon',boss:'Siege'},
+ chest:{hover:'Deck',jetbike:'Streak',heli:'Gunship',heavy:'Cargo',swift:'Street',jet:'Aero',brute:'Diesel',stealth:'Stealth',guard:'Armored',boss:'Fortress'},
+ legs:{hover:'Hovercraft',jetbike:'Jet Bike',heli:'Chopper',heavy:'Hauler',swift:'Racer',jet:'Jet',brute:'Crawler',stealth:'Trike',guard:'Tank',boss:'Juggernaut'}};
 const PCOL=[0x3b5b7a,0xa3222e,0xdfe6ec,0xf2c230,0x2f6b4f,0x6b4a2e,0x2a2438,0x1c8fb8,0xd9612a,0x4a5058,0x8a3fb0,0x1b1d21];
 const GCOL=[0xffb21e,0x46d7ff,0xff4d2e,0x5dffb0,0xb77bff,0xff3a8a,0xfff06a,0xffffff];
 /* part: [id, name, vehicle/base shape, add-on, bonuses {h armor, s speed, p damage, e energy, j jump}, price, power move, power-up price, needs campaign] */
@@ -760,13 +793,21 @@ const RARITY=['Common','Uncommon','Rare','Epic','Legendary'];
 const rarOf=a=>a[8]?4:a[5]===0?0:a[5]<=160?1:a[5]<=200?2:3;
 const PART={};
 for(const sl in CATALOG)CATALOG[sl]=CATALOG[sl].map(a=>PART[a[0]]={id:a[0],name:a[1],base:a[2],addon:a[3],st:a[4],price:a[5],move:'p_'+a[0],pp:a[7],req:!!a[8],slot:sl,rar:rarOf(a)});
-const THEMES=[['heavy','Truck','hauler parts'],['swift','Car','fast racer parts'],['jet','Plane','flying parts'],['brute','Dozer','heavy breaker parts'],['stealth','Bike','ninja parts'],['guard','Tank','armored parts'],['heli','Helicopter','rotor parts']];
+const THEMES=[['heavy','Truck','hauler parts'],['swift','Car','fast racer parts'],['jet','Plane','flying parts'],['brute','Dozer','heavy breaker parts'],['stealth','Bike','ninja parts'],['guard','Tank','armored parts'],['heli','Helicopter','rotor parts'],['hover','Hovercraft','water skimmer parts'],['jetbike','Jet Bike','sky racer parts']];
 const TIERW=['','Field','Veteran','Elite','Prime'],SLOTN={head:'Helm',chest:'Torso',arms:'Arms',legs:'Legs'};
-const GNAME={"heli":{"head":["Rotor Cap","Canopy Helm","Gunship Visor","Skyhawk Crown"],"chest":["Cabin Core","Rotor Frame","Gunship Hull","Stormblade Core"],"arms":["Winch Arms","Pod Arms","Gatling Arms","Hellfire Arms"],"legs":["Skid Legs","Landing Struts","Hover Skids","Thunderhawk Legs"]},"heavy":{"head":["Rig Cap","Stack Crown","Ironbrow","Convoy King"],"chest":["Flatbed Core","Boxcar Chest","Juggernaut Hull","Road Titan"],"arms":["Tow Arms","Jackhammers","Pile Drivers","Atlas Arms"],"legs":["Axle Legs","Big Rigs","Eighteen Wheelers","Colossus Treads"]},"swift":{"head":["Rally Visor","Turbo Dome","Apex Visor","Velocity Crown"],"chest":["Hatchback Shell","Coupe Core","Supercar Shell","Hyperdrive Core"],"arms":["Gearshift Arms","Piston Jabs","Nitro Gauntlets","Mach Fists"],"legs":["Drift Legs","Burnout Legs","Turbo Striders","Quicksilver Legs"]},"jet":{"head":["Cadet Dome","Wingman Visor","Ace Helm","Stratos Crown"],"chest":["Glider Frame","Fighter Frame","Bomber Core","Skyfortress Core"],"arms":["Flap Arms","Aileron Arms","Raptor Wings","Seraph Wings"],"legs":["Landing Gear","Vector Legs","Scramjet Legs","Stormrider Legs"]},"brute":{"head":["Hardhead","Ramskull","Rockjaw","Mountain Skull"],"chest":["Quarry Block","Crusher Core","Furnace Chest","Volcano Core"],"arms":["Shovel Arms","Wrecker Arms","Demolisher Arms","Earthbreaker Arms"],"legs":["Grader Legs","Stomper Treads","Bedrock Legs","Mammoth Legs"]},"stealth":{"head":["Rider Mask","Night Visor","Phantom Hood","Wraith Crown"],"chest":["Street Weave","Dusk Cloak","Ghost Shroud","Eclipse Mantle"],"arms":["Chain Arms","Switchblades","Viper Fangs","Reaper Scythes"],"legs":["Kickstarts","Chopper Legs","Night Striders","Shadowrunner Legs"]},"guard":{"head":["Hatch Helm","Periscope Helm","Citadel Helm","Bastion Crown"],"chest":["Plate Carrier","Bunker Chest","Rampart Core","Fortress Heart"],"arms":["Riot Arms","Barricade Arms","Pavise Arms","Aegis Arms"],"legs":["Half-tracks","Panzer Legs","Siege Treads","Juggernaut Tracks"]}};
-const TN={heli:'Helicopter',heavy:'Truck',swift:'Car',jet:'Plane',brute:'Dozer',stealth:'Bike',guard:'Tank',boss:'Tyrant'};
+const GNAME={"hover":{"head":["Pilot Hood","Sonar Helm","Tidecaller Visor","Leviathan Crown"],"chest":["Deck Core","Hull Plate","Bow Breaker","Dreadnought Deck"],"arms":["Mooring Arms","Spray Arms","Hydro Cannons","Kraken Arms"],"legs":["Skirt Legs","Fan Striders","Wavecutter Legs","Riptide Legs"]},"jetbike":{"head":["Racer Visor","Streak Helm","Nova Visor","Zenith Crown"],"chest":["Fairing Core","Streamline Chest","Afterburn Core","Hyperjet Frame"],"arms":["Grip Arms","Slipstream Arms","Contrail Arms","Comet Arms"],"legs":["Thruster Legs","Skyriders","Burner Legs","Starstreak Legs"]},"heli":{"head":["Rotor Cap","Canopy Helm","Gunship Visor","Skyhawk Crown"],"chest":["Cabin Core","Rotor Frame","Gunship Hull","Stormblade Core"],"arms":["Winch Arms","Pod Arms","Gatling Arms","Hellfire Arms"],"legs":["Skid Legs","Landing Struts","Hover Skids","Thunderhawk Legs"]},"heavy":{"head":["Rig Cap","Stack Crown","Ironbrow","Convoy King"],"chest":["Flatbed Core","Boxcar Chest","Juggernaut Hull","Road Titan"],"arms":["Tow Arms","Jackhammers","Pile Drivers","Atlas Arms"],"legs":["Axle Legs","Big Rigs","Eighteen Wheelers","Colossus Treads"]},"swift":{"head":["Rally Visor","Turbo Dome","Apex Visor","Velocity Crown"],"chest":["Hatchback Shell","Coupe Core","Supercar Shell","Hyperdrive Core"],"arms":["Gearshift Arms","Piston Jabs","Nitro Gauntlets","Mach Fists"],"legs":["Drift Legs","Burnout Legs","Turbo Striders","Quicksilver Legs"]},"jet":{"head":["Cadet Dome","Wingman Visor","Ace Helm","Stratos Crown"],"chest":["Glider Frame","Fighter Frame","Bomber Core","Skyfortress Core"],"arms":["Flap Arms","Aileron Arms","Raptor Wings","Seraph Wings"],"legs":["Landing Gear","Vector Legs","Scramjet Legs","Stormrider Legs"]},"brute":{"head":["Hardhead","Ramskull","Rockjaw","Mountain Skull"],"chest":["Quarry Block","Crusher Core","Furnace Chest","Volcano Core"],"arms":["Shovel Arms","Wrecker Arms","Demolisher Arms","Earthbreaker Arms"],"legs":["Grader Legs","Stomper Treads","Bedrock Legs","Mammoth Legs"]},"stealth":{"head":["Rider Mask","Night Visor","Phantom Hood","Wraith Crown"],"chest":["Street Weave","Dusk Cloak","Ghost Shroud","Eclipse Mantle"],"arms":["Chain Arms","Switchblades","Viper Fangs","Reaper Scythes"],"legs":["Kickstarts","Chopper Legs","Night Striders","Shadowrunner Legs"]},"guard":{"head":["Hatch Helm","Periscope Helm","Citadel Helm","Bastion Crown"],"chest":["Plate Carrier","Bunker Chest","Rampart Core","Fortress Heart"],"arms":["Riot Arms","Barricade Arms","Pavise Arms","Aegis Arms"],"legs":["Half-tracks","Panzer Legs","Siege Treads","Juggernaut Tracks"]}};
+const TN={hover:'Hovercraft',jetbike:'Jet Bike',heli:'Helicopter',heavy:'Truck',swift:'Car',jet:'Plane',brute:'Dozer',stealth:'Bike',guard:'Tank',boss:'Tyrant'};
 const BOXP=[0,135,185,235,425],OCP=[0,160,200,250,300],TIERM=[0,1,1.45,1.9,2.6];
 /* per vehicle type and slot: add-ons for rare/epic looks, starting bonuses, and an ability family [mechanic, numbers, energy, four tier names] */
 const GEN={
+ hover:{head:{ad:['antenna','halo'],st:{e:.1,h:6},ab:['pull',{dmg:6,range:9,stun:.8},24,['Sonar Hook','Tow Line','Riptide Grab','Maelstrom Pull']]},
+  chest:{ad:['plow','core'],st:{h:20,s:.2},ab:['wall',{life:1.4,dmg:5,kb:8},26,['Spray Shield','Wake Wall','Tidal Barrier','Tsunami Wall']]},
+  arms:{ad:['barrel','shieldplate'],st:{p:.05,h:6},ab:['shot',{geo:'wave',dmg:8,kb:10,lift:2,speed:12,y:1.5,scale:1.1,snd:'whiff'},26,['Water Cannon','Bow Wave','Hydro Blast','Typhoon Cannon']]},
+  legs:{ad:['hover','plate'],st:{s:.6,j:.3},ab:['dash',{speed:18,len:.32,dmg:8,kb:4,lift:2},24,['Hover Glide','Skim Dash','Wake Rush','Cyclone Skim']]}},
+ jetbike:{head:{ad:['fin','blade'],st:{s:.3,e:.06},ab:['blink',{dmg:8,kb:5,lift:3},24,['Afterimage','Phase Shift','Warp Step','Vanishing Point']]},
+  chest:{ad:['wings','rockets'],st:{h:10,s:.4},ab:['buff',{t:4,spd:1.35},22,['Boost Mode','Turbo Core','Afterburn Drive','Hyperjet']]},
+  arms:{ad:['wing','saw'],st:{s:.15,p:.04},ab:['flurry',{hits:4,gap:.08,dmg:2.8,lastKb:7,lastLift:3},24,['Slipstream Slash','Jet Blades','Contrail Cuts','Comet Fury']]},
+  legs:{ad:['thruster','anklewing'],st:{s:.6,j:.6},ab:['leap',{vy:9,fwd:13,radius:2,dmg:11,kb:8,lift:3},24,['Ramp Jump','Jet Hop','Sky Kick','Meteor Wheelie']]}},
  heli:{head:{ad:['antenna','eye'],st:{s:.2,p:.04},ab:['beam',{dmg:12,wind:.35},26,['Searchlight','Spotlight Ray','Gunship Glare','Thermal Lance']]},
   chest:{ad:['rockets','reactor'],st:{h:14,j:.8},ab:['nova',{radius:3,dmg:7,kb:12,lift:5,pose:'up'},24,['Rotor Wash','Downdraft','Hurricane Wash','Cyclone Core']]},
   arms:{ad:['pods','barrel'],st:{p:.06,e:.06},ab:['shot',{n:4,gap:.07,dmg:3.5,kb:1.5,lift:0,speed:20,scale:.55,pose:'point'},24,['Chain Gun','Door Gun','Minigun','Gatling Storm']]},
@@ -801,7 +842,7 @@ for(const [k,tn] of THEMES)for(const [sl] of SLOTS)for(let q=1;q<=4;q++){
  const g=GEN[k][sl],st={};for(const key in g.st){const v=g.st[key];st[key]=v<0?v:key==='h'?Math.round(v*TIERM[q]):Math.round(v*TIERM[q]*100)/100;}
  const id=`g${sl[0]}_${k}_${q}`,addon=q===1?'':q===2?g.ad[0]:q===3?g.ad[1]:g.ad[0]+'+'+g.ad[1]+'+prime';
  CATALOG[sl].push(PART[id]={id,name:GNAME[k][sl][q-1],base:k,addon,st,price:BOXP[q],move:'p_'+id,pp:OCP[q],req:false,slot:sl,rar:q,gen:{fam:g.ab,q}});}
-const baseOf=k=>DEFS.find(d=>d.kind===(k==='heli'?'jet':k)&&!d.custom);
+const BASEK={heli:'jet',hover:'guard',jetbike:'swift'};const baseOf=k=>DEFS.find(d=>d.kind===(BASEK[k]||k)&&!d.custom);
 const cleanName=(v,i)=>String(v||'').toUpperCase().replace(/[^A-Z0-9 \-]/g,'').trim().slice(0,12)||'CUSTOM '+(i+1);
 if(!SAVE.parts||typeof SAVE.parts!=='object')SAVE.parts={};
 if(!SAVE.pow||typeof SAVE.pow!=='object')SAVE.pow={};
@@ -813,6 +854,11 @@ for(const k of Object.keys(SAVE.parts))if(k.includes(':')){const [sl,kind]=k.spl
 const ownsPart=p=>p.price===0||!!SAVE.parts[p.id];
 const powered=p=>p.pp===0||!!SAVE.pow[p.id];
 const partLocked=p=>p.req&&!SAVE.tyrant;
+/* trade-in: crate parts you do not use can be sold back for bolts; they go back into the crate */
+const inUse=p=>CUSTOMS.some(i=>i<SAVE.slots&&SAVE.custom[i]&&SAVE.custom[i][p.slot]===p.id);
+const tradeVal=p=>Math.round(BOXP[p.rar]*.4)+(SAVE.pow[p.id]?Math.round(OCP[p.rar]*.5):0);
+const canTrade=p=>p.price>0&&!!SAVE.parts[p.id]&&!inUse(p);
+function tradeIn(p){if(!canTrade(p))return;const v=tradeVal(p);delete SAVE.parts[p.id];delete SAVE.pow[p.id];SAVE.bolts+=v;SAVE.st.traded=(SAVE.st.traded||0)+1;persist();sfx('go');toast(`Traded in ${p.name} for ${v} bolts. It can drop from ${TN[p.base]||''} crates again.`,1);checkChals();renderPilot();renderBoxes();renderDetail();}
 function customOf(i){
  if(!Array.isArray(SAVE.custom))SAVE.custom=[];
  let c=SAVE.custom[i];
@@ -900,8 +946,8 @@ const CAMP=[
  {ch:'Chapter 4 · Inside the Forge',cs:'ch4',name:'Iron Wall',foes:['bulwark'],arena:0,diff:'veteran',rounds:3,mod:{foeHp:1.3,foeDmg:1.1},text:'You are inside the Forge. The siege frame at the main door has never lost.',rule:'Best of 3 · enemy has 30% more armor'},
  {name:'The Vault',foes:['bastille','gridlock'],arena:16,diff:'veteran',mod:{foeDmg:1.1},text:'Two fortress frames seal the inner vault behind walls of hard light and armor.',rule:'Two enemies in a row · you heal 25% between them'},
  {name:'Double Team',foes:['noctis','jugger','quakehorn'],arena:17,diff:'veteran',mod:{foeDmg:1.1},text:'The last lieutenants are done fighting fair. One after another, with no rest.',rule:'Three enemies in a row · you heal 25% between them'},
- {name:'The Overseer',foes:['overseer'],arena:18,diff:'veteran',rounds:3,mod:{foeHp:1.25,foeDmg:1.15,enrage:1},text:'The Tyrant’s second in command wears the same black armor and carries the same power.',rule:'Best of 3 · enrages at half armor'},
- {name:'The Tyrant',foes:['tyrant'],arena:19,diff:'veteran',rounds:1,mod:{foeHp:1.4,foeDmg:1.1,enrage:1},text:'The Tyrant waits at the heart of the Forge. At half armor it stops holding back.',rule:'One long round · boss enrages at half armor'}
+ {name:'The Overseer',foes:['overseer'],arena:18,diff:'veteran',rounds:3,mod:{foeHp:1.25,foeDmg:1.15,enrage:1},text:'The Tyrant’s second in command wears the same black armor and carries the same power.',rule:'Best of 3 · at half armor it changes attacks and drags you into the vault'},
+ {name:'The Tyrant',foes:['tyrant'],arena:19,diff:'veteran',rounds:1,mod:{foeHp:1.4,foeDmg:1.1,enrage:1},text:'The Tyrant waits at the heart of the Forge. At half armor it stops holding back.',rule:'One long round · at half armor the throne collapses and the fight moves to the furnace'}
 ];
 /* cutscenes: each shot = who speaks, the line, arena, seconds of motion, camera [from pos, from look, to pos, to look], actors */
 const CUTS={
@@ -1270,6 +1316,30 @@ const KIT={
   fore(c,el,s){const{M,B}=c;for(let i=0;i<3;i++){const cl=bx(.03,.22,.03,M.gl,(i-1)*.07*B,-.95,.1*B,el);cl.rotation.x=.3;}},
   leg(c,kn,s){const{M,B,L}=c;bx(.03,L*.3,.03,M.gl,s*.22*B,-L*.22,.1,kn);}
  },
+ hover:{
+  chest(c){const{M,TW,TH,front,chest,back,B}=c;
+   bx(TW*.9,TH*.22,.12,M.b,0,-TH*.14,front+.05,chest);bx(TW*.94,.06,.14,M.gl,0,-TH*.02,front+.06,chest);for(const s of [1,-1])bx(.12,.08,.05,M.white,s*TW*.34,-TH*.16,front+.12,chest);
+   for(const s of [1,-1]){const d=grp(back,s*TW*.3,TH*.12,-.22*B);d.add(new THREE.Mesh(new THREE.TorusGeometry(.32,.06,8,20),M.c));const fb=grp(d,0,0,0);for(let i=0;i<5;i++){const b=bx(.08,.28,.02,M.dk,0,.14,0,fb);b.rotation.z=i*1.256;b.position.set(Math.sin(i*1.256)*.14,Math.cos(i*1.256)*.14,0);}cyl(.06,.06,M.gl,d,0,0,0,'z',8);}
+  },
+  head(c){const{M,head}=c;bx(.5,.44,.52,M.a,0,.22,0,head);bx(.42,.18,.08,M.glass,0,.3,.25,head);bx(.36,.05,.04,M.eye,0,.3,.29,head);bx(.54,.08,.56,M.b,0,.47,0,head);
+   const dsh=grp(head,.16,.62,-.1);cyl(.015,.14,M.chrome,dsh,0,-.07,0,null,5);const dc=cyl(.12,.03,M.chrome,dsh,0,.02,0,null,10);dc.rotation.x=.6;},
+  pad(c,sh,s){const{M,B}=c;c.padW=.32*B;bx(.64*B,.32,.64*B,TIRE,s*.06,.08,0,sh);bx(.5*B,.06,.5*B,M.a,s*.06,.26,0,sh);bx(.4*B,.03,.03,M.gl,s*.06,.08,.33*B,sh);},
+  fore(c,el,s){const{M,B}=c;cyl(.09,.3,M.c,el,s*.22*B,-.4,.1,null,10);cone(.11,.16,M.chrome,el,s*.22*B,-.62,.1,Math.PI,0,10);},
+  leg(c,kn,s){const{M,B,L}=c;bx(.12,L*.34,.5*B,TIRE,s*.25*B,-L*.3,0,kn);cyl(.14,.04,M.gl,kn,0,-L*.5-.02,.05,null,12);}
+ },
+ jetbike:{
+  chest(c){const{M,TW,TH,front,chest,back,B}=c;
+   const ws=bx(TW*.6,TH*.3,.04,M.glass,0,TH*.22,front+.08,chest);ws.rotation.x=-.5;
+   for(const s of [1,-1]){const v=bx(.04,TH*.5,.04,M.gl,s*TW*.18,-.02,front+.06,chest);v.rotation.z=s*.35;}
+   bx(.16,.08,.05,M.white,0,-TH*.2,front+.06,chest);
+   for(const s of [1,-1]){cyl(.12,.7,M.c,back,s*TW*.24,-TH*.05,-.18*B,null,12);cyl(.1,.05,M.gl,back,s*TW*.24,-TH*.05-.37,-.18*B,null,12);const f=bx(.04,.32,.28,M.b,s*TW*.42,TH*.18,-.18*B,back);f.rotation.z=-s*.4;}
+  },
+  head(c){const{M,head}=c;bx(.44,.44,.5,M.a,0,.22,0,head);const v=bx(.42,.2,.12,M.glass,0,.28,.22,head);v.rotation.x=-.2;bx(.34,.04,.04,M.eye,0,.28,.28,head);
+   const f=bx(.05,.22,.42,M.b,0,.52,-.04,head);f.rotation.x=-.3;},
+  pad(c,sh,s){const{M,B}=c;c.padW=.26*B;const p=bx(.46*B,.16,.58*B,M.a,s*.06,.08,0,sh);p.rotation.z=s*.25;const fin=bx(.04,.3,.36*B,M.b,s*.28*B,.22,-.08,sh);fin.rotation.x=-.4;bx(.03,.03,.5*B,M.gl,s*.26*B,.02,0,sh);},
+  fore(c,el,s){const{M,B}=c;const bl=bx(.04,.5,.22,M.b,s*.22*B,-.3,-.02,el);bl.rotation.x=.2;bx(.045,.46,.03,M.gl,s*.23*B,-.3,.1,el);},
+  leg(c,kn,s){const{M,B,L}=c;cyl(.1,L*.3,M.c,kn,s*.22*B,-L*.26,-.2*B,null,10);cyl(.08,.05,M.gl,kn,s*.22*B,-L*.42,-.2*B,null,10);}
+ },
  heli:{
   chest(c){const{M,TW,TH,front,chest,back,B}=c;
    const cn=bx(TW*.7,TH*.36,.08,M.glass,0,TH*.08,front+.03,chest);cn.rotation.x=-.15;bx(TW*.74,.06,.1,M.b,0,TH*.28,front+.04,chest);
@@ -1411,6 +1481,8 @@ const ADDON={
 };
 /* modular vehicles: legs = drive, chest = hull, head = cab, arms = gear */
 const VDRIVE={
+ hover(M,v,w){bx(3.3,.42,1.8,TIRE,0,.26,0,v);for(const s of [1,-1])cyl(.22,3.3,TIRE,v,0,.26,s*.88,'x',12);for(const x of [1.62,-1.62])cyl(.22,1.75,TIRE,v,x,.26,0,'z',12);bx(3,.04,1.5,M.gl,0,.02,0,v);return {D:.5,y:.2};},
+ jetbike(M,v,w){for(const x of [1.05,-.95]){bx(.9,.24,.5,M.c,x,.12,0,v);bx(.7,.04,.4,M.gl,x,-.01,0,v);}bx(2.4,.12,.22,M.dk,0,.26,0,v);return {D:.3,y:.75};},
  heli(M,v,w){for(const s of [1,-1]){bx(2.1,.05,.07,M.chrome,.15,-.42,s*.46,v);for(const x of [.75,-.35]){const st=bx(.05,.36,.05,M.chrome,x,-.25,s*.4,v);st.rotation.x=s*.25;}}return {D:-.1,y:1.5};},
  heavy(M,v,w){bx(3.9,.3,1.5,M.dk,0,.55,0,v);for(const x of [1.15,-.35,-1.35])for(const z of [.82,-.82])w.push(wheel(v,.46,.3,x,.46,z,M,'z'));bx(.2,.2,1.8,M.chrome,1.9,.5,0,v);return {D:.7};},
  swift(M,v,w){bx(3.1,.2,1.4,M.dk,0,.36,0,v);for(const x of [1,-1])for(const z of [.74,-.74])w.push(wheel(v,.35,.26,x,.35,z,M,'z'));for(const s of [1,-1])bx(2.4,.1,.05,M.c,0,.3,s*.78,v);return {D:.46};},
@@ -1421,6 +1493,8 @@ const VDRIVE={
  boss(M,v,w){const o=VDRIVE.guard(M,v,w);for(const s of [1,-1])for(let i=0;i<3;i++)cone(.09,.35,M.chrome,v,-1+i,.36,s*1.3,s*1.57,0,6);return o;}
 };
 const VHULL={
+ hover(M,v,D){bx(3,.3,1.6,M.a,0,D+.15,0,v);bx(.3,.18,1.5,M.b,1.45,D+.12,0,v);for(const s of [1,-1])bx(2.8,.06,.06,M.chrome,0,D+.45,s*.74,v);for(const x of [-.6,.4,1.2])for(const s of [1,-1])bx(.05,.15,.05,M.chrome,x,D+.37,s*.74,v);return {cab:[.25,D+.3],top:D+.3,hw:.8};},
+ jetbike(M,v,D){bx(2.6,.36,.62,M.a,0,D+.18,0,v);const n=bx(.8,.24,.5,M.b,1.45,D+.12,0,v);n.rotation.z=-.15;bx(.9,.14,.44,M.dk,-.35,D+.43,0,v);bx(2.6,.04,.64,M.gl,0,D+.06,0,v);for(const s of [1,-1])bx(.1,.07,.05,M.white,1.82,D+.14,s*.15,v);return {cab:[.75,D+.36],top:D+.5,hw:.32};},
  heli(M,v,D){bx(1.8,.8,.92,M.a,.35,D+.4,0,v);bx(.9,.3,.94,M.b,.3,D+.84,0,v);bx(1.9,.2,.2,M.a,-1.4,D+.62,0,v);const fn=bx(.4,.6,.06,M.b,-2.3,D+.86,0,v);fn.rotation.z=-.3;cyl(.26,.03,M.dk,v,-2.3,D+.8,.08,'z',12);bx(.06,.06,.5,M.gl,-2.35,D+.8,.1,v);for(const s of [1,-1])bx(.5,.05,.04,M.gl,.3,D+.25,s*.47,v);return {cab:[1.05,D+.05],top:D+.99,hw:.46};},
  heavy(M,v,D){bx(2.3,.95,1.6,M.b,-.75,D+.5,0,v);for(let i=0;i<5;i++)bx(.05,.9,1.62,M.c,-1.7+i*.45,D+.5,0,v);return {cab:[1.05,D],top:D+.98,hw:.8};},
  swift(M,v,D){bx(3.0,.34,1.45,M.a,0,D+.17,0,v);const h=bx(1,.1,1.4,M.a,1.1,D+.38,0,v);h.rotation.z=-.12;bx(3.02,.05,.16,M.gl,0,D+.36,0,v);for(const s of [1,-1]){bx(.06,.12,.36,M.white,1.52,D+.2,s*.5,v);bx(.05,.1,.36,M.red,-1.52,D+.22,s*.5,v);}return {cab:[-.2,D+.34],top:D+.36,hw:.72};},
@@ -1431,6 +1505,8 @@ const VHULL={
  boss(M,v,D){bx(3,.7,1.6,M.a,0,D+.35,0,v);for(const s of [1,-1])for(let i=0;i<2;i++){const f=bx(.7,.5-i*.1,.08,M.b,-1.0-i*.4,D+.9,s*(.3+i*.25),v);f.rotation.z=.5;}bx(.3,.3,1.3,M.gl,-1.45,D+.4,0,v);return {cab:[.5,D+.7],top:D+.7,hw:.8};}
 };
 const VCAB={
+ hover(M,v,x,y){bx(1.1,.65,1.1,M.b,x,y+.32,0,v);bx(.05,.32,.95,M.glass,x+.56,y+.45,0,v);for(const s of [1,-1])bx(.8,.3,.03,M.glass,x,y+.45,s*.56,v);bx(1.15,.06,1.15,M.c,x,y+.68,0,v);cyl(.02,.5,M.chrome,v,x-.3,y+.95,0,null,5);bx(.06,.06,.06,M.red,x-.3,y+1.2,0,v);},
+ jetbike(M,v,x,y){const ws=bx(.5,.36,.5,M.glass,x,y+.14,0,v);ws.rotation.z=-.7;bx(.4,.12,.56,M.b,x-.05,y,0,v);},
  heli(M,v,x,y){const g=bx(.7,.62,.86,M.glass,x+.05,y+.36,0,v);g.rotation.z=-.15;bx(.4,.26,.6,M.b,x+.4,y+.12,0,v);bx(.06,.08,.4,M.white,x+.61,y+.12,0,v);},
  heavy(M,v,x,y){bx(1.2,1.1,1.5,M.a,x,y+.55,0,v);bx(.05,.45,1.3,M.glass,x+.61,y+.75,0,v);bx(.06,.4,1.1,M.chrome,x+.62,y+.25,0,v);bx(.1,.08,.9,M.gl,x+.2,y+1.14,0,v);},
  swift(M,v,x,y){bx(1.2,.3,1.1,M.glass,x,y+.15,0,v);bx(.7,.05,1.0,M.b,x-.1,y+.32,0,v);},
@@ -1441,6 +1517,10 @@ const VCAB={
  boss(M,v,x,y){bx(.7,.5,.7,M.c,x,y+.25,0,v);bx(.04,.08,.6,M.gl,x+.36,y+.32,0,v);for(let i=0;i<3;i++)cone(.07,i===1?.5:.36,M.b,v,x-.2+i*.2,y+.7,0,0,0,5);}
 };
 const VGEAR={
+ hover(M,v,H,w){for(const s of [1,-1]){const z=s*.45,d=grp(v,-1.2,H.top+.62,z);const ring=new THREE.Mesh(new THREE.TorusGeometry(.55,.07,8,24),M.c);ring.rotation.y=Math.PI/2;d.add(ring);bx(.06,.9,.06,M.chrome,0,-.42,0,d);
+   const fan=grp(d,0,0,0);fan.userData.wheel=true;fan.userData.rotor=true;fan.rotation.y=Math.PI/2;for(let i=0;i<4;i++){const b=bx(.12,.46,.02,M.dk,0,0,0,fan);b.rotation.z=i*Math.PI/2;b.position.set(Math.sin(i*Math.PI/2)*.23,Math.cos(i*Math.PI/2)*.23,0);}cyl(.08,.06,M.gl,fan,0,0,0,'z',8);if(w)w.push(fan);}
+  bx(.06,.5,1.2,M.b,-1.55,H.top+.62,0,v);},
+ jetbike(M,v,H,w){for(const s of [1,-1]){cyl(.16,1,M.c,v,-1.25,H.D+.3,s*.3,'x',12);cyl(.13,.05,M.gl,v,-1.77,H.D+.3,s*.3,'x',12);const f=bx(.5,.36,.04,M.b,-1.2,H.D+.6,s*.36,v);f.rotation.x=s*.35;}},
  heli(M,v,H,w){cyl(.08,.36,M.chrome,v,.25,H.top+.18,0,null,8);const rt=grp(v,.25,H.top+.4,0);rt.userData.wheel=true;rt.userData.rotor=true;rt.rotation.x=-Math.PI/2;cyl(.16,.12,M.dk,rt,0,0,0,'z',12);
   for(let i=0;i<4;i++){const b=bx(1.9,.18,.035,M.dk,0,0,0,rt);b.rotation.z=i*Math.PI/2;b.position.set(Math.cos(i*Math.PI/2)*.95,Math.sin(i*Math.PI/2)*.95,0);bx(.12,.19,.04,M.gl,.9,0,0,b);}if(w)w.push(rt);for(const s of [1,-1]){cyl(.07,.5,M.c,v,.4,H.D+.2,s*.62,'x',8);cone(.07,.12,M.red,v,.71,H.D+.2,s*.62,0,-Math.PI/2,8);}},
  heavy(M,v,H){for(const s of [1,-1]){const z=s*(H.hw-.05);cyl(.07,1.2,M.chrome,v,.2,H.top+.5,z,null,10);cyl(.09,.08,M.gl,v,.2,H.top+1.12,z,null,10);cyl(.16,1.2,M.c,v,-.3,H.D+.1,s*(H.hw+.14),'x',10);}},
@@ -1822,6 +1902,29 @@ function tierAbility(fam,q){const [kind,base,cost,names]=fam,o=Object.assign({},
  o.sk=skinFor(names[t],kind,o);
  return Object.assign(skin(AB[kind](o),kind,o),{name:names[t],short:names[t].split(' ').pop().toUpperCase().slice(0,7),cost:cost+[0,3,6,10][t],desc:describe(kind,o)});}
 for(const p of Object.values(PART))if(p.gen)SPECIALS[p.move]=tierAbility(p.gen.fam,p.gen.q);
+/* boss second phases: new attacks, a new arena and a hazard */
+const BSP=(kind,o,name,el)=>{o.sk=dress({el,shape:kind==='strike'?'crystal':kind==='shot'?'dodeca':'',pv:kind==='nova'?1:0},900,1);return Object.assign(skin(AB[kind](o),kind,o),{name,short:name.split(' ').pop().toUpperCase().slice(0,7),cost:30,desc:''});};
+Object.assign(SPECIALS,{
+ b_meteor:BSP('strike',{n:4,gap:.2,dmg:9,kb:5,lift:6},'Meteor Storm','fire'),
+ b_burst:BSP('nova',{wind:.45,radius:4.2,dmg:13,kb:12,lift:7,pose:'up'},'Forge Burst','fire'),
+ b_blink:BSP('blink',{dmg:10,kb:7,lift:4},'Black Step','shadow'),
+ b_storm:BSP('shot',{n:5,gap:.09,dmg:4,speed:17,spread:.3,scale:.7,kb:2,lift:0},'Hard-Light Storm','volt')});
+for(const k of ['b_meteor','b_burst','b_blink','b_storm'])SPECIALS[k].cost=45;
+const BOSS2={
+ tyrant:{arena:13,specials:['b_meteor','b_burst'],line:'The throne gives way. Into the furnace!',hz:'fire'},
+ overseer:{arena:16,specials:['b_blink','b_storm'],line:'Lockdown. Sealing you in the vault.',hz:'volt'}};
+function bossPhase2(){const B=BOSS2[G.p2.def.id];G.phase2=B?{B,t:2.5}:null;if(!B)return;
+ G.p2.baseDef=G.p2.def;G.p2.def=Object.assign({},G.p2.def,{specials:B.specials.slice()});G.p2.energy=Math.max(G.p2.energy,45);
+ G.slowT=.6;G.focus=G.p2;G.focusT=1;cine(true);setTimeout(()=>{if(G.phase==='fight')cine(false);},1600);
+ flash();shake(.8);sfx('boom');setTimeout(()=>{if(G.phase!=='fight'&&G.phase!=='paused')return;applyArena(B.arena);flash();sfx('transform');},450);
+ announce('Phase 2','ko',1300);setTimeout(()=>callout(B.line),900);}
+function hazardTick(dt){const H=G.phase2;if(!H||G.phase!=='fight')return;H.t-=dt;
+ if(H.warn){H.warn.t-=dt;if(Math.random()<.5)ring(H.warn.x,.06,H.B.hz==='fire'?0xff5a1a:0x8affff,1.6,true);
+  if(H.warn.t<=0){const x=H.warn.x;H.warn=null;const sk={el:H.B.hz,imp:H.B.hz,c:H.B.hz==='fire'?0xff6a1e:0xfff06a,c2:0xffffff,sig:'hoop'};
+   if(H.B.hz==='fire')pillarFx(x,0xff6a1e,1.2,9);else boltFx(x,.1,0x8affff);elImpact(sk,x,.6,1);shake(.3);sfx('boom');
+   const p=G.p1;if(Math.abs(p.x-x)<1.2&&p.y<1.2&&p.state!=='ko'&&!p.ghost)applyHit(G.p2,p,4,3,7,x,p.x,p.y+1);}}
+ else if(H.t<=0){H.t=3.4+Math.random()*1.6;H.warn={x:Math.max(-ARENA+1,Math.min(ARENA-1,G.p1.x+(Math.random()-.5)*2)),t:1.1};}}
+
 
 /* ================= projectiles ================= */
 const PGEO={wave:new THREE.BoxGeometry(1.3,.45,1.5),shell:new THREE.SphereGeometry(.36,14,10),orb:new THREE.IcosahedronGeometry(.34,1),missile:new THREE.CylinderGeometry(.09,.09,.62,8),blade:new THREE.OctahedronGeometry(.34,0),barrier:new THREE.BoxGeometry(.22,3,1.8),tankshell:new THREE.SphereGeometry(.26,12,8),spikes:new THREE.BoxGeometry(.1,.1,.1),claws:new THREE.BoxGeometry(.1,.1,.1)};
@@ -2318,7 +2421,7 @@ function trySpecial(f,i){
  const cost=i===2?S.cost:sc(f.def,key);
  if(f.energy<cost){if(f===G.p1)denyFlash();return false;}
  if(S.ground&&!f.onGround)return false;
- if(f===G.p1&&G.mode!=='training')SAVE.st.specials=(SAVE.st.specials||0)+1;
+ if(f===G.p1&&G.mode!=='training'&&!G.twoP){SAVE.st.specials=(SAVE.st.specials||0)+1;weekAdd('specials');}
  f.energy-=cost;setState(f,'special');f.sp=S;f.sFlag=0;f.sHit=false;f.spDone=false;
  if(S.start)S.start(f);
  if(i!==2)sfx('special');
@@ -2361,7 +2464,7 @@ function applyHit(att,def,dmg,kb,lift,srcX,hx,hy){
  att.energy=Math.min(100,att.energy);def.energy=Math.min(100,def.energy);
  if(G.mode==='training'&&def.hp<1)def.hp=1;
  if(def.hp<=0){
-  if(att===G.p1&&att.state==='special'&&(att.sp===SPECIALS.rush||att.sp===SPECIALS.barrage))SAVE.st.rushKO=true;
+  if(att===G.p1&&att.state==='special'&&(att.sp===SPECIALS.rush||att.sp===SPECIALS.barrage)&&!G.twoP&&G.mode!=='training'){SAVE.st.rushKO=true;weekAdd('rushKO');}
   G.koFx={f:def,t:0,n:0};G.focus=def;G.focusT=1.3;G.kick=1;
   def.hp=0;def.state='ko';def.t=0;def.vx=dir*8;def.vy=8;def.onGround=false;def.ghost=false;def.morph=0;
   roundOver(att);
@@ -2546,20 +2649,26 @@ function aiIntent(me,foe,dt){
 
 /* ================= input ================= */
 const KEYMAP={KeyA:'left',ArrowLeft:'left',KeyD:'right',ArrowRight:'right',KeyS:'block',ArrowDown:'block',KeyL:'block',KeyW:'jump',ArrowUp:'jump',Space:'jump',KeyJ:'punch',KeyK:'kick',KeyU:'s1',KeyI:'s2',KeyO:'rush',ShiftLeft:'dodge',ShiftRight:'dodge',Semicolon:'dodge',KeyH:'shoot',KeyY:'heavy'};
-const held={},pressed={};
+const held={},pressed={},held2={},pressed2={};
+const KEYMAP2={ArrowLeft:'left',ArrowRight:'right',ArrowUp:'jump',ArrowDown:'block',Comma:'punch',Period:'kick',Slash:'heavy',KeyM:'shoot',ShiftRight:'dodge',BracketLeft:'s1',BracketRight:'s2',Backslash:'rush',
+ Numpad1:'punch',Numpad2:'kick',Numpad3:'heavy',Numpad4:'s1',Numpad5:'s2',Numpad6:'rush',Numpad0:'dodge',NumpadDecimal:'shoot',Numpad8:'jump'};
+const twoP=()=>!!(G.twoP&&G.p1&&G.phase!=='select'&&G.phase!=='title');
 function clearPressed(){for(const k in pressed)delete pressed[k];}
 window.addEventListener('keydown',e=>{
  if(e.target&&e.target.tagName==='INPUT'){if(e.code==='Enter')e.target.blur();return;}
  if(G.phase==='cutscene'){e.preventDefault();if(e.code==='Escape')csEnd();else if(!e.repeat&&(e.code==='Enter'||e.code==='Space'||e.code==='KeyJ'))csNext();return;}
  if(e.code==='Enter'){if(G.phase==='title'){e.preventDefault();onStart();return;}if(G.phase==='select'){e.preventDefault();startMatch();return;}}
+ if(G.phase==='photo'){if(e.code==='Escape')exitPhoto();return;}
  if(e.code==='Escape'||e.code==='KeyP'){togglePause();return;}
  if(G.phase==='select'&&(e.code==='ArrowLeft'||e.code==='ArrowRight')){e.preventDefault();stepFrame(e.code==='ArrowRight'?1:-1);return;}
  if(G.phase==='select'&&e.code==='Escape'&&G.shop){setShop(false);return;}
+ if(twoP()&&KEYMAP2[e.code]){const b=KEYMAP2[e.code];e.preventDefault();held2[b]=true;if(!e.repeat)pressed2[b]=true;return;}
  const a=KEYMAP[e.code];if(!a)return;
  e.preventDefault();held[a]=true;if(!e.repeat)pressed[a]=true;
 });
-window.addEventListener('keyup',e=>{const a=KEYMAP[e.code];if(a)held[a]=false;});
-window.addEventListener('blur',()=>{for(const k in held)held[k]=false;});
+window.addEventListener('keyup',e=>{if(KEYMAP2[e.code])held2[KEYMAP2[e.code]]=false;const a=KEYMAP[e.code];if(a&&!(twoP()&&KEYMAP2[e.code]))held[a]=false;});
+window.addEventListener('blur',()=>{for(const k in held)held[k]=false;for(const k in held2)held2[k]=false;});
+function playerIntent2(){const I={left:!!held2.left,right:!!held2.right,block:!!held2.block};for(const a in pressed2){I['p_'+a]=true;delete pressed2[a];}return I;}
 function playerIntent(){const I={left:!!held.left,right:!!held.right,block:!!held.block};for(const a in pressed)I['p_'+a]=true;clearPressed();return I;}
 document.querySelectorAll('#touch .tb').forEach(b=>{
  const a=b.dataset.h;
@@ -2626,7 +2735,7 @@ function sfx(n,v){try{SFX[n]&&SFX[n](v);}catch(e){}}
 
 /* ================= UI ================= */
 const $=id=>document.getElementById(id);
-const scr={title:$('title'),select:$('select'),hud:$('hud'),pause:$('pause'),result:$('result'),cs:$('cs')};
+const scr={title:$('title'),select:$('select'),hud:$('hud'),pause:$('pause'),result:$('result'),cs:$('cs'),photo:$('photo')};
 function show(which){for(const k in scr)scr[k].hidden=!which.includes(k);const on=coarse&&which.includes('hud')&&!which.includes('result')&&!which.includes('pause'),gm=G.touchMode==='gesture';
  $('touch').classList.toggle('on',on);$('touch').classList.toggle('gesture',gm);$('gest').classList.toggle('on',on&&gm);}
 let annTimer=0;
@@ -2648,7 +2757,7 @@ function newCustom(){if(rookie()||SAVE.slots>=MAXC)return;if(SAVE.bolts<SLOT_COS
  SAVE.bolts-=SLOT_COST;const i=SAVE.slots;SAVE.slots++;persist();applyCustom(i,true);layoutShow();sfx('transform');
  const idx=DEFS.findIndex(d=>d.custom&&d.slot===i);renderPilot();renderBoxes();pickFrame(idx);if(!G.shop)setShop(true);setTab('workshop');toast(`Custom ${i+1} built. Give it parts and colors in the Workshop.`,1);}
 function setTab(t){G.shopTab=t;document.querySelectorAll('#shopTabs button').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.tab===t)));
- document.querySelectorAll('.tabp').forEach(p=>p.classList.toggle('tabOff',p.dataset.tab!==t));const sp=$('selPanel');if(sp)sp.scrollTop=0;if(t==='crates')renderBoxes();if(t==='workshop')renderWorkshop();}
+ document.querySelectorAll('.tabp').forEach(p=>p.classList.toggle('tabOff',p.dataset.tab!==t));const sp=$('selPanel');if(sp)sp.scrollTop=0;if(t==='crates')renderBoxes();if(t==='progress')renderWeekly();if(t==='workshop')renderWorkshop();}
 function renderWorkshop(){const W=$('workshop');if(!W)return;const d=DEFS[G.sel];
  const built=DEFS.map((x,i)=>[x,i]).filter(([x,i])=>x.custom&&!slotOff(i));
  const pick=`<div class="cpick">${built.map(([x,i])=>`<button data-ci2="${i}" aria-pressed="${i===G.sel}" ${locked(i)?'disabled':''}><i style="background:${hex(x.pals[0][0])}"></i>${x.name}</button>`).join('')}${SAVE.slots<MAXC?`<button class="newc2" ${rookie()?'disabled':''}>+ New · ${SLOT_COST}</button>`:''}</div>`;
@@ -2660,9 +2769,9 @@ function renderDetail(){
  const d=DEFS[G.sel];
  $('selName').textContent=d.name;$('selRole').textContent=d.role+' · becomes a '+d.vehicle.toLowerCase();
  const stats=Object.entries(d.stats).map(([k,v])=>`<span>${k}</span><span class="meter">${[0,1,2,3,4].map(j=>`<i class="${j<v?'on':''}"></i>`).join('')}</span>`).join('');
- $('detail').innerHTML=`<h3>${d.name}<small>${d.role}</small></h3><p class="blurb">${d.blurb}</p><div class="vrow"><span>Vehicle: ${d.vehicle}</span><button class="buy" id="vehBtn">${G.showVeh?'Show robot':'Show vehicle'}</button></div><div class="stats">${stats}</div><div class="movelistSel">${moveRows(d)}</div><div class="ups"><h4>Upgrades for ${d.name}</h4>${upRows(d)}</div>`;
+ $('detail').innerHTML=`<h3>${d.name}<small>${d.role}</small></h3><p class="blurb">${d.blurb}</p><div class="vrow"><span>Vehicle: ${d.vehicle}</span><button class="buy" id="vehBtn">${G.showVeh?'Show robot':'Show vehicle'}</button><button class="buy" id="photoBtn">Photo mode</button></div><div class="stats">${stats}</div><div class="movelistSel">${moveRows(d)}</div><div class="ups"><h4>Upgrades for ${d.name}</h4>${upRows(d)}</div>`;
  $('detail').querySelectorAll('.buy[data-up]').forEach(b=>b.addEventListener('click',()=>{const k=b.dataset.up,u=upOf(d.id),cost=100*(u[k]+1);if(u[k]>=5)return;if(SAVE.bolts<cost){short(cost,'this upgrade');return;}SAVE.bolts-=cost;u[k]++;persist();checkChals();sfx('go');renderPilot();renderDetail();renderChals();}));
- $('vehBtn').addEventListener('click',toggleVeh);renderDock();
+ $('vehBtn').addEventListener('click',toggleVeh);$('photoBtn').addEventListener('click',enterPhoto);renderDock();
  renderWorkshop();
  const gold=rankInfo(SAVE.xp).L>=3||d.custom;
  seg($('paint'),d.palNames.map((n,i)=>[i,n]).filter(([i])=>i<2||gold),G.pal,v=>{G.pal=v;rebuildShowcase(G.sel);});
@@ -2701,15 +2810,15 @@ function builderHTML(d){const c=customOf(d.slot),sl=G.bslot||'head',lab=Object.f
  const th=p=>{const u=G.shop?partThumb(p):'';return u?`<img class="pth" src="${u}" alt="">`:'<i class="pth"></i>';};
  const tabs=SLOTS.map(([k,l])=>`<button data-bs="${k}" aria-pressed="${k===sl}">${l}</button>`).join('');
  const rows=CATALOG[sl].filter(ownsPart).map(p=>{const eq=c[sl]===p.id,own=ownsPart(p),lk=!own&&partLocked(p);
-  const tag=eq?'Equipped':'Owned';
-  return `<button class="part p${p.rar}" data-p="${p.id}" aria-pressed="${eq}">${th(p)}<b>${p.name}<i class="rar q${p.rar}">${RARITY[p.rar]}</i></b><em>${tag}</em><span class="st">${statText(p.st)}</span><span class="vp"><b>${TN[p.base]} part</b> · turns into the ${VTXT[sl][p.base]}</span><span><b style="font-size:13px;color:var(--text)">${SPECIALS[p.move].name}</b>${SPECIALS[p.move].el?`<i class="elc" style="color:${hex(SPECIALS[p.move].sk.c)}">${SPECIALS[p.move].look}</i>`:''} · ${SPECIALS[p.move].cost} energy · ${SPECIALS[p.move].desc}</span></button>`;}).join('');
+  const tag=eq?'Equipped':inUse(p)?'In use':'Owned';const tr=canTrade(p)?`<span class="sell" role="button" tabindex="0" data-sell="${p.id}">Trade in · ${tradeVal(p)} bolts</span>`:'';
+  return `<button class="part p${p.rar}" data-p="${p.id}" aria-pressed="${eq}">${th(p)}<b>${p.name}<i class="rar q${p.rar}">${RARITY[p.rar]}</i></b><em>${tag}</em><span class="st">${statText(p.st)}</span><span class="vp"><b>${TN[p.base]} part</b> · turns into the ${VTXT[sl][p.base]}</span><span><b style="font-size:13px;color:var(--text)">${SPECIALS[p.move].name}</b>${SPECIALS[p.move].el?`<i class="elc" style="color:${hex(SPECIALS[p.move].sk.c)}">${SPECIALS[p.move].look}</i>`:''} · ${SPECIALS[p.move].cost} energy · ${SPECIALS[p.move].desc}</span>${tr}</button>`;}).join('');
  const pws=SLOTS.map(([k,l])=>{const p=PART[c[k]],bp=p.pp||150;return `<div class="pw"><b>${l}</b><span>${p.name}<i class="rar q${p.rar}">${RARITY[p.rar]}</i> ${SPECIALS[p.move].name}</span>${SAVE.pow[p.id]?'<em>Overcharged</em>':`<button class="buy" data-pow="${p.id}">Overcharge · ${bp}</button>`}</div>`;}).join('');
  const av=availMoves(c);
  const pick=j=>`<div class="bslot"><b>${j?'Key I':'Key U'}</b><div class="seg">${av.length?av.map(m=>`<button data-sp="${j}" data-m="${m}" aria-pressed="${c.sp[j]===m}">${SPECIALS[m].name}</button>`).join(''):'<button disabled>No powered parts</button>'}</div></div>`;
  const sw=(idx,label,list)=>`<div class="bslot"><b>${label}</b><div class="sws">${list.map((col,j)=>`<button class="sw" data-ci="${idx}" data-j="${j}" aria-pressed="${c.cols[idx]===j}" aria-label="${label} color ${j+1}" style="background:${hex(col)}"></button>`).join('')}${idx===2?`<button class="sw none" data-ci="2" data-j="-1" aria-pressed="${c.cols[2]===-1}" aria-label="No glow">None</button>`:''}</div></div>`;
  return `<div class="bld"><h4>Workshop</h4><div class="bslot"><b>Name</b><input id="cname" maxlength="12" value="${c.name}" autocomplete="off" spellcheck="false"></div>
   ${vehLine(c)}<p class="tot">Armor ${d.hp} · Speed ${d.speed.toFixed(1)} · Damage ${Math.round(d.power*100)}% · Energy ${Math.round(d.en*100)}% · Jump ${d.jump.toFixed(1)}</p>
-  <h5>Parts</h5><p class="rarKey">${RARITY.map((n,q)=>`<i class="rar q${q}">${n} ${Object.values(PART).filter(p=>p.rar===q&&ownsPart(p)).length}/${Object.values(PART).filter(p=>p.rar===q).length}</i>`).join('')}</p><div class="seg">${tabs}</div><div class="plist">${rows}</div><p class="hint">You own ${CATALOG[sl].filter(ownsPart).length} of ${CATALOG[sl].length} here. Open mystery boxes to find more.</p>
+  <h5>Parts</h5><p class="rarKey">${RARITY.map((n,q)=>`<i class="rar q${q}">${n} ${Object.values(PART).filter(p=>p.rar===q&&ownsPart(p)).length}/${Object.values(PART).filter(p=>p.rar===q).length}</i>`).join('')}</p><div class="seg">${tabs}</div><div class="plist">${rows}</div><p class="hint">You own ${CATALOG[sl].filter(ownsPart).length} of ${CATALOG[sl].length} here. Open crates to find more. Parts you are not using on any custom robot can be traded in for 40% of their crate price.</p>
   <h5>Powers</h5><p class="hint">Every part you own comes with a power that uses your blue energy bar. Choose which two of your four powers go on your keys. Overcharging a part makes its power cost 30% less energy.</p>${pws}${pick(0)}${pick(1)}
   <h5>Colors</h5>${sw(0,'Main',PCOL)}${sw(1,'Trim',PCOL)}${sw(2,'Glow',GCOL)}
   <h5>Saved designs</h5><p class="hint">Save this robot's parts, colors, name and power keys. Load a saved design onto any custom robot to go back to it.</p>
@@ -2717,6 +2826,7 @@ function builderHTML(d){const c=customOf(d.slot),sl=G.bslot||'head',lab=Object.f
   <div class="dlist">${SAVE.designs.map((g,j)=>`<div class="dsg"><span class="dsw">${g.cols.map((cv,k)=>`<i style="background:${cv<0?'#1b1e23':hex((k<2?PCOL:GCOL)[cv]||0)}"></i>`).join('')}</span><b>${g.name}</b><small>${SLOTS.map(([sl])=>PART[g[sl]]?TN[PART[g[sl]].base]:'?').join(' · ')}</small><button class="buy" data-dl="${j}">Load</button><button class="buy" data-dd="${j}">Delete</button></div>`).join('')||'<p class="hint">No saved designs yet.</p>'}</div></div>`;}
 function wireBuilder(d){const i=d.slot,c=customOf(i),D=$('workshop');
  D.querySelectorAll('[data-bs]').forEach(b=>b.addEventListener('click',()=>{G.bslot=b.dataset.bs;sfx('ui');renderDetail();}));
+ D.querySelectorAll('[data-sell]').forEach(b=>{const go=e=>{e.stopPropagation();e.preventDefault();const p=PART[b.dataset.sell];if(!b.dataset.arm){b.dataset.arm=1;b.textContent=`Press again to trade for ${tradeVal(p)} bolts`;setTimeout(()=>{if(b.isConnected){delete b.dataset.arm;b.textContent=`Trade in · ${tradeVal(p)} bolts`;}},3000);return;}tradeIn(p);};b.addEventListener('click',go);b.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' ')go(e);});});
  D.querySelectorAll('.part').forEach(b=>b.addEventListener('click',()=>{const p=PART[b.dataset.p];
   if(!ownsPart(p)){toast(`The ${p.name} comes from ${RARITY[p.rar]} mystery boxes${p.rar===4&&!SAVE.tyrant?', which unlock when you beat the campaign':''}.`);return;}sfx('ui');
   c[p.slot]=p.id;applyCustom(i);checkChals();}));
@@ -2846,7 +2956,7 @@ function openBox(k,q){const price=BOXP[q],pool=boxPool(k,q),name=BOXES.find(b=>b
  if(SAVE.bolts<price){short(price,`the ${RARITY[q]} ${name} crate`);return;}
  const n=pool.length>1&&Math.random()<.3?2:1,won=[],lab=Object.fromEntries(SLOTS);
  for(let i=0;i<n;i++)won.push(pool.splice(Math.random()*pool.length|0,1)[0]);
- SAVE.bolts-=price;SAVE.st.crates=(SAVE.st.crates||0)+1;won.forEach(p=>SAVE.parts[p.id]=1);persist();checkChals();
+ SAVE.bolts-=price;SAVE.st.crates=(SAVE.st.crates||0)+1;weekAdd('crates');won.forEach(p=>SAVE.parts[p.id]=1);persist();checkChals();
  const rv=$('boxRev');rv.className='q'+q;rv.hidden=false;$('bxTitle').textContent=`${RARITY[q]} ${name} crate`;
  $('bxWon').innerHTML=(n>1?'<p class="hint">Lucky! This crate held two parts.</p>':'')+won.map(p=>{const u=partThumb(p);return `<div class="part p${p.rar}">${u?`<img class="pth" src="${u}" alt="">`:'<i class="pth"></i>'}<b>${p.name}<i class="rar q${p.rar}">${RARITY[p.rar]}</i></b><em>${lab[p.slot]}</em><span class="st">${statText(p.st)}</span><span class="vp"><b>${TN[p.base]} part</b> · turns into the ${VTXT[p.slot][p.base]}</span><span><b style="font-size:13px;color:var(--text)">${SPECIALS[p.move].name}</b>${SPECIALS[p.move].el?`<i class="elc" style="color:${hex(SPECIALS[p.move].sk.c)}">${SPECIALS[p.move].look}</i>`:''} · ${SPECIALS[p.move].desc}</span></div>`;}).join('')+`<p class="hint">${setLine(k)}</p>`+'<p class="hint">Equip it on a custom robot in the Workshop. Tap anywhere to close.</p>';
  sfx('transform');clearTimeout(boxT);boxT=setTimeout(()=>{rv.classList.add('open');sfx('win');},950);
@@ -2867,7 +2977,7 @@ function renderPilot(){const k=rankInfo(SAVE.xp);$('pilot').innerHTML=`<b>Rank $
 function pickFrame(i){if(i===G.sel||locked(i))return;if(showcase[G.sel].pal!==0)rebuildShowcase(G.sel,0);G.sel=i;G.pal=0;renderRoster();renderDetail();sfx('ui');}
 function renderMode(){
  $('modes').querySelectorAll('button').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.m===G.mode)));
- $('modeNote').textContent=MODES[G.mode].note+(G.mode==='survival'?' Best run: '+(SAVE.st.surv||0)+' defeated.':'');$('fightBtn').textContent=MODES[G.mode].btn;
+ $('modeNote').textContent=MODES[G.mode].note+(G.mode==='versus'&&G.p2human?' Two players on one keyboard. Player 1: A D W S, J K Y H, U I O, Left Shift. Player 2: arrow keys, comma, period, slash, M, [ ] \\, Right Shift. Pick Player 2’s robot under Opponent.':'')+(G.mode==='survival'?' Best run: '+(SAVE.st.surv||0)+' defeated.':'');$('fightBtn').textContent=MODES[G.mode].btn;
  document.querySelectorAll('[data-for]').forEach(el=>{el.hidden=!el.dataset.for.split(' ').includes(G.mode);});
  if(G.mode==='campaign'){if(G.arena!==CAMP[G.stageSel].arena)applyArena(CAMP[G.stageSel].arena);renderMissions();}
  renderArena();renderDock();
@@ -2885,12 +2995,33 @@ function renderChals(){const n=CHALS.filter(c=>SAVE.done[c[0]]).length;$('chalSu
  $('chalList').innerHTML=order.map(c=>{const d=SAVE.done[c[0]],p=!d&&c[5]?c[5](SAVE):null;return `<div class="ch${d?' done':''}"><b>${c[1]}</b><em>${d?'Unlocked':'+'+c[3]+' bolts'}</em><span>${c[2]}${p?` · ${p[0].toLocaleString('en-US')}/${p[1].toLocaleString('en-US')}`:''}</span>${p?`<i class="chp"><i style="transform:scaleX(${p[0]/p[1]})"></i></i>`:''}</div>`;}).join('');}
 seg($('rounds'),[[1,'1'],[3,'3'],[5,'5']],3,v=>G.rounds=v);
 seg($('diff'),Object.entries(DIFF).map(([k,v])=>[k,v.label]),G.diff,v=>{G.diff=v;G.userDiff=v;});
+seg($('p2ctl'),[['cpu','Computer'],['human','Friend']],'cpu',v=>{G.p2human=v==='human';renderMode();});
 seg($('dummy'),[['stand','Stand'],['block','Block'],['fight','Fight back']],'stand',v=>G.dummy=v);
 
 document.querySelectorAll('.soundToggle').forEach(b=>b.addEventListener('click',()=>{audioInit();G.muted=!G.muted;document.querySelectorAll('.soundToggle').forEach(x=>{x.textContent=G.muted?'Sound off':'Sound on';x.setAttribute('aria-pressed',String(!G.muted));});}));
 
 function goTitle(){if(G.tut){G.tut=null;G.mode='campaign';}$('tut').hidden=true;cleanupMatch();G.phase='title';show(['title']);showcase.forEach(f=>f.root.visible=true);}
 const DAILY=[40,50,60,75,90,110,200];
+/* weekly challenges: three goals that change every Monday */
+const WKT=[['wins','Win {n} matches',[3,6,10]],['fights','Play {n} matches',[5,10,15]],['specials','Use {n} special moves',[20,45,80]],['crates','Open {n} crates',[1,3,5]],
+ ['camp','Win {n} campaign missions (replays count)',[2,4,7]],['customWin','Win {n} matches with a custom robot',[2,4,7]],['perfect','Win {n} rounds without taking damage',[1,2,3]],
+ ['rushKO','Finish {n} enemies with a Transform Rush',[1,2,4]],['surv','Beat {n} enemies in one Survival run',[3,5,8],1],['combo','Land a {n}-hit combo',[5,7,9],1],
+ ['arcade','Win {n} Arcade fights',[2,4,7]],['earned','Earn {n} bolts from matches',[200,400,700]]];
+const WKPAY=[120,180,260],WKBONUS=100;
+const dayNum=()=>{const d=new Date();return Math.floor((Date.UTC(d.getFullYear(),d.getMonth(),d.getDate())-Date.UTC(1970,0,5))/864e5);};
+function weekly(){const id=Math.floor(dayNum()/7);let W=SAVE.week;if(!W||W.id!==id){W=SAVE.week={id,prog:{},claimed:{},bonus:false};}
+ if(!W.list){const R=rng(id*7919+13),pool=WKT.slice();W.list=[0,1,2].map(t=>{const T=pool.splice(R()*pool.length|0,1)[0];return {k:T[0],goal:T[2][t],pay:WKPAY[t],max:!!T[3]};});}
+ return W;}
+const wkText=c=>WKT.find(t=>t[0]===c.k)[1].replace('{n}',c.goal.toLocaleString('en-US'));
+function weekBump(k,n,isMax){const W=weekly(),c=W.list.find(x=>x.k===k);if(!c)return;const before=W.prog[k]||0;W.prog[k]=isMax?Math.max(before,n):before+n;
+ if(before<c.goal&&W.prog[k]>=c.goal)setTimeout(()=>toast(`Weekly challenge done: ${wkText(c)}. Claim it in Progress.`,1),G.phase==='matchEnd'?1200:0);}
+const weekAdd=(k,n)=>weekBump(k,n===undefined?1:n,false),weekMax=(k,v)=>weekBump(k,v,true);
+function renderWeekly(){const el=$('weekly');if(!el)return;const W=weekly(),left=7-(dayNum()%7);
+ el.innerHTML=`<h4>This week</h4><p class="hint">New challenges in ${left} day${left>1?'s':''}. Finish all three for a ${WKBONUS} bolt bonus.</p>`+W.list.map((c,i)=>{const p=Math.min(W.prog[c.k]||0,c.goal),done=p>=c.goal,cl=W.claimed[c.k];
+  return `<div class="wk${cl?' done':''}"><b>${wkText(c)}</b><em>${cl?'Claimed':'+'+c.pay+' bolts'}</em><span>${p.toLocaleString('en-US')} / ${c.goal.toLocaleString('en-US')}</span>${done&&!cl?`<button class="buy" data-wk="${c.k}">Claim ${c.pay}</button>`:''}<i class="chp"><i style="transform:scaleX(${p/c.goal})"></i></i></div>`;}).join('')+
+  (W.bonus?'<p class="hint">Weekly bonus claimed. See you next week.</p>':'');
+ el.querySelectorAll('[data-wk]').forEach(b=>b.addEventListener('click',()=>{const W=weekly(),c=W.list.find(x=>x.k===b.dataset.wk);if(!c||W.claimed[c.k]||(W.prog[c.k]||0)<c.goal)return;W.claimed[c.k]=1;SAVE.bolts+=c.pay;let msg=`+${c.pay} bolts`;
+  if(!W.bonus&&W.list.every(x=>W.claimed[x.k])){W.bonus=true;SAVE.bolts+=WKBONUS;msg+=` and a ${WKBONUS} bolt bonus for finishing the week`;}SAVE.st.weekly=(SAVE.st.weekly||0)+1;persist();sfx('win');toast('Weekly challenge claimed: '+msg,1);renderWeekly();renderPilot();renderBoxes();}));}
 const dayKey=(o)=>{const d=new Date();d.setDate(d.getDate()+(o||0));return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');};
 function dailyState(){const D=SAVE.daily,today=dayKey(),ready=D.last!==today,next=ready?(D.last===dayKey(-1)?D.streak%7+1:1):D.streak;return {ready,day:next,cont:D.last===dayKey(-1)};}
 function checkDaily(){if(G.phase!=='select'||!SAVE.tutDone||G.tut)return;const S=dailyState();if(!S.ready)return;
@@ -2904,8 +3035,27 @@ function ago(t){const s=Math.round((Date.now()-t)/1000);return s<10?'just now':s
 function renderSave(){const el=$('saveState');if(!el)return;const S=dailyState();
  el.textContent={local:'Saved in this browser. Sign in to Claude to also keep it in your account.',saving:'Saving to your Claude account…',synced:`Saved to your Claude account · ${CLOUD.at?ago(CLOUD.at):'up to date'}`,error:'Saved in this browser. The account save failed; it will try again on your next save.'}[CLOUD.state];
  el.className='saveState '+CLOUD.state;$('dailyBtn').textContent=S.ready?'Claim daily reward':`Daily reward claimed · ${SAVE.daily.streak}-day streak · back tomorrow`;$('dailyBtn').disabled=!S.ready;}
+/* photo mode: pose the selected robot in any arena and save a picture */
+const PHP=[['win','Victory'],['idle','Ready'],['block','Guard'],['jump','Leap'],['ko','Down'],['veh','Vehicle']];
+function enterPhoto(){if(locked(G.sel))return;audioInit();setShop(false);G.phase='photo';G.ph={pose:'win',ang:20,zoom:75,h:22,snap:0};show(['photo']);$('phPanel').hidden=false;$('phShot').hidden=true;
+ seg($('phPose'),PHP,'win',v=>{G.ph.pose=v;sfx('ui');if(v==='veh'||G.showVeh!==(v==='veh'))sfx('transform');});for(const [id,k] of [['phAng','ang'],['phZoom','zoom'],['phH','h']])$(id).value=G.ph[k];phArena();sfx('transform');}
+function phArena(){$('phArena').textContent=ARENAS[G.arena].name;}
+function exitPhoto(){if(G.phase!=='photo')return;G.ph=null;goSelect();}
+for(const [id,k] of [['phAng','ang'],['phZoom','zoom'],['phH','h']])$(id).addEventListener('input',e=>{if(G.ph)G.ph[k]=+e.target.value;});
+$('phPrev').addEventListener('click',()=>{applyArena((G.arena+ARENAS.length-1)%ARENAS.length);phArena();sfx('ui');});
+$('phNext').addEventListener('click',()=>{applyArena((G.arena+1)%ARENAS.length);phArena();sfx('ui');});
+$('phHide').addEventListener('click',e=>{e.stopPropagation();$('phPanel').hidden=true;toast('Tap anywhere to show the controls again',1);});
+$('photo').addEventListener('click',e=>{if($('phPanel').hidden&&$('phShot').hidden){$('phPanel').hidden=false;}});
+$('phDone').addEventListener('click',exitPhoto);
+$('phSnap').addEventListener('click',()=>{if(G.ph){G.ph.snap=1;sfx('go');flash();}});
+$('phBack').addEventListener('click',e=>{e.stopPropagation();$('phShot').hidden=true;$('phPanel').hidden=false;});
+function photoReady(blob){if(!G.ph||!blob){toast('Could not take the picture on this device');return;}G.ph.blob=blob;const u=URL.createObjectURL(blob);if(G.ph.url)URL.revokeObjectURL(G.ph.url);G.ph.url=u;$('phImg').src=u;$('phMsg').textContent='';$('phPanel').hidden=true;$('phShot').hidden=false;}
+$('phSave').addEventListener('click',async e=>{e.stopPropagation();const P=G.ph;if(!P||!P.blob)return;const name=`forgeframe-${DEFS[G.sel].name.toLowerCase().replace(/[^a-z0-9]+/g,'-')}-${ARENAS[G.arena].id}.png`;
+ let dl=null;try{dl=window.claude&&window.claude.use?await window.claude.use('downloads'):null;}catch(_){dl=null;}
+ if(dl){try{await dl.save({filename:name,data:P.blob});$('phMsg').textContent='Saved.';}catch(err){const c=err&&err.code;$('phMsg').textContent=c==='declined'?'Not saved.':c==='rate_limited'?'A save is already waiting for your answer.':'Saving is not available here. Press and hold (or right-click) the picture to save it.';}return;}
+ try{const a=document.createElement('a');a.href=P.url;a.download=name;document.body.appendChild(a);a.click();a.remove();$('phMsg').textContent='If nothing downloaded, press and hold (or right-click) the picture to save it.';}catch(_){$('phMsg').textContent='Press and hold (or right-click) the picture to save it.';}});
 function goSelect(){audioInit();cleanupMatch();G.phase='select';show(['select']);showcase.forEach(f=>f.root.visible=true);if(G.tut){G.tut=null;G.mode='campaign';}$('tut').hidden=true;if(locked(G.sel)){G.sel=0;G.pal=0;}
- G.diff=G.userDiff;G.stageSel=Math.min(G.stageSel,campOpen());setShop(false);$('boxRev').hidden=true;renderPilot();renderBoxes();renderRoster();renderDetail();renderOpp();renderChals();renderMode();renderSave();sfx('ui');setTimeout(checkDaily,700);}
+ G.diff=G.userDiff;G.stageSel=Math.min(G.stageSel,campOpen());setShop(false);$('boxRev').hidden=true;renderPilot();renderBoxes();renderRoster();renderDetail();renderOpp();renderChals();renderMode();renderSave();renderWeekly();sfx('ui');setTimeout(checkDaily,700);}
 $('startBtn').addEventListener('click',onStart);
 $('backBtn').addEventListener('click',()=>{sfx('ui');goTitle();});
 $('fightBtn').addEventListener('click',()=>startMatch());
@@ -2931,7 +3081,7 @@ function layoutShow(){showcase.forEach((f,i)=>{f.x=showX(i);});}
 function makeShow(i,pal){const f=new Fighter(DEFS[i],false,pal);f.reset(showX(i),1);f.showRot=0;f.rotY=0;return f;}
 const showcase=DEFS.filter(d=>!d.enemy).map((d,i)=>makeShow(i,0));
 function rebuildShowcase(i,pal){showcase[i].dispose();showcase[i]=makeShow(i,pal===undefined?G.pal:pal);}
-function cleanupMatch(){if(G.p1)G.p1.dispose();if(G.p2)G.p2.dispose();G.p1=G.p2=null;clearProj();G.timeScale=1;G.hitstop=0;G.koFx=null;G.slowT=0;G.focusT=0;cine(false);$('danger').classList.remove('on');$('announce').className='';}
+function cleanupMatch(){G.phase2=null;if(G.p1)G.p1.dispose();if(G.p2)G.p2.dispose();G.p1=G.p2=null;clearProj();G.timeScale=1;G.hitstop=0;G.koFx=null;G.slowT=0;G.focusT=0;cine(false);$('danger').classList.remove('on');$('announce').className='';}
 function shuffle(a){for(let i=a.length-1;i>0;i--){const j=Math.random()*(i+1)|0;[a[i],a[j]]=[a[j],a[i]];}return a;}
 function others(){return DEFS.map((_,i)=>i).filter(i=>i!==G.sel&&!DEFS[i].boss&&!DEFS[i].custom);}
 function startMatch(){
@@ -2950,9 +3100,9 @@ function setupMode(){
  else if(G.mode==='survival'){R=1;G.diff='rookie';G.nextFoe=()=>{const n=G.wave+1,o=others();G.diff=n>=6?'prime':n>=3?'veteran':'rookie';G.mod={foeHp:1+.1*(n-1),foeDmg:1+.06*(n-1),foeEnergy:1+.15*(n-1)};G.cpuDef=Math.random()<.35?randomEnemy():null;return o[Math.random()*o.length|0];};}
  G.maxRounds=R;G.need=G.mode==='training'?99:Math.ceil(R/2);
 }
-function spawnFoe(){if(G.p2)G.p2.dispose();const fd=G.cpuDef||DEFS[G.cpuIdx],cpal=!G.cpuDef&&G.cpuIdx===G.sel?(G.pal===0?1:0):(Math.random()<.3?1:0);G.p2=new Fighter(fd,true,Math.min(cpal,fd.pals.length-1));G.p2.enter=true;$('n2').textContent=G.p2.def.name;}
+function spawnFoe(){if(G.p2)G.p2.dispose();const fd=G.cpuDef||DEFS[G.cpuIdx],cpal=!G.cpuDef&&G.cpuIdx===G.sel?(G.pal===0?1:0):(Math.random()<.3?1:0);G.p2=new Fighter(fd,!G.twoP,Math.min(cpal,fd.pals.length-1));G.p2.enter=true;$('n2').textContent=G.p2.def.name;}
 function beginMatch(){
- cleanupMatch();setupMode();
+ cleanupMatch();G.twoP=G.mode==='versus'&&!!G.p2human;setupMode();for(const k in held2)held2[k]=false;$('tag1').textContent=G.twoP?'P1':'YOU';$('tag2').textContent=G.twoP?'P2':'CPU';
  G.showVeh=false;showcase.forEach(f=>{f.root.visible=false;f.veh.visible=false;f.morph=0;});
  G.p1=new Fighter(DEFS[G.sel],false,G.pal);G.p1.enter=true;
  spawnFoe();
@@ -2965,7 +3115,7 @@ function beginMatch(){
 function startRound(){
  G.p1.reset(-3.5,1);G.p2.reset(3.5,-1);G.p1.rotY=.95;G.p2.rotY=-.95;
  {const m=G.mod,a=G.p1,b=G.p2;if(m.foeHp)b.maxHp=b.hp=b.trail=Math.round(b.maxHp*m.foeHp);if(m.myHp)a.hp=a.trail=a.maxHp*m.myHp;}
- G.enraged=false;G.koFx=null;G.firstHit=false;G.focusT=0;G.slowT=0;
+ G.enraged=false;G.phase2=null;if(G.p2.baseDef){G.p2.def=G.p2.baseDef;G.p2.baseDef=null;}if(G.mode==='campaign'&&G.arena!==CAMP[G.stageSel].arena)applyArena(CAMP[G.stageSel].arena);G.koFx=null;G.firstHit=false;G.focusT=0;G.slowT=0;
  {const ent=G.mode!=='training'&&(G.p1.enter||G.p2.enter);cine(ent);if(ent)showVS();}
  clearProj();G.timer=G.mode==='training'?Infinity:(G.mod.timer||60);G.phase='intro';G.introT=0;G.fightShown=false;G.timeScale=1;G.roundWinner=null;
  const rl=G.nextFoe?'Wave '+G.wave:'Round '+G.round;
@@ -2976,7 +3126,7 @@ function startRound(){
 }
 function roundOver(winner){
  if(G.phase!=='fight')return;
- if(winner===G.p1&&G.p1.hp>=G.p1.maxHp&&G.mode!=='training')SAVE.st.perfect=true;
+ if(winner===G.p1&&G.p1.hp>=G.p1.maxHp&&G.mode!=='training'&&!G.twoP){SAVE.st.perfect=true;weekAdd('perfect');}
  G.phase='roundEnd';G.endT=0;G.roundWinner=winner;G.timeScale=.25;announce('K.O.','ko',1600);sfx('ko');flash();clearPressed();cine(true);
  if(G.wins[winner===G.p1?0:1]+1>=G.need&&!G.nextFoe){G.timeScale=.14;G.hitstop=.2;}
  if(winner.hp>=winner.maxHp)callout('Perfect');else if(winner.hp<winner.maxHp*.2)callout('Comeback');
@@ -2989,6 +3139,8 @@ function endMatch(){
  let sub=`${G.p1.def.name} ${G.wins[0]} – ${G.wins[1]} ${G.p2.def.name}`;
  const B=(label,fn,primary)=>{const b=document.createElement('button');b.className='btn'+(primary?' primary':'');b.textContent=label;b.addEventListener('click',fn);btns.appendChild(b);};
  btns.innerHTML='';lad.innerHTML='';
+ if(G.twoP){t.textContent=draw?'Draw':won?'Player 1 wins':'Player 2 wins';sfx('win');$('resReward').innerHTML='<small>Two-player matches do not earn XP or bolts.</small>';
+  B('Rematch',()=>beginMatch(),true);B('Change setup',goSelect);B('Title',goTitle);t.className='win';$('resSub').textContent=sub;lad.hidden=true;show(['hud','result']);return;}
  const champion=G.mode==='arcade'&&won&&G.stage>=G.ladder.length-1;
  const before=rankInfo(SAVE.xp);
  let gain=Math.round(((won?100:draw?50:30)+G.wins[0]*20+G.bestCombo*5)*({rookie:1,veteran:1.5,prime:2})[G.diff]);
@@ -2997,13 +3149,16 @@ function endMatch(){
  if(G.mode==='campaign'&&won){const fr=G.p1.hp/G.p1.maxHp;stars=fr>=.6?3:fr>=.3?2:1;const prev=SAVE.camp[G.stageSel]||0;if(!prev){gain+=150;extra.push('Includes 150 XP first clear bonus');}if(stars>prev)SAVE.camp[G.stageSel]=stars;if(G.stageSel===CAMP.length-1)SAVE.tyrant=true;}
  if(G.mode==='survival'){gain=30+45*G.wins[0]+G.bestCombo*5;if(G.wins[0]>(SAVE.st.surv||0)){SAVE.st.surv=G.wins[0];extra.push('New best run');}}
  if(won){SAVE.won[G.p1.def.id]=true;if(G.diff==='prime'&&(G.mode==='arcade'||G.mode==='versus'))SAVE.st.hard=true;}
- SAVE.st.combo=Math.max(SAVE.st.combo||0,G.bestCombo);
+ SAVE.st.combo=Math.max(SAVE.st.combo||0,G.bestCombo);weekly();
  SAVE.fights++;if(SAVE.fights===ROOKIE_FIGHTS)extra.push('All robots and the Workshop are now unlocked');
  let bolts=won?({rookie:45,veteran:50,prime:55})[G.diff]:25;
  if(G.mode==='campaign'&&won&&stars===3)bolts+=5;
  if(G.mode==='survival')bolts=Math.max(25,20*G.wins[0]);
  if(champion)bolts+=40;
- SAVE.xp+=gain;SAVE.bolts+=bolts;SAVE.st.earned=(SAVE.st.earned||0)+bolts;if(won)SAVE.wins++;persist();
+ SAVE.xp+=gain;SAVE.bolts+=bolts;SAVE.st.earned=(SAVE.st.earned||0)+bolts;if(won)SAVE.wins++;
+ weekAdd('fights');weekAdd('earned',bolts);weekMax('combo',G.bestCombo);if(G.mode==='survival')weekMax('surv',G.wins[0]);
+ if(won){weekAdd('wins');if(G.p1.def.custom)weekAdd('customWin');if(G.mode==='campaign')weekAdd('camp');if(G.mode==='arcade')weekAdd('arcade');}
+ persist();
  checkChals(false).forEach(c=>extra.push(`Achievement unlocked: ${c[1]} · +${c[3]} bolts`));
  const after=rankInfo(SAVE.xp);
  $('resReward').innerHTML=`<b>+${gain} XP · +${bolts} bolts</b><div class="xpbar"><i style="transform:scaleX(${after.frac})"></i></div><small>Rank ${after.L} · ${after.name}${after.L>before.L?' · rank up':''}${before.L<3&&after.L>=3?' · gold paint unlocked':''}</small>`+extra.map(x=>`<small>${x}</small>`).join('');
@@ -3063,6 +3218,7 @@ function buildMovelist(){
  const rows=[['J','Punch',''],['K','Kick',''],['Y','Heavy hit',''],['H','Blaster',''],['L','Block (hold)',''],['Shift','Dodge',''],['U',s[0].name,sc(d,d.specials[0])],['I',s[1].name,sc(d,d.specials[1])],['O',SPECIALS[d.rush||'rush'].name,100]];
  $('movelist').innerHTML=rows.map((r,i)=>`<kbd data-r="${i}">${r[0]}</kbd><span data-r="${i}">${r[1]}</span><em data-r="${i}">${r[2]}</em>`).join('');
  $('ts1').textContent=s[0].short;$('ts2').textContent=s[1].short;mlCache='';
+ const m2=$('movelist2');m2.hidden=!G.twoP;if(G.twoP){const e=G.p2.def,t=e.specials.map(k=>SPECIALS[k]);m2.innerHTML=[['← →','Move',''],['↑','Jump',''],[',','Punch',''],['.','Kick',''],['/','Heavy',''],['M','Blaster',''],['↓','Block',''],['R Shift','Dodge',''],['[',t[0].name,''],[']',t[1].name,''],['\\',SPECIALS[e.rush||'rush'].name,'']].map(r=>`<kbd>${r[0]}</kbd><span>${r[1]}</span><em>${r[2]}</em>`).join('');}
 }
 function updateHUD(){
  if(!G.p1)return;
@@ -3106,6 +3262,8 @@ function updateCamera(dt){
  }else if(G.phase==='select'){
   const f=showcase[G.sel];const narrow=window.innerWidth<=760;
   tx=f.x;ty=2.3;tz=port?(G.showVeh?13.5:11):7.8;lx=f.x;ly=port?1.2:1.45;
+ }else if(G.phase==='photo'&&G.ph){
+  const f=showcase[G.sel],a=G.ph.ang*Math.PI/180,d=G.ph.zoom/10*(port?1.5:1);tx=f.x+Math.sin(a)*d;tz=Math.cos(a)*d;ty=G.ph.h/10;lx=f.x;ly=G.ph.pose==='veh'?.9+(f.vehY||0):1.6;
  }else{
   const ox=showcase[2]?showcase[2].x+2.5*3.3:0;tx=ox+Math.sin(G.clock*.15)*4;ty=3.2;tz=port?19:13;lx=ox+(port?0:-1.5);ly=1.7;
  }
@@ -3123,6 +3281,9 @@ const STEP=1/60;let last=performance.now(),acc=0;
 function step(dt){
  G.clock+=dt;
  if(G.phase==='cutscene'){if(G.cs)csStep(dt);}
+ else if(G.phase==='photo'&&G.ph){const P=G.ph;
+  showcase.forEach((f,i)=>{if(i!==G.sel){f.root.visible=false;f.veh.visible=false;return;}const veh=P.pose==='veh';f.state=veh?'idle':P.pose;f.showRot=0;f.morph+=Math.max(-dt*1.3,Math.min(dt*1.3,(veh?1:0)-f.morph));poseFighter(f,dt);drawFighter(f,dt);});
+ }
  else if(G.phase==='title'||G.phase==='select'){
   showcase.forEach((f,i)=>{if(slotOff(i)||Math.abs(f.x-(G.phase==='select'&&showcase[G.sel]?showcase[G.sel].x:showcase[2].x))>7){f.root.visible=false;f.veh.visible=false;return;}const on=G.phase==='select'&&i===G.sel;f.state=on?'win':'idle';f.showRot=on?Math.sin(G.clock*.5)*.6:0;{const tg=on&&G.showVeh?1:0;f.morph+=Math.max(-dt*1.3,Math.min(dt*1.3,tg-f.morph));}poseFighter(f,dt);drawFighter(f,dt);});
  }else if(G.p1){
@@ -3132,8 +3293,9 @@ function step(dt){
   else{
    const live=G.phase==='fight';
    if(live&&G.tut)tutTick(dt);
-   if(live&&G.mod.enrage&&!G.enraged&&G.p2.hp<G.p2.maxHp*.5){G.enraged=true;announce(G.p2.def.name+' enraged','ko',1000);flash();sfx('transform');}
-   const i1=live?playerIntent():{},i2=live?aiIntent(G.p2,G.p1,dt):{};
+   if(live&&G.mod.enrage&&!G.enraged&&G.p2.hp<G.p2.maxHp*.5){G.enraged=true;if(BOSS2[G.p2.def.id])bossPhase2();else{announce(G.p2.def.name+' enraged','ko',1000);flash();sfx('transform');}}
+   if(live)hazardTick(dt);
+   const i1=live?playerIntent():{},i2=live?(G.twoP?playerIntent2():aiIntent(G.p2,G.p1,dt)):{};
    updateFighter(G.p1,G.p2,i1,dt);updateFighter(G.p2,G.p1,i2,dt);
    separate(G.p1,G.p2);updateProj(dt);
   }
@@ -3152,6 +3314,7 @@ function frame(now){
   updateCamera(real);updateHUD();
  }
  if(composer)composer.render();else renderer.render(scene,camera);
+ if(G.ph&&G.ph.snap){G.ph.snap=0;try{canvas.toBlob(photoReady,'image/png');}catch(e){photoReady(null);}}
 }
 applyArena(0);
 show(['title']);
