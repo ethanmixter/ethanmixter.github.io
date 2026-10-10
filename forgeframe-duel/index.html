@@ -475,6 +475,16 @@ html{-webkit-text-size-adjust:100%;text-size-adjust:100%}
 #stage{transition:filter .5s}
 body.fin #stage{filter:saturate(.35) contrast(1.15) brightness(1.05)}
 @media (prefers-reduced-motion:reduce){#fin.on{animation:none}}
+/* garage tour */
+#tour{position:fixed;inset:0;z-index:7}
+#tourHi{position:fixed;border:2px solid var(--amber);box-shadow:0 0 0 9999px rgba(6,8,11,.6),0 0 18px rgba(255,178,30,.6);transition:left .3s,top .3s,width .3s,height .3s;pointer-events:none}
+#tourHi.none{left:50%!important;top:50%!important;width:0!important;height:0!important;border:0}
+#tourCard{position:fixed;left:50%;transform:translateX(-50%);width:min(470px,calc(100% - 32px));box-sizing:border-box;display:flex;flex-direction:column;gap:6px;padding:14px 18px;
+ background:linear-gradient(180deg,rgba(22,28,35,.98),rgba(10,13,17,.98));box-shadow:inset 0 0 0 1px var(--line),inset 0 3px 0 var(--amber);clip-path:polygon(12px 0,calc(100% - 12px) 0,100% 12px,100% 100%,0 100%,0 12px)}
+#tourCard small{font-family:var(--f-label);font-size:11px;letter-spacing:.2em;text-transform:uppercase;color:var(--amber)}
+#tourCard b{font-family:var(--f-display);font-weight:400;font-size:24px;line-height:1.05}
+#tourCard p{margin:0;font-size:14px;line-height:1.45;color:var(--text)}
+#tourCard .row{display:flex;gap:8px;justify-content:flex-end;margin-top:6px}
 #fail{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;padding-inline:16px;text-align:center;font-family:var(--f-label);letter-spacing:.08em;color:var(--muted)}
 </style>
 
@@ -482,6 +492,7 @@ body.fin #stage{filter:saturate(.35) contrast(1.15) brightness(1.05)}
 <div id="flash"></div>
 <div id="toast" role="status"></div>
 <div id="daily" hidden><div class="dlCard"><h2>Daily reward</h2><div id="dlTiles"></div><p id="dlNote"></p><button id="dlClaim" class="btn primary">Claim</button></div></div>
+<div id="tour" hidden><div id="tourHi"></div><div id="tourCard" role="dialog" aria-live="polite"><small id="tourN"></small><b id="tourT"></b><p id="tourD"></p><div class="row"><button class="btn small" id="tourSkip">Skip</button><button class="btn small" id="tourBack">Back</button><button class="btn small primary" id="tourNext">Next</button></div></div></div>
 <div id="boxRev" hidden><div class="bxCard"><h2 id="bxTitle"></h2><i class="cube big"></i><div id="bxWon"></div></div></div>
 <div id="lb1"></div><div id="lb2"></div><div id="danger"></div><div id="fin"></div>
 
@@ -553,6 +564,7 @@ body.fin #stage{filter:saturate(.35) contrast(1.15) brightness(1.05)}
       <span>Sound</span><div class="seg"><button class="soundToggle" aria-pressed="true">Sound on</button></div>
       <span>Music</span><div class="seg" id="musicOpt"></div>
       <span>Voices</span><div class="seg" id="voiceOpt"></div>
+      <span>Help</span><div class="seg"><button id="tourBtn">Garage tour</button><button id="howBtn2">Fighting tutorial</button></div>
       <span>Progress</span><div class="seg"><button id="resetBtn">Reset</button></div>
     </div>
     <div class="keys"><span><kbd>A</kbd><kbd>D</kbd> move</span><span><kbd>W</kbd> jump</span><span><kbd>J</kbd> punch</span><span><kbd>K</kbd> kick</span><span><kbd>L</kbd> block</span><span><kbd>Shift</kbd> dodge</span><span><kbd>H</kbd> blaster</span><span><kbd>Y</kbd> heavy hit</span><span><kbd>U</kbd><kbd>I</kbd> specials</span><span><kbd>O</kbd> transform rush</span><span><kbd>Esc</kbd> pause</span></div>
@@ -3031,6 +3043,7 @@ function clearPressed(){for(const k in pressed)delete pressed[k];}
 window.addEventListener('keydown',e=>{
  if(e.target&&e.target.tagName==='INPUT'){if(e.code==='Enter')e.target.blur();return;}
  if(G.phase==='cutscene'){e.preventDefault();if(e.code==='Escape')csEnd();else if(!e.repeat&&(e.code==='Enter'||e.code==='Space'||e.code==='KeyJ'))csNext();return;}
+ if(G.tour){e.preventDefault();if(e.code==='Escape')tourEnd();else if(e.code==='Enter'||e.code==='ArrowRight')tourGo(G.tour.i+1);else if(e.code==='ArrowLeft')tourGo(G.tour.i-1);return;}
  if(e.code==='Enter'){if(G.phase==='title'){e.preventDefault();onStart();return;}if(G.phase==='select'){e.preventDefault();startMatch();return;}}
  if(G.phase==='photo'){if(e.code==='Escape')exitPhoto();return;}
  if(e.code==='Escape'||e.code==='KeyP'){togglePause();return;}
@@ -3491,7 +3504,7 @@ function renderWeekly(){const el=$('weekly');if(!el)return;const W=weekly(),left
   if(!W.bonus&&W.list.every(x=>W.claimed[x.k])){W.bonus=true;SAVE.bolts+=WKBONUS;msg+=` and a ${WKBONUS} bolt bonus for finishing the week`;}SAVE.st.weekly=(SAVE.st.weekly||0)+1;persist();sfx('win');toast('Weekly challenge claimed: '+msg,1);renderWeekly();renderPilot();renderBoxes();}));}
 const dayKey=(o)=>{const d=new Date();d.setDate(d.getDate()+(o||0));return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');};
 function dailyState(){const D=SAVE.daily,today=dayKey(),ready=D.last!==today,next=ready?(D.last===dayKey(-1)?D.streak%7+1:1):D.streak;return {ready,day:next,cont:D.last===dayKey(-1)};}
-function checkDaily(){if(G.phase!=='select'||!SAVE.tutDone||G.tut)return;const S=dailyState();if(!S.ready)return;
+function checkDaily(){if(G.phase!=='select'||!SAVE.tutDone||G.tut||G.tour)return;const S=dailyState();if(!S.ready)return;
  const el=$('daily');$('dlTiles').innerHTML=DAILY.map((b,i)=>`<i class="${i+1<S.day?'got':i+1===S.day?'now':''}"><small>Day ${i+1}</small><b>${b}</b><em>bolts</em></i>`).join('');
  $('dlNote').textContent=S.day===1&&SAVE.daily.streak>0&&!S.cont?'Your streak reset. Come back every day to climb to the 200 bolt day.':S.day===7?'Day 7: the big one.':'Come back tomorrow to keep your streak going.';
  el.hidden=false;sfx('transform');}
@@ -3522,7 +3535,39 @@ $('phSave').addEventListener('click',async e=>{e.stopPropagation();const P=G.ph;
  if(dl){try{await dl.save({filename:name,data:P.blob});$('phMsg').textContent='Saved.';}catch(err){const c=err&&err.code;$('phMsg').textContent=c==='declined'?'Not saved.':c==='rate_limited'?'A save is already waiting for your answer.':'Saving is not available here. Press and hold (or right-click) the picture to save it.';}return;}
  try{const a=document.createElement('a');a.href=P.url;a.download=name;document.body.appendChild(a);a.click();a.remove();$('phMsg').textContent='If nothing downloaded, press and hold (or right-click) the picture to save it.';}catch(_){$('phMsg').textContent='Press and hold (or right-click) the picture to save it.';}});
 function goSelect(){audioInit();cleanupMatch();G.phase='select';show(['select']);showcase.forEach(f=>f.root.visible=true);if(G.tut){G.tut=null;G.mode='campaign';}$('tut').hidden=true;if(locked(G.sel)){G.sel=0;G.pal=0;}
- G.diff=G.userDiff;G.stageSel=Math.min(G.stageSel,campOpen());setShop(false);$('boxRev').hidden=true;renderPilot();renderBoxes();renderRoster();renderDetail();renderOpp();renderChals();renderMode();renderSave();renderWeekly();sfx('ui');setTimeout(checkDaily,700);}
+ G.diff=G.userDiff;G.stageSel=Math.min(G.stageSel,campOpen());setShop(false);$('boxRev').hidden=true;renderPilot();renderBoxes();renderRoster();renderDetail();renderOpp();renderChals();renderMode();renderSave();renderWeekly();sfx('ui');setTimeout(()=>{if(G.phase==='select'&&!SAVE.tour2Done&&SAVE.fights>=ROOKIE_FIGHTS&&!G.tour)tourStart();else checkDaily();},700);}
+/* garage tour: after the first five fights everything unlocks at once, so walk through each shop tab and point at what matters */
+const TOUR=[
+ {tab:null,sel:'#shopBtn',t:'Everything is unlocked',d:'You have finished your first five fights, so every robot, the Workshop and the crates are open. This quick tour shows where everything is. Tap Next, or skip it any time. You can watch it again from Settings.'},
+ {tab:'play',sel:'#modes',t:'Battle: pick a mode',d:'Campaign is the story. Survival keeps sending enemies until you fall. Arcade is eight fights in a row. Versus is one match against anyone, or a friend on the same keyboard. Ranked climbs from Bronze to Legend. Daily Boss is one tough boss a day with a big reward. Boss Rush opens after you beat the Tyrant. Training is for practice.'},
+ {tab:'play',sel:'#partnerOpt',t:'Partner and hazards',d:'Pick a partner to fight as a tag team. Press T or tap TAG to swap robots, and the one resting slowly repairs. Hazards turn falling rocks, fire and lightning on or off on maps that have them.'},
+ {tab:'robots',sel:'#roster',t:'Robots: your garage',d:'Every robot you can fight with is here. Each one turns into a different vehicle. Pick one, then pick its paint below.'},
+ {tab:'robots',sel:'.wpn',t:'Weapons and upgrades',d:'Spend bolts on a weapon for your robot’s right hand, like a sword, an axe or an arm cannon. Further down, upgrade armor, power and energy for the robot you have picked.'},
+ {tab:'workshop',sel:'#workshop',t:'Custom: build your own',d:'Build a robot from parts. The head, torso, arms and legs each change its look, its stats, its special moves and the vehicle it turns into. Make four parts match for a full vehicle. A new custom slot costs 100 bolts.'},
+ {tab:'crates',sel:'#boxes',t:'Crates: where parts come from',d:'Custom parts only come from crates. Pick a vehicle type and a rarity: Uncommon, Rare, Epic or Legendary. Each crate gives a part of that type that you do not own yet. You can level parts up or trade unused ones back for bolts.'},
+ {tab:'progress',sel:'#weekly',t:'Progress: rewards',d:'Weekly challenges pay extra bolts. Claim your daily reward here, and find your achievements below. Your progress saves to your Claude account, and you can copy a backup code too.'},
+ {tab:'settings',sel:'.tabp[data-tab="settings"] .opts',t:'Settings',d:'Choose touch controls, and turn sound, music and robot voices on or off. The fighting tutorial and this tour are here too.'},
+ {tab:null,sel:'#fightBtn',t:'You are ready',d:'Win fights to earn bolts and XP, then spend them in the shop. When you are ready, press the big yellow button. Good luck, pilot.'}];
+function tourStart(){G.tour={i:0};$('tour').hidden=false;tourGo(0);}
+function tourEnd(){if(!G.tour)return;G.tour=null;$('tour').hidden=true;SAVE.tour2Done=true;persist();setShop(false);sfx('ui');setTimeout(checkDaily,400);}
+function tourGo(i){const T=G.tour;if(!T)return;if(i<0)return;if(i>=TOUR.length){tourEnd();return;}T.i=i;const s=TOUR[i];sfx('ui');
+ if(s.tab){if(!G.shop)setShop(true);setTab(s.tab);}else if(G.shop&&i>0)setShop(false);
+ $('tourN').textContent=`Garage tour · ${i+1} of ${TOUR.length}`;$('tourT').textContent=s.t;$('tourD').textContent=s.d;
+ $('tourBack').disabled=i===0;$('tourNext').textContent=i===TOUR.length-1?'Done':'Next';
+ const el=document.querySelector(s.sel);if(el&&s.tab)try{el.scrollIntoView({block:'center'});}catch(e){}
+ setTimeout(tourPlace,s.tab?420:60);}
+function tourPlace(){const T=G.tour;if(!T)return;const s=TOUR[T.i],el=document.querySelector(s.sel),hi=$('tourHi'),card=$('tourCard');
+ const r=el&&el.offsetParent!==null?el.getBoundingClientRect():null;
+ if(!r||r.width<2){hi.className='none';card.style.top='';card.style.bottom='calc(env(safe-area-inset-bottom,0px) + 110px)';return;}
+ hi.className='';const p=6,top=Math.max(4,r.top-p),bot=Math.min(innerHeight-4,r.bottom+p);hi.style.left=(r.left-p)+'px';hi.style.top=top+'px';hi.style.width=(r.width+p*2)+'px';hi.style.height=Math.max(10,bot-top)+'px';
+ const below=innerHeight-bot,above=top,ch=card.offsetHeight+16;
+ if(below>=ch){card.style.top=(bot+10)+'px';card.style.bottom='';}else if(above>=ch){card.style.top='';card.style.bottom=(innerHeight-top+10)+'px';}else{card.style.top='';card.style.bottom='12px';}}
+$('tourNext').addEventListener('click',()=>tourGo(G.tour?G.tour.i+1:0));
+$('tourBack').addEventListener('click',()=>{if(G.tour)tourGo(G.tour.i-1);});
+$('tourSkip').addEventListener('click',tourEnd);
+$('tourBtn').addEventListener('click',()=>{if(G.phase==='select')tourStart();});
+$('howBtn2').addEventListener('click',()=>{setShop(false);startTutorial();});
+window.addEventListener('resize',()=>{if(G.tour)setTimeout(tourPlace,50);});
 $('startBtn').addEventListener('click',onStart);
 $('backBtn').addEventListener('click',()=>{sfx('ui');goTitle();});
 $('fightBtn').addEventListener('click',()=>startMatch());
