@@ -3460,7 +3460,7 @@ function rankedNote(){if(rookie())return 'Climb from Bronze to Legend. Unlocks a
 function dailyNote(){if(rookie())return 'One tough boss a day with a big reward. Unlocks after your first five fights.';const B=dailyBoss(),D=dbState(),h=24-new Date().getHours();
  return `Today: ${B.def.name}, ${B.def.vehicle.toLowerCase()} on ${ARENAS[B.arena].name}. Twist: ${B.twist[0]}. ${B.twist[1]} It has a lot more armor than a normal frame. `+(D.won?`Beaten today. A new boss arrives in about ${h} hour${h>1?'s':''}.`:`First win today: +250 bolts and +300 XP.`);}
 function renderArena(){seg($('arena'),ARENAS.map((a,i)=>[i,a.name]),G.arena,v=>applyArena(v));}
-function renderPartner(){if(G.partner>=0&&(locked(G.partner)||G.partner===G.sel))G.partner=-1;seg($('partnerOpt'),[[-1,'None'],...DEFS.map((d,i)=>[i,d.name]).filter(([i])=>!locked(i)&&!DEFS[i].enemy&&i!==G.sel)],G.partner,v=>{G.partner=v;sfx('ui');});}
+function renderPartner(){if(!SAVE.tyrant){G.partner=-1;const el=$('partnerOpt');el.innerHTML='<button disabled>Beat the Tyrant to unlock tag teams</button>';return;}if(G.partner>=0&&(locked(G.partner)||G.partner===G.sel))G.partner=-1;seg($('partnerOpt'),[[-1,'None'],...DEFS.map((d,i)=>[i,d.name]).filter(([i])=>!locked(i)&&!DEFS[i].enemy&&i!==G.sel)],G.partner,v=>{G.partner=v;sfx('ui');});}
 function renderOpp(){renderPartner();if(G.opp>=0&&bossLocked(G.opp))G.opp=-1;seg($('opp'),[[-1,'Random'],...DEFS.map((d,i)=>[i,d.name]).filter(([i])=>!bossLocked(i)&&!DEFS[i].enemy)],G.opp,v=>G.opp=v);}
 function renderMissions(){const open=campOpen(),st=CAMP[G.stageSel];
  $('missions').innerHTML=CAMP.map((m,i)=>{const n=SAVE.camp[i]||0,lk=i>open;return `${m.ch?`<small class="chap">${m.ch}</small>`:''}<button class="ms" data-i="${i}" aria-pressed="${i===G.stageSel}" ${lk?'disabled':''}><b>${i+1}</b><span>${lk?'Locked':m.name}</span><em>${[0,1,2].map(j=>`<i class="${j<n?'on':''}"></i>`).join('')}</em></button>`;}).join('')+
@@ -3540,7 +3540,7 @@ function goSelect(){audioInit();cleanupMatch();G.phase='select';show(['select'])
 const TOUR=[
  {tab:null,sel:'#shopBtn',t:'Everything is unlocked',d:'You have finished your first five fights, so every robot, the Workshop and the crates are open. This quick tour shows where everything is. Tap Next, or skip it any time. You can watch it again from Settings.'},
  {tab:'play',sel:'#modes',t:'Battle: pick a mode',d:'Campaign is the story. Survival keeps sending enemies until you fall. Arcade is eight fights in a row. Versus is one match against anyone, or a friend on the same keyboard. Ranked climbs from Bronze to Legend. Daily Boss is one tough boss a day with a big reward. Boss Rush opens after you beat the Tyrant. Training is for practice.'},
- {tab:'play',sel:'#partnerOpt',t:'Partner and hazards',d:'Pick a partner to fight as a tag team. Press T or tap TAG to swap robots, and the one resting slowly repairs. Hazards turn falling rocks, fire and lightning on or off on maps that have them.'},
+ {tab:'play',sel:'#partnerOpt',t:'Partner and hazards',d:'Once you beat the Tyrant you can pick a partner to fight as a tag team. Press T or tap TAG to swap robots, and the one resting slowly repairs. Hazards turn falling rocks, fire and lightning on or off on maps that have them.'},
  {tab:'robots',sel:'#roster',t:'Robots: your garage',d:'Every robot you can fight with is here. Each one turns into a different vehicle. Pick one, then pick its paint below.'},
  {tab:'robots',sel:'.wpn',t:'Weapons and upgrades',d:'Spend bolts on a weapon for your robot’s right hand, like a sword, an axe or an arm cannon. Further down, upgrade armor, power and energy for the robot you have picked.'},
  {tab:'workshop',sel:'#workshop',t:'Custom: build your own',d:'Build a robot from parts. The head, torso, arms and legs each change its look, its stats, its special moves and the vehicle it turns into. Make four parts match for a full vehicle. A new custom slot costs 100 bolts.'},
@@ -3626,7 +3626,7 @@ function beginMatch(){
  cleanupMatch();G.twoP=G.mode==='versus'&&!!G.p2human;setupMode();for(const k in held2)held2[k]=false;$('tag1').textContent=G.twoP?'P1':'YOU';$('tag2').textContent=G.twoP?'P2':'CPU';
  G.showVeh=false;showcase.forEach(f=>{f.root.visible=false;f.veh.visible=false;f.morph=0;});
  G.p1=new Fighter(DEFS[G.sel],false,G.pal);G.p1.enter=true;G.p1b=null;G.tagAuto=0;G.tagCD=0;
- if(G.partner>=0&&G.partner!==G.sel&&!locked(G.partner)&&!G.twoP&&!G.tut){G.p1b=new Fighter(DEFS[G.partner],false,0);G.p1b.root.visible=false;G.p1b.veh.visible=false;}
+ if(SAVE.tyrant&&G.partner>=0&&G.partner!==G.sel&&!locked(G.partner)&&!G.twoP&&!G.tut){G.p1b=new Fighter(DEFS[G.partner],false,0);G.p1b.root.visible=false;G.p1b.veh.visible=false;}
  $('tagBtn').hidden=$('tagInfo').hidden=!G.p1b;
  spawnFoe();
  G.wins=[0,0];G.round=1;G.bestCombo=0;G.endSeen=false;
