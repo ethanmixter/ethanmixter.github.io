@@ -485,6 +485,29 @@ body.fin #stage{filter:saturate(.35) contrast(1.15) brightness(1.05)}
 #tourCard b{font-family:var(--f-display);font-weight:400;font-size:24px;line-height:1.05}
 #tourCard p{margin:0;font-size:14px;line-height:1.45;color:var(--text)}
 #tourCard .row{display:flex;gap:8px;justify-content:flex-end;margin-top:6px}
+/* play tab: modes grouped into cards on the left, the picked mode's details on the right */
+.pilot{column-span:all}
+.playGrid{column-span:all;display:grid;grid-template-columns:minmax(0,380px) minmax(0,1fr);gap:18px 30px;align-items:start;margin-bottom:16px}
+@media (max-width:760px){.playGrid{grid-template-columns:minmax(0,1fr)}}
+.grpH{margin:0 0 6px;font-family:var(--f-label);font-weight:700;font-size:12px;letter-spacing:.22em;text-transform:uppercase;color:var(--muted)}
+.mgrid{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:14px}
+.mgrid.one{grid-template-columns:1fr}
+.mcard{display:flex;flex-direction:column;align-items:flex-start;gap:3px;text-align:left;padding:10px 12px;min-width:0;background:linear-gradient(90deg,rgba(255,255,255,.06),rgba(255,255,255,.01));border:1px solid var(--line);cursor:pointer;clip-path:polygon(0 0,calc(100% - 10px) 0,100% 10px,100% 100%,0 100%)}
+.mcard b{font-family:var(--f-display);font-weight:400;font-size:20px;line-height:1.05}
+.mgrid.one .mcard b{font-size:28px}
+.mcard small{font-family:var(--f-label);font-size:12px;letter-spacing:.05em;color:var(--muted);line-height:1.25}
+.mcard:hover{border-color:#4a5868}
+.mcard[aria-pressed="true"]{border-color:var(--amber);background:rgba(255,178,30,.12)}
+.mcard[aria-pressed="true"] b{color:var(--amber)}
+.mcard.lk{opacity:.5}
+.mcard.lk small::before{content:"🔒 "}
+.mTitle{font-family:var(--f-display);font-weight:400;font-size:32px;line-height:1;margin:0 0 6px}
+.detCol .modeNote{margin:0 0 14px;font-size:14px}
+.detCol .opts{margin-top:14px}
+.chips{display:flex;flex-wrap:wrap;gap:4px;margin:0 0 8px}
+.chips button{background:transparent;border:1px solid var(--line);padding:6px 10px;font-family:var(--f-label);font-weight:700;letter-spacing:.08em;font-size:13px;color:var(--muted);cursor:pointer}
+.chips button[aria-pressed="true"]{background:var(--amber);border-color:var(--amber);color:#16110a}
+.chips button:disabled{opacity:.35;cursor:default}
 #fail{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;padding-inline:16px;text-align:center;font-family:var(--f-label);letter-spacing:.08em;color:var(--muted)}
 </style>
 
@@ -512,23 +535,24 @@ body.fin #stage{filter:saturate(.35) contrast(1.15) brightness(1.05)}
 
 <section id="select" class="screen" hidden>
   <div class="sel-title"><h2 id="selName">BULWARK</h2><p id="selRole">Siege frame</p></div>
-  <button id="shopBtn" class="btn small corner" aria-expanded="false">Open shop</button>
+  <button id="shopBtn" class="btn small corner" aria-expanded="false">Menu</button>
   <div class="sel-panel" id="selPanel" hidden>
   <nav class="shopTabs" id="shopTabs" aria-label="Shop sections">
-    <button data-tab="play" aria-pressed="true">Battle</button><button data-tab="robots" aria-pressed="false">Robots</button><button data-tab="workshop" aria-pressed="false">Custom</button><button data-tab="crates" aria-pressed="false">Crates</button><button data-tab="progress" aria-pressed="false">Progress</button><button data-tab="settings" aria-pressed="false">Settings</button>
+    <button data-tab="play" aria-pressed="true">Play</button><button data-tab="robots" aria-pressed="false">Robots</button><button data-tab="workshop" aria-pressed="false">Build</button><button data-tab="crates" aria-pressed="false">Crates</button><button data-tab="progress" aria-pressed="false">Rewards</button><button data-tab="settings" aria-pressed="false">Settings</button>
   </nav><div class="sel-in">
     <div class="pilot" id="pilot"></div>
     <section class="tabp" data-tab="play">
-    <div class="tabs" id="modes">
-      <button data-m="campaign" aria-pressed="true">Campaign</button>
-      <button data-m="survival" aria-pressed="false">Survival</button>
-      <button data-m="arcade" aria-pressed="false">Arcade</button>
-      <button data-m="versus" aria-pressed="false">Versus</button>
-      <button data-m="bossrush" aria-pressed="false">Boss Rush</button>
-      <button data-m="daily" aria-pressed="false">Daily Boss</button>
-      <button data-m="ranked" aria-pressed="false">Ranked</button>
-      <button data-m="training" aria-pressed="false">Training</button>
+    <div class="playGrid">
+    <div class="modeCol" id="modes">
+      <h4 class="grpH">Story</h4>
+      <div class="mgrid one"><button class="mcard" data-m="campaign" aria-pressed="true"><b>Campaign</b><small data-sub="campaign"></small></button></div>
+      <h4 class="grpH">Quick play</h4>
+      <div class="mgrid"><button class="mcard" data-m="versus" aria-pressed="false"><b>Versus</b><small data-sub="versus"></small></button><button class="mcard" data-m="arcade" aria-pressed="false"><b>Arcade</b><small data-sub="arcade"></small></button><button class="mcard" data-m="survival" aria-pressed="false"><b>Survival</b><small data-sub="survival"></small></button><button class="mcard" data-m="training" aria-pressed="false"><b>Training</b><small data-sub="training"></small></button></div>
+      <h4 class="grpH">Challenges</h4>
+      <div class="mgrid"><button class="mcard" data-m="ranked" aria-pressed="false"><b>Ranked</b><small data-sub="ranked"></small></button><button class="mcard" data-m="daily" aria-pressed="false"><b>Daily Boss</b><small data-sub="daily"></small></button><button class="mcard" data-m="bossrush" aria-pressed="false"><b>Boss Rush</b><small data-sub="bossrush"></small></button></div>
     </div>
+    <div class="detCol">
+    <h3 class="mTitle" id="modeTitle"></h3>
     <p class="modeNote" id="modeNote"></p>
     <div class="missions" id="missions" data-for="campaign"></div>
     <div class="opts">
@@ -541,6 +565,7 @@ body.fin #stage{filter:saturate(.35) contrast(1.15) brightness(1.05)}
       <span data-for="campaign survival arcade versus bossrush daily ranked">Hazards</span><div class="seg" id="hzOpt" data-for="campaign survival arcade versus bossrush daily ranked"></div>
       <span data-for="training">Dummy</span><div class="seg" id="dummy" data-for="training"></div>
     </div>
+    </div></div>
     </section>
     <section class="tabp" data-tab="robots">
     <div class="roster" id="roster"></div>
@@ -952,6 +977,11 @@ DEFS.push(Object.assign(mixDef('architect','ARCHITECT',['gh_ship_4','gc_ship_4',
  {enemy:false,boss:true,unlock:'ch5',scale:1.25,hp:200,power:1.22,speed:4.2,
   pals:[[0xe8ecf2,0x2a2440,0x14161c,0x9a6bff],[0x1a1a22,0xffb21e,0x0e0e12,0xffb21e],[0xd4a83a,0x2b2b30,0x1a1a1c,0xfff2a0]],palNames:['Architect','Sunforge','Gold'],
   blurb:'The mind that built the Tyrant. It drew every frame you ever fought, and it fights like it already knows your next move.',stats:{Armor:5,Speed:4,Power:5}}));
+/* chapter 6 final boss: the last design, part Tyrant, part Architect, part dragon */
+DEFS.push(Object.assign(mixDef('omega','OMEGA',['h6','gc_ship_4','a6','gl_dragon_4'],[0x1a0a14,0xd9a441,0x0e0a0c,0xff2a4a],'Final frame'),
+ {enemy:false,boss:true,unlock:'ch6',scale:1.35,hp:215,power:1.28,speed:3.9,
+  pals:[[0x1a0a14,0xd9a441,0x0e0a0c,0xff2a4a],[0xe8ecf2,0x6a1a8a,0x14161c,0xc77bff],[0xd4a83a,0x2b2b30,0x1a1a1c,0xfff2a0]],palNames:['Omega','Phantom','Gold'],
+  blurb:'The last design. It has the Tyrant’s crown, the Architect’s mind and a dragon’s legs, and it was built to beat you.',stats:{Armor:5,Speed:3,Power:5}}));
 /* enemy frames: themed mixes of Workshop parts [id, name, head, torso, arms, legs, main, trim, glow, role] */
 const ENEMY=[
  ['rivet','RIVET','h0','c12','a7','l7',0x8a4a2a,0x3a3d42,0xff8a2a,'Scrap brawler'],
@@ -976,7 +1006,11 @@ const ENEMY=[
  ['locomotor','LOCOMOTOR','gh_train_3','gc_train_3','ga_train_2','gl_train_3',0x2a2a30,0xa3222e,0xffb21e,'Rail juggernaut'],
  ['wyrmforge','WYRMFORGE','gh_dragon_4','gc_dragon_4','ga_dragon_4','gl_dragon_4',0x3a1414,0xd9a441,0xff5a1a,'Forge dragon'],
  ['nova','NOVA','gh_ship_2','gc_ship_3','ga_ship_3','gl_ship_2',0xe6ebf0,0x1c8fb8,0x6fe0ff,'Star fighter'],
- ['comet','COMET','gh_ship_3','gc_ship_2','ga_ship_2','gl_ship_3',0xd9612a,0x1b1d21,0xffd23a,'Star fighter']
+ ['comet','COMET','gh_ship_3','gc_ship_2','ga_ship_2','gl_ship_3',0xd9612a,0x1b1d21,0xffd23a,'Star fighter'],
+ ['frostbite','FROSTBITE','gh_hover_3','gc_guard_3','ga_hover_3','gl_hover_3',0xdfe9f2,0x5a8ab0,0x8fe4ff,'Ice warden'],
+ ['hailstorm','HAILSTORM','gh_heli_3','gc_heli_3','ga_heli_4','gl_heli_3',0x4a5866,0xd9e2ea,0xbfe8ff,'Storm gunship'],
+ ['galeforce','GALEFORCE','gh_jetbike_3','gc_jetbike_4','ga_jetbike_3','gl_jetbike_3',0xd02a5a,0x1b1d21,0xff6ad8,'Sky racer'],
+ ['kraken','KRAKEN','gh_boat_4','gc_boat_4','ga_boat_4','gl_boat_4',0x123a4a,0x2ad0c0,0x46ffd8,'Sea monster']
 ];
 function mixDef(id,name,ids,pal,role){const ps=ids.map(k=>PART[k]);let hp=70,sp=3.9,pw=.95,en=1,jp=10;
  for(const p of ps){const t=p.st;hp+=t.h||0;sp+=t.s||0;pw+=t.p||0;en+=t.e||0;jp+=t.j||0;}
@@ -1003,13 +1037,13 @@ const rkState=()=>{let k=SAVE.rk;if(!k||typeof k!=='object')k=SAVE.rk={tier:0,st
 const rkStars=k=>k.tier>=6?`${k.stars} legend point${k.stars===1?'':'s'}`:'★'.repeat(k.stars)+'☆'.repeat(RKS-k.stars);
 const dbState=()=>{const D=SAVE.dboss;return D&&D.day===dayNum()?D:{day:dayNum(),won:false,tries:0};};
 const idOf=id=>DEFS.findIndex(d=>d.id===id);
-DEFS[idOf('wyrmforge')].scale=1.18;
+DEFS[idOf('wyrmforge')].scale=1.18;DEFS[idOf('kraken')].scale=1.28;
 const ROOKIE_FIGHTS=5;
 const bossLocked=i=>!!DEFS[i].boss&&!SAVE[DEFS[i].unlock||'tyrant'];
 const rookie=()=>SAVE.fights<ROOKIE_FIGHTS;
 const slotOff=i=>!!DEFS[i].custom&&DEFS[i].slot>=SAVE.slots;
 const locked=i=>!!DEFS[i].enemy||bossLocked(i)||slotOff(i)||(rookie()&&i>2);
-const lockWhy=i=>rookie()&&i>2?`${ROOKIE_FIGHTS-SAVE.fights} more fight${ROOKIE_FIGHTS-SAVE.fights===1?'':'s'}`:DEFS[i].unlock==='ch5'?'Beat chapter 5':'Beat the Tyrant';
+const lockWhy=i=>rookie()&&i>2?`${ROOKIE_FIGHTS-SAVE.fights} more fight${ROOKIE_FIGHTS-SAVE.fights===1?'':'s'}`:DEFS[i].unlock==='ch5'?'Beat chapter 5':DEFS[i].unlock==='ch6'?'Beat chapter 6':'Beat the Tyrant';
 const CAMP=[
  {ch:'Chapter 1 · The Canyon Road',cs:'intro',name:'Canyon Gate',foes:['voltaic'],arena:2,diff:'rookie',rounds:1,text:'The Tyrant has seized the Forge, the foundry where every frame is built. A scout guards the canyon road in. Knock it down.',rule:'One round'},
  {name:'Scrap Patrol',foes:['rivet'],arena:3,diff:'rookie',rounds:3,text:'A scrap brawler patrols the wrecks along the road. It is bolted together from spare parts and it hits with all of them.',rule:'Best of 3'},
@@ -1035,9 +1069,14 @@ const CAMP=[
  {name:'Rail Yard',foes:['locomotor'],arena:'rail',diff:'veteran',rounds:1,mod:{foeHp:1.45,foeDmg:1.15},text:'An armored locomotive frame runs the yard at night. It does not stop and it does not turn. The overhead wires spark where it has been.',rule:'One long round · enemy has 45% more armor'},
  {name:'Dragon’s Nest',foes:['wyrmforge'],arena:'nest',diff:'veteran',rounds:3,mod:{foeHp:1.3,foeDmg:1.15,enrage:1},text:'The Architect’s first new design sleeps inside a volcano. It is half dragon, half furnace. Wake it up.',rule:'Best of 3 · at half armor it takes the fight into the sky'},
  {name:'Launch Pad',foes:['nova','comet'],arena:'launch',diff:'veteran',mod:{foeDmg:1.15},text:'Two starfighters guard the last rocket up to the Architect’s orbital forge. Take the rocket.',rule:'Two enemies in a row · you heal 25% between them'},
- {name:'The Architect',foes:['architect'],arena:'core',diff:'veteran',rounds:1,mod:{foeHp:1.35,foeDmg:1.15,enrage:1},text:'The Architect waits in the core of its forge. It has studied every fight you have ever had.',rule:'One long round · at half armor it pulls the fight into orbit, where gravity is low'}
+ {name:'The Architect',foes:['architect'],arena:'core',diff:'veteran',rounds:1,mod:{foeHp:1.35,foeDmg:1.15,enrage:1},text:'The Architect waits in the core of its forge. It has studied every fight you have ever had.',rule:'One long round · at half armor it pulls the fight into orbit, where gravity is low'},
+ {ch:'Chapter 6 · The Last Signal',cs:'ch6',name:'Frozen Relay',foes:['frostbite'],arena:'snow',diff:'veteran',rounds:3,mod:{foeHp:1.35,foeDmg:1.15},text:'Before it fell, the Architect sent one last signal north. The relay that carried it is guarded by an ice warden.',rule:'Best of 3 · enemy has 35% more armor'},
+ {name:'Storm Escort',foes:['hailstorm','galeforce'],arena:'spire',diff:'veteran',mod:{foeDmg:1.2},text:'A gunship and a sky racer fly escort for the signal’s cargo. Knock them out of the clouds.',rule:'Two enemies in a row · you heal 25% between them'},
+ {name:'The Deep',foes:['kraken'],arena:'abyss',diff:'veteran',rounds:1,mod:{foeHp:1.4,foeDmg:1.2,enrage:1},text:'The signal ends at a foundry at the bottom of the sea. Something enormous lives there.',rule:'One long round · at half armor it bursts up to the harbor'},
+ {name:'The Gauntlet',foes:['overseer','wyrmforge','kraken'],arena:'core',diff:'veteran',mod:{},text:'The foundry rebuilt three old bosses to stop you. All three, one after another.',rule:'Three bosses in a row · you heal 25% between them'},
+ {name:'Omega',foes:['omega'],arena:'citadel',diff:'veteran',rounds:1,mod:{foeHp:1.35,foeDmg:1.2,enrage:1},text:'The last design is finished. Omega waits in its citadel at the top of the storm.',rule:'One long round · at half armor it drags you back to the Tyrant’s throne'}
 ];
-const TYR_M=CAMP.findIndex(m=>m.foes.includes('tyrant'));
+const TYR_M=CAMP.findIndex(m=>m.foes.includes('tyrant')),ARCH_M=CAMP.findIndex(m=>m.foes.includes('architect'));
 /* cutscenes: each shot = who speaks, the line, arena, seconds of motion, camera [from pos, from look, to pos, to look], actors */
 const CUTS={
  intro:[
@@ -1078,6 +1117,19 @@ const CUTS={
   {who:'ARCHITECT',text:'Then come and find me. My new frames ship from the harbor tonight. I will be waiting above the sky.',dur:5.5,cam:[[5.6,2,6.8],[3,3,0],[4.8,2.2,6],[3,3.3,0]],a:{hero:{x:-2.5,face:1},architect:{x:3,rot:-.5,st:'win'}}},
   {who:'NARRATOR',text:'Chapter 5. The Architect.',arena:'harbor',dur:3.4,cam:[[2,2.6,11],[3,1,0],[5,2.6,11],[6,1,0]],a:{hero:{x:-2,to:16,veh:1}}}
  ],
+ ch6:[
+  {who:'NARRATOR',text:'The Architect is gone. But before it fell, it sent one last signal down to the bottom of the sea.',arena:'abyss',dur:6,cam:[[0,3.2,14],[0,3,-8],[0,2.6,9],[0,2.6,-4]],a:{hero:{x:-1.5,face:1}}},
+  {who:'hero',text:'Who was it talking to?',dur:3.6,cam:[[-.4,1.6,5],[-1.5,2.1,0],[-1,1.8,4.4],[-1.5,2.3,0]],a:{hero:{x:-1.5,rot:.5}}},
+  {who:'OMEGA',text:'To me. It drew the Tyrant. It drew itself. Then it drew me, the last design.',dur:6,cam:[[6.4,2.4,8],[3.2,3.4,0],[5.4,2.6,7],[3.2,3.6,0]],a:{hero:{x:-2.5,face:1},omega:{x:3.2,rot:-.5,st:'win'}}},
+  {who:'hero',text:'Then I will erase the last design.',dur:4,cam:[[-.6,1.6,5],[-2.5,2.1,0],[-1.2,1.8,4.4],[-2.5,2.3,0]],a:{hero:{x:-2.5,rot:.5},omega:{x:3.2,rot:-.5}}},
+  {who:'NARRATOR',text:'Chapter 6. The Last Signal.',arena:'snow',dur:3.4,cam:[[2,2.6,11],[3,1,0],[5,2.6,11],[6,1,0]],a:{hero:{x:-2,to:16,veh:1}}}
+ ],
+ omegaEnd:[
+  {who:'NARRATOR',text:'The storm over the citadel breaks. The last signal stops.',arena:'citadel',dur:6,cam:[[0,3.4,12],[.5,1.4,0],[.5,2.4,8.5],[.5,1.6,0]],a:{hero:{x:-2.2,face:1},omega:{x:2.8,face:-1,st:'ko'}}},
+  {who:'OMEGA',text:'No more designs. No more drafts. Who builds the next one?',dur:5,cam:[[5.4,2.4,6.2],[3.2,.9,0],[4.6,2.6,5.6],[3.2,1,0]],a:{hero:{x:-2.2,face:1},omega:{x:2.8,face:-1,st:'ko'}}},
+  {who:'hero',text:'We do. From now on, we build our own.',dur:4.5,cam:[[-.4,1.6,5],[-2.2,2.1,0],[-1,1.8,4.4],[-2.2,2.3,0]],a:{hero:{x:-2.2,rot:.5},omega:{x:2.8,face:-1,st:'ko'}}},
+  {who:'NARRATOR',text:'Omega has been rebuilt and is waiting in your garage. The Forge is finally free.',arena:'core',dur:7,cam:[[0,2.6,10],[0,2,0],[0,3.4,14],[0,2.2,0]],a:{hero:{x:0,rot:0,st:'win'},architect:{x:-3.6,rot:.2,st:'win'},tyrant:{x:3.6,rot:-.2,st:'win'},aegis:{x:-7,rot:.3,st:'win'},voltaic:{x:7,rot:-.3,st:'win'}}}
+ ],
  finale:[
   {who:'NARRATOR',text:'High above the world, the lights of the orbital forge go dark one by one.',arena:'orbit',dur:6,cam:[[0,3.4,12],[.5,1.4,0],[.5,2.4,8.5],[.5,1.6,0]],a:{hero:{x:-2.2,face:1},architect:{x:2.6,face:-1,st:'ko'}}},
   {who:'ARCHITECT',text:'Every frame you fought was one of my designs. You were the only one I never drew.',dur:5,cam:[[5,2.4,5.8],[3,.9,0],[4.2,2.6,5.2],[3,1,0]],a:{hero:{x:-2.2,face:1},architect:{x:2.6,face:-1,st:'ko'}}},
@@ -1097,6 +1149,7 @@ const CHALS=[
  ['surv10','Last frame standing','Beat 10 enemies in one Survival run',400,s=>(s.st.surv||0)>=10],
  ['camp','Liberator','Beat the Tyrant',300,s=>!!s.tyrant],
  ['ch5','Master builder','Finish chapter 5 and beat the Architect',400,s=>!!s.ch5],
+ ['ch6','Final design','Finish chapter 6 and beat Omega',500,s=>!!s.ch6],
  ['stars','Perfectionist','Earn 3 stars on every mission',500,s=>CAMP.every((_,i)=>s.camp[i]>=3)],
  ['max','Maxed out','Fully upgrade one frame',300,s=>Object.values(s.up).some(u=>u.armor>=5&&u.power>=5&&u.energy>=5)],
  ['parts','Parts collector','Collect 10 parts from mystery boxes',250,s=>Object.keys(s.parts||{}).length>=10],
@@ -1162,7 +1215,7 @@ const DIFF={
  prime:{label:'Hard',react:.27,block:.52,aggro:.7,spec:.4,dmg:.9,rest:.2,energy:2.6,combo:.42,dodge:.25}
 };
 const MODES={
- campaign:{note:`The Tyrant has seized the Forge. Fight through ${CAMP.length} missions in five chapters, earn up to 3 stars on each, and take it back.`,btn:'Start mission'},
+ campaign:{note:`The Tyrant has seized the Forge. Fight through ${CAMP.length} missions in six chapters, earn up to 3 stars on each, and take it back.`,btn:'Start mission'},
  survival:{note:'One life. Enemies keep coming and keep getting tougher. You heal a little between fights.',btn:'Start survival'},
  arcade:{note:'Beat eight random frames in a row. Lose a match and you can retry that stage.',btn:'Start arcade'},
  versus:{note:'One match against the frame of your choice.',btn:'Fight'},
@@ -2145,12 +2198,18 @@ Object.assign(SPECIALS,{
  b_tail:BSP('nova',{wind:.35,radius:3.8,dmg:12,kb:13,lift:6,pose:'kick'},'Tail Cyclone','wind'),
  b_lance:BSP('beam',{dmg:16,wind:.35},'Orbital Lance','plasma'),
  b_rain:BSP('strike',{n:5,gap:.16,dmg:8,kb:5,lift:6},'Star Rain','light')});
-for(const k of ['b_meteor','b_burst','b_blink','b_storm','b_fire','b_tail','b_lance','b_rain'])SPECIALS[k].cost=45;
+Object.assign(SPECIALS,{
+ b_tide:BSP('shot',{geo:'wave',dmg:10,kb:11,lift:3,speed:13,y:1.5,scale:1.5,snd:'whiff'},'Tidal Wave','ice'),
+ b_whirl:BSP('nova',{wind:.4,radius:4,dmg:12,kb:12,lift:7,pose:'up'},'Whirlpool','wind'),
+ b_omega:BSP('beam',{dmg:19,wind:.45},'Omega Cannon','plasma')});
+for(const k of ['b_meteor','b_burst','b_blink','b_storm','b_fire','b_tail','b_lance','b_rain','b_tide','b_whirl','b_omega'])SPECIALS[k].cost=45;
 const BOSS2={
  tyrant:{arena:13,specials:['b_meteor','b_burst'],line:'The throne gives way. Into the furnace!',hz:'fire'},
  overseer:{arena:16,specials:['b_blink','b_storm'],line:'Lockdown. Sealing you in the vault.',hz:'volt'},
  wyrmforge:{arena:'spire',specials:['b_fire','b_tail'],line:'It spreads its wings and drags you into the sky.',hz:'fire'},
- architect:{arena:'orbit',specials:['b_lance','b_rain'],line:'Gravity off. Welcome to my orbit.',hz:'grav',grav:14}};
+ architect:{arena:'orbit',specials:['b_lance','b_rain'],line:'Gravity off. Welcome to my orbit.',hz:'grav',grav:14},
+ kraken:{arena:'harbor',specials:['b_tide','b_whirl'],line:'It bursts out of the water and onto the docks!',hz:'crate'},
+ omega:{arena:'throne',specials:['b_omega','b_meteor'],line:'Omega protocol. Back to where it all began.',hz:'fire'}};
 function bossPhase2(){const B=BOSS2[G.p2.def.id];G.phase2=B?{B,t:2.5}:null;if(!B)return;if(B.grav)G.mod=Object.assign({},G.mod,{grav:B.grav});
  G.p2.baseDef=G.p2.def;G.p2.def=Object.assign({},G.p2.def,{specials:B.specials.slice()});G.p2.energy=Math.max(G.p2.energy,45);
  G.slowT=.6;G.focus=G.p2;G.focusT=1;cine(true);setTimeout(()=>{if(G.phase==='fight')cine(false);},1600);
@@ -2158,15 +2217,15 @@ function bossPhase2(){const B=BOSS2[G.p2.def.id];G.phase2=B?{B,t:2.5}:null;if(!B
  announce('Phase 2','ko',1300);setTimeout(()=>callout(B.line),900);}
 /* arena hazards: some maps fight back. A glowing ring warns where it will hit. */
 const ARHZ={foundry:'fire',firewall:'fire',burn:'fire',tower:'fire',throne:'fire',trench:'volt',crane:'volt',vault:'volt',quarry:'rock',scrap:'rock',canyon:'rock',lab:'grav',
- harbor:'crate',rail:'volt',nest:'fire',launch:'fire',core:'volt',orbit:'grav'};
+ harbor:'crate',rail:'volt',nest:'fire',launch:'fire',core:'volt',orbit:'grav',abyss:'volt',citadel:'volt'};
 const HZC={fire:0xff6a1e,volt:0x8affff,rock:0xffc890,grav:0x7affff,crate:0xffd27a};
 const HZCM=[0xa3222e,0x1c6f9a,0xd9a12a,0x2f6b4f].map(c=>metal(c,.4,.6));
-/* tag team: swap to your partner; the robot on the bench slowly repairs */
+/* tag team: swap to your partner; the robot on the bench does not repair, so damage sticks */
 function tagSwap(forced){const out=G.p1,inn=G.p1b;if(!inn||inn.hp<=0||G.phase!=='fight')return;if(!forced&&(G.tagCD>0||out.state==='ko'||out.state==='special'||out.state==='hit'))return;
  inn.x=out.state==='ko'?Math.max(-ARENA,Math.min(ARENA,out.x-out.facing*1.5)):out.x;inn.y=0;inn.vx=0;inn.vy=0;inn.onGround=true;inn.facing=Math.sign(G.p2.x-inn.x)||1;inn.rotY=inn.facing*.95;inn.state='idle';inn.t=0;inn.inv=.7;inn.morph=0;inn.fade=0;inn.ghost=false;
  out.root.visible=false;out.veh.visible=false;for(const p of G.proj){if(p.foe===out)p.foe=inn;if(p.owner===out)p.owner=inn;}
  G.p1=inn;G.p1b=out;G.tagCD=3;puff(inn.x,1.3,12,inn.glow);ring(inn.x,1.4,inn.glow,3);sfx('transform');callout('Tag: '+inn.def.name);$('n1').textContent=inn.def.name;buildMovelist();}
-function tagTick(dt){if(!G.p1b)return;G.tagCD=Math.max(0,G.tagCD-dt);const b=G.p1b;if(b.hp>0)b.hp=Math.min(b.maxHp,b.hp+b.maxHp*.025*dt);
+function tagTick(dt){if(!G.p1b)return;G.tagCD=Math.max(0,G.tagCD-dt);const b=G.p1b;
  if(G.tagAuto>0){G.tagAuto-=dt;if(G.tagAuto<=0){G.tagAuto=0;tagSwap(true);}}
  $('tagInfo').textContent=b.hp>0?`Partner ${b.def.name} · ${Math.round(b.hp/b.maxHp*100)}% · T to tag`:`Partner ${b.def.name} · down`;$('tagBtn').disabled=G.tagCD>0||b.hp<=0;}
 function hazardHit(f,x,dmg,lift){if(!f||f.state==='ko'||f.ghost||f.inv>0)return;const o=f===G.p1?G.p2:G.p1,ch=o.chain,en=o.energy,bc=G.bestCombo;if(f.state==='block')setState(f,'idle');
@@ -2690,6 +2749,33 @@ AID.orbit=addArena({id:'orbit',name:'Orbital Ring',bg:0x000004,fog:[60,300],hemi
  const mods=[];for(let i=0;i<6;i++){const m=grp(S,-40+i*16,6+Math.sin(i)*4,-40-(i%2)*10);bx(5,3,3,pM,0,0,0,m);for(const s of [-1,1])bx(5,.05,2.4,metal(0x1c3a8a,.6,.3),s*5,0,0,m);bx(.6,.6,3.2,glowMat(0xffd0a0,2),2.6,0,0,m);mods.push(m);}
  for(const x of [-ARENA-2,ARENA+2]){bx(.6,6,.6,pM,x,3,-3.8,S);bx(.12,4.6,.06,glowMat(0x4a8aff,2),x,3,-3.47,S);}
  A.update=dt=>{planet.rotation.y+=dt*.01;rgl.rotation.z+=dt*.02;ring.rotation.z+=dt*.02;mods.forEach((m,i)=>{m.rotation.x+=dt*.1;m.position.y+=Math.sin(G.clock*.4+i)*dt*.3;});};});
+/* ---- chapter 6 maps ---- */
+// 26 Sunken Foundry
+AID.abyss=addArena({id:'abyss',name:'Sunken Foundry',bg:0x021a22,fog:[12,70],hemi:[0x4ad0c0,0x02080a,.5],sun:[0x8affe0,.85,[0,16,4]],accent:[0x2affd0,2.4,[0,3,-5]],rim:[0x4a8aff,1.4],dust:0x1a3a40,particles:'motes',pcol:0x9affff,bloom:.9,env:[[.01,.05,.06],[[.4,1.8,1.6],[.2,.6,1],[.3,1,1]]]},(A,S)=>{
+ S.add(skyDome('#010a0e','#03222a','#06343a'));
+ const cau=canvasTex(512,512,g=>{g.fillStyle='#0c2224';g.fillRect(0,0,512,512);noiseFill(g,4000,[14,40,42],20,.4);g.strokeStyle='rgba(120,255,240,.32)';g.lineWidth=3;for(let i=0;i<60;i++){g.beginPath();g.ellipse(Math.random()*512,Math.random()*512,14+Math.random()*30,8+Math.random()*16,Math.random()*3,0,7);g.stroke();}},[12,6]);
+ floorM(S,cau,{r:.6,m:.3,em:.4});
+ const dM=metal(0x1a2a30,.8,.4);for(let i=0;i<4;i++){const a=new THREE.Mesh(new THREE.TorusGeometry(18,.6,8,48,Math.PI),dM);a.position.set(0,0,-8-i*7);a.castShadow=true;S.add(a);const gl=new THREE.Mesh(new THREE.TorusGeometry(18,.12,6,48,Math.PI),glowMat(0x2affd0,1.6));gl.position.set(0,0,-7.4-i*7);S.add(gl);}
+ const wall=new THREE.Mesh(new THREE.PlaneGeometry(90,30),new THREE.MeshStandardMaterial({color:lin(0x0a3a48),roughness:.1,metalness:.3,transparent:true,opacity:.55}));wall.position.set(0,12,-32);S.add(wall);
+ const ports=[];for(let i=-3;i<=3;i++){const p=cyl(1.1,.3,metal(0x2a3a40,.8,.4),S,i*7,6,-31.6,'z',16);ports.push(cyl(.8,.32,glowMat(0x7affff,1.6),S,i*7,6,-31.5,'z',16));}
+ const kelp=[];const kM=metal(0x1e5a3a,.1,.8);for(let i=0;i<22;i++){const side=i%2?1:-1,k=grp(S,side*(13+Math.random()*16),0,-3-Math.random()*16);for(let j=0;j<4;j++)cone(.35-j*.06,2.2,kM,k,0,1+j*1.9,0,0,0,5);kelp.push(k);}
+ const wr=grp(S,-20,0,-18);wr.rotation.set(.2,.6,-.35);bx(14,4,5,metal(0x3a3028,.4,.8),0,1.5,0,wr);bx(4,3,3,metal(0x3a3028,.4,.8),-3,4.4,0,wr);cyl(.5,6,metal(0x2a2420,.4,.8),wr,2,6,0,null,8);
+ const an=grp(S,17,0,-12);an.rotation.z=.4;cyl(.3,6,metal(0x4a4e54,.8,.4),an,0,3,0,null,8);const ar=new THREE.Mesh(new THREE.TorusGeometry(1.6,.3,8,20,Math.PI),metal(0x4a4e54,.8,.4));ar.rotation.z=Math.PI;an.add(ar);
+ const beams=[];for(const x of [-9,9]){const b=new THREE.Mesh(new THREE.ConeGeometry(4,22,20,1,true),new THREE.MeshBasicMaterial({color:lin(0x8affff).multiplyScalar(.6),transparent:true,opacity:.1,blending:THREE.AdditiveBlending,depthWrite:false,side:THREE.DoubleSide}));b.position.set(x,12,-12);S.add(b);beams.push(b);}
+ edgePosts(S,dM,0x2affd0,4);emblem(S,'DEEP','rgba(120,255,240,.45)',3.6);
+ A.update=dt=>{cau.offset.x+=dt*.02;cau.offset.y+=dt*.01;kelp.forEach((k,i)=>{k.rotation.z=Math.sin(G.clock*.9+i)*.12;k.rotation.x=Math.sin(G.clock*.7+i*2)*.08;});beams.forEach((b,i)=>b.rotation.z=Math.sin(G.clock*.5+i*2)*.35);ports.forEach((p,i)=>p.material.emissiveIntensity=1.3+Math.sin(G.clock*2+i)*.4);if(Math.random()<.3)addPart((Math.random()-.5)*30,.2,-2-Math.random()*10,0,2+Math.random()*1.5,0,3,0xbfffff,-1.2,.6+Math.random()*.6,2);};});
+// 27 Omega Citadel
+AID.citadel=addArena({id:'citadel',name:'Omega Citadel',bg:0x08060c,fog:[18,120],hemi:[0x6a6a9a,0x080408,.45],sun:[0xb0a0ff,.9,[-6,14,8]],accent:[0xff2a4a,2.8,[0,4,-6]],rim:[0x8a6bff,1.4],dust:0x2a2630,particles:'rain',bloom:.95,env:[[.03,.02,.05],[[1.6,.6,1.2],[.6,.4,1.4],[1,.6,1]]]},(A,S)=>{
+ S.add(skyDome('#030208','#120a1c','#2a1430'));
+ floorM(S,gTex('#16141a',[24,22,28],16,gridDraw('rgba(255,40,80,.55)',128,3),[12,6]),{r:.35,m:.5,em:.4});
+ const bM=metal(0x16141c,.8,.4),rM=metal(0x3a0a18,.6,.5);
+ const tw=grp(S,0,0,-30);bx(10,46,10,bM,0,23,0,tw);for(const s of [-1,1]){bx(4,34,4,bM,s*8,17,2,tw);cone(2.8,8,rM,tw,s*8,38,2,0,0,4);}cone(7,14,rM,tw,0,53,0,0,0,4);
+ const ring=new THREE.Mesh(new THREE.TorusGeometry(6,.5,10,48),glowMat(0xff2a4a,2.6));ring.position.set(0,30,5.3);tw.add(ring);const ring2=new THREE.Mesh(new THREE.TorusGeometry(4.2,.25,8,40),glowMat(0xc77bff,2.2));ring2.position.set(0,30,5.4);tw.add(ring2);
+ const win=windowTex('#ff3a5a','#c77bff');for(const s of [-1,1]){const w=glowPlane(3,26,win,1.2);w.position.set(s*8,17,4.05);tw.add(w);}
+ for(let i=0;i<16;i++){const side=i%2?1:-1,x=side*(16+Math.random()*40),z=-20-Math.random()*50,h=14+Math.random()*30;const t=bx(3+Math.random()*3,h,3+Math.random()*3,bM,x,h/2,z,S);t.castShadow=false;cone(2.4,5,rM,S,x,h+2.5,z,0,0,4);}
+ const fl=[];for(let i=0;i<5;i++){const r=new THREE.Mesh(new THREE.TorusGeometry(2+i*.6,.12,6,32),glowMat(i%2?0xc77bff:0xff2a4a,2));r.position.set((i-2)*9,14+Math.sin(i)*3,-14);S.add(r);fl.push(r);}
+ edgePosts(S,bM,0xff2a4a,5);emblem(S,'OMEGA','rgba(255,40,80,.5)',4);
+ const st=stormFx(A,.01);A.update=dt=>{st(dt);ring.rotation.z+=dt*.4;ring2.rotation.z-=dt*.7;ring.material.emissiveIntensity=2.2+Math.sin(G.clock*3)*.8;fl.forEach((r,i)=>{r.rotation.x+=dt*(.4+i*.1);r.rotation.y+=dt*.3;r.position.y+=Math.sin(G.clock+i)*dt*.4;});};});
 /* missions, boss phases and cutscenes name their maps by id; turn those into map numbers now that every map exists */
 CAMP.forEach(m=>{if(typeof m.arena==='string')m.arena=AID[m.arena];});
 for(const k in BOSS2)if(typeof BOSS2[k].arena==='string')BOSS2[k].arena=AID[BOSS2[k].arena];
@@ -3123,13 +3209,16 @@ const SONGS={
  architect:{bpm:124,root:46.25,prog:[0,-3,-5,-7],bass:'x.o.x.o.x.o.x.o.',drum:'k.h.s.h.k.hhs.h.',lp:800,arp:[0,3,7,12,15,19,15,12],pad:1},
  tyrant:{bpm:134,root:38.89,prog:[0,1,0,-2],bass:'xxoxxxoxxxoxx5o5',drum:'k.hsk.hsk.hsk.ss',lp:600,bassWave:'square',
   lead:[12,_,12,13,_,12,_,10,12,_,_,_,7,_,8,_,12,_,12,13,_,15,_,13,12,_,_,_,10,_,8,_]},
+ abyss:{bpm:100,root:36.71,prog:[0,-2,-4,-5],bass:'x..ox...x..ox.5.',drum:'k..hs.h.k.h.s..h',lp:520,arp:[0,3,10,7,15,12],pad:1},
+ omega:{bpm:146,root:34.65,prog:[0,1,-2,-1],bass:'xxoxx5oxxxox5xox',drum:'k.hsk.hsk.hskkss',lp:820,bassWave:'square',
+  lead:[12,_,13,_,15,_,13,12,_,_,8,_,10,_,12,_,12,_,13,_,17,_,15,13,_,_,15,_,13,_,12,_]},
  final:{bpm:140,root:43.65,prog:[0,-4,-2,1],bass:'xox5xox5xox5xoxo',drum:'kkhsk.hsk.hskkss',lp:760,arp:[0,3,7,10,12,10,7,3],
   lead:[15,_,_,_,17,_,15,_,12,_,_,_,10,_,12,_,15,_,_,_,19,_,17,_,15,_,_,_,14,_,12,_]}};
 function songFor(){if(G.phase==='title'||G.phase==='select'||G.phase==='photo'||G.phase==='cutscene')return 'garage';
  if(!G.p1||!(G.phase==='fight'||G.phase==='intro'||G.phase==='roundEnd'))return null;
  const id=G.p2&&G.p2.def.id;
- if(id==='tyrant'||id==='overseer')return 'tyrant';if(id==='wyrmforge'||id==='architect'||id==='dailyboss')return 'final';
- if(G.mode==='campaign')return ['canyon','city','outer','forge','architect'][Math.min(4,Math.floor(G.stageSel/5))];
+ if(id==='tyrant'||id==='overseer')return 'tyrant';if(id==='omega')return 'omega';if(id==='wyrmforge'||id==='architect'||id==='dailyboss'||id==='kraken')return 'final';
+ if(G.mode==='campaign')return ['canyon','city','outer','forge','architect','abyss'][Math.min(5,Math.floor(G.stageSel/5))];
  if(G.mode==='training')return 'garage';
  return {survival:'outer',arcade:'city',ranked:'canyon',versus:'city',bossrush:'tyrant',daily:'final'}[G.mode]||'canyon';}
 function musicTick(){
@@ -3172,9 +3261,9 @@ const VOXL={
  dragon:{special:['Burn!','Roar!'],win:['Ashes.'],start:['The dragon wakes.']},
  ship:{special:['Engage!','Warp speed!'],win:['Mission accomplished.'],start:['Systems online.']}};
 const VOXID={architect:{start:['I designed you to lose.','Every move you make, I drew first.'],win:['As drawn.','Exactly to plan.'],special:['Calculated.','Predictable.','Revision complete.']},
- tyrant:{start:['The Forge answers to me.']},wyrmforge:{start:['Rrraaagh!'],special:['Burn!','Roar!']}};
+ tyrant:{start:['The Forge answers to me.']},omega:{start:['I am the last design.','Every draft before me failed. I will not.'],win:['Final version.','Obsolete.'],special:['Omega.','Delete.','End of line.']},kraken:{start:['Glub... ROAR!'],special:['Down you go!','Tidal force!']},wyrmforge:{start:['Rrraaagh!'],special:['Burn!','Roar!']}};
 const VOXALL={rush:['Transform!','Changing form!','Vehicle mode!'],ko:['Shutting down.','Power... failing.','System error.']};
-const VOXP={architect:[150,.3],tyrant:[90,.15],overseer:[110,.35],wyrmforge:[80,.1]};
+const VOXP={omega:[80,.05],kraken:[70,.1],architect:[150,.3],tyrant:[90,.15],overseer:[110,.35],wyrmforge:[80,.1]};
 function voxOf(d){if(VOXP[d.id])return VOXP[d.id];const k=(d.parts&&d.parts.head)||d.kind,b=VOXK[k]||VOXK[d.kind]||[170,.75];const h=hashStr(d.id||d.name||'x');return [b[0]*(1+((h%7)-3)*.03),Math.max(.1,Math.min(2,b[1]+((h>>3)%5-2)*.04))];}
 function voxLine(d,ev){const k=(d.parts&&d.parts.head)||d.kind,o=VOXID[d.id]&&VOXID[d.id][ev]||VOXALL[ev]||(VOXL[k]||VOXL[d.kind]||VOXL.heavy)[ev];return o?o[Math.random()*o.length|0]:null;}
 function chirp(base,ev){if(!AC||G.muted)return;const t0=AC.currentTime,bus=AC.createGain(),bp=AC.createBiquadFilter();bp.type='bandpass';bp.frequency.value=base*5;bp.Q.value=1.2;bus.gain.value=.5;bp.connect(bus);bus.connect(master);
@@ -3314,7 +3403,7 @@ function renderDock(){const d=DEFS[G.sel];$('dockName').textContent=d.name;
  $('dockInfo').textContent=(G.mode==='campaign'?`Mission ${G.stageSel+1} · ${CAMP[G.stageSel].name}`:G.mode[0].toUpperCase()+G.mode.slice(1)+' mode')+' · '+SAVE.bolts+' bolts';
  $('dockVeh').textContent=G.showVeh?'Robot':'Vehicle';}
 function setShop(open){G.shop=open;const p=$('selPanel');p.hidden=!open;p.classList.toggle('open',open);
- $('shopBtn').textContent=open?'Close shop':'Open shop';$('shopBtn').setAttribute('aria-expanded',String(open));
+ $('shopBtn').textContent=open?'Close menu':'Menu';$('shopBtn').setAttribute('aria-expanded',String(open));
  document.querySelector('.sel-title').hidden=open;if(open){sfx('transform');renderDetail();renderBoxes();}}
 function stepFrame(dir){const n=DEFS.length;let i=G.sel;for(let k=0;k<n;k++){i=(i+(dir>0?1:n-1))%n;if(!locked(i))break;}pickFrame(i);}
 $('shopBtn').addEventListener('click',()=>setShop(!G.shop));
@@ -3449,12 +3538,16 @@ function renderPilot(){const k=rankInfo(SAVE.xp);$('pilot').innerHTML=`<b>Rank $
 function pickFrame(i){if(i===G.sel||locked(i))return;if(showcase[G.sel].pal!==0)rebuildShowcase(G.sel,0);G.sel=i;G.pal=0;renderRoster();renderDetail();sfx('ui');}
 function renderMode(){
  $('modes').querySelectorAll('button').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.m===G.mode)));
+ {const k=rkState(),D=dbState(),rk=rookie(),sub={campaign:[SAVE.ch6?'All 6 chapters cleared':`Mission ${campOpen()+1} of ${CAMP.length} · chapter ${chapOf(campOpen())+1}`,0],versus:['One match vs anyone',0],arcade:['8 fights in a row',0],survival:[`Best: ${SAVE.st.surv||0} defeated`,0],training:['Practice, no timer',0],
+  ranked:[rk?'After 5 fights':`${RKT[k.tier]} · ${k.tier>=6?k.stars+' pts':k.stars+'/'+RKS+' stars'}`,rk],daily:[rk?'After 5 fights':D.won?'Beaten today':'New boss today',rk],bossrush:[SAVE.tyrant?`${rushList().length} bosses`:'Beat the Tyrant',!SAVE.tyrant]};
+  for(const m in sub){const el=document.querySelector(`[data-sub="${m}"]`);if(el){el.textContent=sub[m][0];el.parentElement.classList.toggle('lk',!!sub[m][1]);}}
+  $('modeTitle').textContent={campaign:'Campaign',versus:'Versus',arcade:'Arcade',survival:'Survival',training:'Training',ranked:'Ranked',daily:'Daily Boss',bossrush:'Boss Rush'}[G.mode];}
  $('modeNote').textContent=MODES[G.mode].note+(G.mode==='versus'&&G.p2human?' Two players on one keyboard. Player 1: A D W S, J K Y H, U I O, Left Shift. Player 2: arrow keys, comma, period, slash, M, [ ] \\, Right Shift. Pick Player 2’s robot under Opponent.':'')+(G.mode==='survival'?' Best run: '+(SAVE.st.surv||0)+' defeated.':'')+(G.mode==='daily'?dailyNote():'')+(G.mode==='ranked'?rankedNote():'')+(G.mode==='bossrush'?(SAVE.tyrant?` ${rushList().length} bosses: ${rushList().map(b=>DEFS[b.i].name).join(', ')}. Best: ${SAVE.st.brBest||0}.`:' Locked for now.'):'');$('fightBtn').textContent=MODES[G.mode].btn;
  document.querySelectorAll('[data-for]').forEach(el=>{el.hidden=!el.dataset.for.split(' ').includes(G.mode);});
  if(G.mode==='campaign'){if(G.arena!==CAMP[G.stageSel].arena)applyArena(CAMP[G.stageSel].arena);renderMissions();}
  renderArena();renderDock();
 }
-$('modes').addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;G.mode=b.dataset.m;renderMode();sfx('ui');});
+$('modes').addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;G.mode=b.dataset.m;renderMode();sfx('ui');if(window.innerWidth<=760&&!G.tour)try{$('modeTitle').scrollIntoView({behavior:'smooth',block:'start'});}catch(_){}});
 function rankedNote(){if(rookie())return 'Climb from Bronze to Legend. Unlocks after your first five fights.';const k=rkState();
  return `Climb from Bronze to Legend. Each win earns a star; win three in a row and every win after that earns two. A loss costs a star, but you never drop a league. Five stars moves you up a league, and the enemies get tougher. You are ${RKT[k.tier]} ${rkStars(k)}`+(k.streak>1?` · ${k.streak} win streak`:'')+(k.tier<6&&!k.paid[k.tier+1]?`. Reaching ${RKT[k.tier+1]} pays ${100*(k.tier+1)} bolts.`:'.');}
 function dailyNote(){if(rookie())return 'One tough boss a day with a big reward. Unlocks after your first five fights.';const B=dailyBoss(),D=dbState(),h=24-new Date().getHours();
@@ -3462,10 +3555,15 @@ function dailyNote(){if(rookie())return 'One tough boss a day with a big reward.
 function renderArena(){seg($('arena'),ARENAS.map((a,i)=>[i,a.name]),G.arena,v=>applyArena(v));}
 function renderPartner(){if(!SAVE.tyrant){G.partner=-1;const el=$('partnerOpt');el.innerHTML='<button disabled>Beat the Tyrant to unlock tag teams</button>';return;}if(G.partner>=0&&(locked(G.partner)||G.partner===G.sel))G.partner=-1;seg($('partnerOpt'),[[-1,'None'],...DEFS.map((d,i)=>[i,d.name]).filter(([i])=>!locked(i)&&!DEFS[i].enemy&&i!==G.sel)],G.partner,v=>{G.partner=v;sfx('ui');});}
 function renderOpp(){renderPartner();if(G.opp>=0&&bossLocked(G.opp))G.opp=-1;seg($('opp'),[[-1,'Random'],...DEFS.map((d,i)=>[i,d.name]).filter(([i])=>!bossLocked(i)&&!DEFS[i].enemy)],G.opp,v=>G.opp=v);}
-function renderMissions(){const open=campOpen(),st=CAMP[G.stageSel];
- $('missions').innerHTML=CAMP.map((m,i)=>{const n=SAVE.camp[i]||0,lk=i>open;return `${m.ch?`<small class="chap">${m.ch}</small>`:''}<button class="ms" data-i="${i}" aria-pressed="${i===G.stageSel}" ${lk?'disabled':''}><b>${i+1}</b><span>${lk?'Locked':m.name}</span><em>${[0,1,2].map(j=>`<i class="${j<n?'on':''}"></i>`).join('')}</em></button>`;}).join('')+
-  `<p class="brief">${st.text}<small>Enemy: ${st.foes.map(f=>DEFS[idOf(f)].name).join(' then ')} · ${st.rule}</small></p>`+(st.cs&&SAVE.seen[st.cs]?'<button class="buy" id="csBtn">Watch the chapter cutscene</button>':'')+(G.stageSel===TYR_M&&SAVE.seen.ending?'<button class="buy" id="csEndBtn">Watch the Tyrant ending</button>':'')+(G.stageSel===CAMP.length-1&&SAVE.seen.finale?'<button class="buy" id="csFinBtn">Watch the finale</button>':'');
- {const b=$('csBtn');if(b)b.addEventListener('click',()=>playCutscene(st.cs,goSelect));const e2=$('csEndBtn');if(e2)e2.addEventListener('click',()=>playCutscene('ending',goSelect));const e3=$('csFinBtn');if(e3)e3.addEventListener('click',()=>playCutscene('finale',goSelect));}
+/* chapters: the campaign list shows one chapter at a time */
+const CHAPS=CAMP.map((m,i)=>m.ch?{i,name:m.ch}:null).filter(Boolean);
+function chapOf(i){let c=0;CHAPS.forEach((h,k)=>{if(i>=h.i)c=k;});return c;}
+function renderMissions(){const open=campOpen(),st=CAMP[G.stageSel];if(G.chapView===undefined||G.chapView>chapOf(open))G.chapView=chapOf(G.stageSel);
+ const cv=G.chapView,c0=CHAPS[cv].i,c1=cv+1<CHAPS.length?CHAPS[cv+1].i:CAMP.length;
+ $('missions').innerHTML=`<div class="chips">${CHAPS.map((h,k)=>`<button data-ch="${k}" aria-pressed="${k===cv}" ${h.i>open?'disabled':''} title="${h.name}">Ch ${k+1}</button>`).join('')}</div>`+CAMP.slice(c0,c1).map((m,j)=>{const i=c0+j,n=SAVE.camp[i]||0,lk=i>open;return `${m.ch?`<small class="chap">${m.ch}</small>`:''}<button class="ms" data-i="${i}" aria-pressed="${i===G.stageSel}" ${lk?'disabled':''}><b>${i+1}</b><span>${lk?'Locked':m.name}</span><em>${[0,1,2].map(j=>`<i class="${j<n?'on':''}"></i>`).join('')}</em></button>`;}).join('')+
+  `<p class="brief">${st.text}<small>Enemy: ${st.foes.map(f=>DEFS[idOf(f)].name).join(' then ')} · ${st.rule}</small></p>`+(st.cs&&SAVE.seen[st.cs]?'<button class="buy" id="csBtn">Watch the chapter cutscene</button>':'')+(G.stageSel===TYR_M&&SAVE.seen.ending?'<button class="buy" id="csEndBtn">Watch the Tyrant ending</button>':'')+(G.stageSel===ARCH_M&&SAVE.seen.finale?'<button class="buy" id="csFinBtn">Watch the Architect ending</button>':'')+(G.stageSel===CAMP.length-1&&SAVE.seen.omegaEnd?'<button class="buy" id="csOmBtn">Watch the final ending</button>':'');
+ {const b=$('csBtn');if(b)b.addEventListener('click',()=>playCutscene(st.cs,goSelect));const e2=$('csEndBtn');if(e2)e2.addEventListener('click',()=>playCutscene('ending',goSelect));const e3=$('csFinBtn');if(e3)e3.addEventListener('click',()=>playCutscene('finale',goSelect));const e4=$('csOmBtn');if(e4)e4.addEventListener('click',()=>playCutscene('omegaEnd',goSelect));}
+ $('missions').querySelectorAll('[data-ch]').forEach(b=>b.addEventListener('click',()=>{const k=+b.dataset.ch,h=CHAPS[k],e=k+1<CHAPS.length?CHAPS[k+1].i-1:CAMP.length-1;G.chapView=k;G.stageSel=Math.min(e,open);if(G.arena!==CAMP[G.stageSel].arena)applyArena(CAMP[G.stageSel].arena);renderMissions();renderDock();sfx('ui');}));
  $('missions').querySelectorAll('.ms').forEach(b=>b.addEventListener('click',()=>{G.stageSel=+b.dataset.i;if(G.arena!==CAMP[G.stageSel].arena)applyArena(CAMP[G.stageSel].arena);renderMissions();renderDock();sfx('ui');}));}
 function renderChals(){const n=CHALS.filter(c=>SAVE.done[c[0]]).length;$('chalSum').textContent=`Achievements ${n}/${CHALS.length}`;
  const order=[...CHALS].sort((a,b)=>(!!SAVE.done[a[0]])-(!!SAVE.done[b[0]]));
@@ -3534,18 +3632,18 @@ $('phSave').addEventListener('click',async e=>{e.stopPropagation();const P=G.ph;
  let dl=null;try{dl=window.claude&&window.claude.use?await window.claude.use('downloads'):null;}catch(_){dl=null;}
  if(dl){try{await dl.save({filename:name,data:P.blob});$('phMsg').textContent='Saved.';}catch(err){const c=err&&err.code;$('phMsg').textContent=c==='declined'?'Not saved.':c==='rate_limited'?'A save is already waiting for your answer.':'Saving is not available here. Press and hold (or right-click) the picture to save it.';}return;}
  try{const a=document.createElement('a');a.href=P.url;a.download=name;document.body.appendChild(a);a.click();a.remove();$('phMsg').textContent='If nothing downloaded, press and hold (or right-click) the picture to save it.';}catch(_){$('phMsg').textContent='Press and hold (or right-click) the picture to save it.';}});
-function goSelect(){audioInit();cleanupMatch();G.phase='select';show(['select']);showcase.forEach(f=>f.root.visible=true);if(G.tut){G.tut=null;G.mode='campaign';}$('tut').hidden=true;if(locked(G.sel)){G.sel=0;G.pal=0;}
+function goSelect(){audioInit();cleanupMatch();G.chapView=undefined;G.phase='select';show(['select']);showcase.forEach(f=>f.root.visible=true);if(G.tut){G.tut=null;G.mode='campaign';}$('tut').hidden=true;if(locked(G.sel)){G.sel=0;G.pal=0;}
  G.diff=G.userDiff;G.stageSel=Math.min(G.stageSel,campOpen());setShop(false);$('boxRev').hidden=true;renderPilot();renderBoxes();renderRoster();renderDetail();renderOpp();renderChals();renderMode();renderSave();renderWeekly();sfx('ui');setTimeout(()=>{if(G.phase==='select'&&!SAVE.tour2Done&&SAVE.fights>=ROOKIE_FIGHTS&&!G.tour)tourStart();else checkDaily();},700);}
 /* garage tour: after the first five fights everything unlocks at once, so walk through each shop tab and point at what matters */
 const TOUR=[
  {tab:null,sel:'#shopBtn',t:'Everything is unlocked',d:'You have finished your first five fights, so every robot, the Workshop and the crates are open. This quick tour shows where everything is. Tap Next, or skip it any time. You can watch it again from Settings.'},
- {tab:'play',sel:'#modes',t:'Battle: pick a mode',d:'Campaign is the story. Survival keeps sending enemies until you fall. Arcade is eight fights in a row. Versus is one match against anyone, or a friend on the same keyboard. Ranked climbs from Bronze to Legend. Daily Boss is one tough boss a day with a big reward. Boss Rush opens after you beat the Tyrant. Training is for practice.'},
- {tab:'play',sel:'#partnerOpt',t:'Partner and hazards',d:'Once you beat the Tyrant you can pick a partner to fight as a tag team. Press T or tap TAG to swap robots, and the one resting slowly repairs. Hazards turn falling rocks, fire and lightning on or off on maps that have them.'},
+ {tab:'play',sel:'#modes',t:'Play: pick a mode',d:'Modes are split into Story, Quick play and Challenges. Campaign is the story. Survival keeps sending enemies until you fall. Arcade is eight fights in a row. Versus is one match against anyone, or a friend on the same keyboard. Ranked climbs from Bronze to Legend. Daily Boss is one tough boss a day with a big reward. Boss Rush opens after you beat the Tyrant. Training is for practice.'},
+ {tab:'play',sel:'#partnerOpt',t:'Partner and hazards',d:'Once you beat the Tyrant you can pick a partner to fight as a tag team. Press T or tap TAG to swap robots. The one resting does not repair, so plan your swaps. Hazards turn falling rocks, fire and lightning on or off on maps that have them.'},
  {tab:'robots',sel:'#roster',t:'Robots: your garage',d:'Every robot you can fight with is here. Each one turns into a different vehicle. Pick one, then pick its paint below.'},
  {tab:'robots',sel:'.wpn',t:'Weapons and upgrades',d:'Spend bolts on a weapon for your robot’s right hand, like a sword, an axe or an arm cannon. Further down, upgrade armor, power and energy for the robot you have picked.'},
- {tab:'workshop',sel:'#workshop',t:'Custom: build your own',d:'Build a robot from parts. The head, torso, arms and legs each change its look, its stats, its special moves and the vehicle it turns into. Make four parts match for a full vehicle. A new custom slot costs 100 bolts.'},
+ {tab:'workshop',sel:'#workshop',t:'Build: make your own robot',d:'Build a robot from parts. The head, torso, arms and legs each change its look, its stats, its special moves and the vehicle it turns into. Make four parts match for a full vehicle. A new custom slot costs 100 bolts.'},
  {tab:'crates',sel:'#boxes',t:'Crates: where parts come from',d:'Custom parts only come from crates. Pick a vehicle type and a rarity: Uncommon, Rare, Epic or Legendary. Each crate gives a part of that type that you do not own yet. You can level parts up or trade unused ones back for bolts.'},
- {tab:'progress',sel:'#weekly',t:'Progress: rewards',d:'Weekly challenges pay extra bolts. Claim your daily reward here, and find your achievements below. Your progress saves to your Claude account, and you can copy a backup code too.'},
+ {tab:'progress',sel:'#weekly',t:'Rewards',d:'Weekly challenges pay extra bolts. Claim your daily reward here, and find your achievements below. Your progress saves to your Claude account, and you can copy a backup code too.'},
  {tab:'settings',sel:'.tabp[data-tab="settings"] .opts',t:'Settings',d:'Choose touch controls, and turn sound, music and robot voices on or off. The fighting tutorial and this tour are here too.'},
  {tab:null,sel:'#fightBtn',t:'You are ready',d:'Win fights to earn bolts and XP, then spend them in the shop. When you are ready, press the big yellow button. Good luck, pilot.'}];
 function tourStart(){G.tour={i:0};$('tour').hidden=false;tourGo(0);}
@@ -3596,8 +3694,8 @@ function rebuildShowcase(i,pal){showcase[i].dispose();showcase[i]=makeShow(i,pal
 function cleanupMatch(){G.fin=null;document.body.classList.remove('fin');if(G.p1b){G.p1b.dispose();G.p1b=null;}G.phase2=null;if(G.hz&&G.hz.warn&&G.hz.warn.rock)scene.remove(G.hz.warn.rock);G.hz=null;if(G.p1)G.p1.dispose();if(G.p2)G.p2.dispose();G.p1=G.p2=null;clearProj();G.timeScale=1;G.hitstop=0;G.koFx=null;G.slowT=0;G.focusT=0;cine(false);$('danger').classList.remove('on');$('announce').className='';}
 function shuffle(a){for(let i=a.length-1;i>0;i--){const j=Math.random()*(i+1)|0;[a[i],a[j]]=[a[j],a[i]];}return a;}
 /* boss rush: the bosses you have beaten, each on its home map */
-function rushList(){const L=[['overseer',SAVE.camp[TYR_M-1]],['tyrant',SAVE.tyrant],['wyrmforge',SAVE.camp[CAMP.findIndex(m=>m.foes.includes('wyrmforge'))]],['architect',SAVE.ch5]];
- return L.filter(x=>x[1]).map(([id])=>({i:idOf(id),arena:CAMP.find(m=>m.foes.includes(id)).arena}));}
+function rushList(){const L=[['overseer',SAVE.camp[TYR_M-1]],['tyrant',SAVE.tyrant],['wyrmforge',SAVE.camp[CAMP.findIndex(m=>m.foes.includes('wyrmforge'))]],['architect',SAVE.ch5],['kraken',SAVE.camp[CAMP.findIndex(m=>m.foes[0]==='kraken')]],['omega',SAVE.ch6]];
+ return L.filter(x=>x[1]).map(([id])=>({i:idOf(id),arena:CAMP.find(m=>m.foes[0]===id||m.foes.includes(id)&&m.foes.length===1).arena}));}
 function others(){return DEFS.map((_,i)=>i).filter(i=>i!==G.sel&&!DEFS[i].boss&&!DEFS[i].custom);}
 function startMatch(){
  audioInit();
@@ -3667,7 +3765,7 @@ function finisher(w){const L=w===G.p1?G.p2:G.p1;G.fin={t:0,f:L,side:Math.sign(L.
  setTimeout(()=>{if(!G.fin||G.phase!=='roundEnd')return;callout(w===G.p1||G.twoP?'Finish':'Defeated');},350);
  setTimeout(()=>document.body.classList.remove('fin'),1700);}
 function endMatch(){
- if(G.mode==='campaign'&&G.wins[0]>G.wins[1]&&(G.stageSel===TYR_M||G.stageSel===CAMP.length-1)&&!G.endSeen){G.endSeen=true;playCutscene(G.stageSel===TYR_M?'ending':'finale',endMatch);return;}
+ if(G.mode==='campaign'&&G.wins[0]>G.wins[1]&&(G.stageSel===TYR_M||G.stageSel===ARCH_M||G.stageSel===CAMP.length-1)&&!G.endSeen){G.endSeen=true;playCutscene(G.stageSel===TYR_M?'ending':G.stageSel===ARCH_M?'finale':'omegaEnd',endMatch);return;}
  G.phase='matchEnd';cine(false);
  const won=G.mode==='bossrush'?G.wins[0]>=G.rush.length:G.wins[0]>G.wins[1],draw=G.mode!=='bossrush'&&G.wins[0]===G.wins[1];
  const t=$('resTitle'),btns=$('resBtns'),lad=$('resLadder');
@@ -3681,7 +3779,7 @@ function endMatch(){
  let gain=Math.round(((won?100:draw?50:30)+G.wins[0]*20+G.bestCombo*5)*({rookie:1,veteran:1.5,prime:2})[G.diff]);
  if(champion){gain+=300;SAVE.champs[G.p1.def.id]=true;}
  let stars=0;const extra=[];
- if(G.mode==='campaign'&&won){const fr=G.p1.hp/G.p1.maxHp;stars=fr>=.6?3:fr>=.3?2:1;const prev=SAVE.camp[G.stageSel]||0;if(!prev){gain+=150;extra.push('Includes 150 XP first clear bonus');}if(stars>prev)SAVE.camp[G.stageSel]=stars;if(G.stageSel===TYR_M)SAVE.tyrant=true;if(G.stageSel===CAMP.length-1)SAVE.ch5=true;}
+ if(G.mode==='campaign'&&won){const fr=G.p1.hp/G.p1.maxHp;stars=fr>=.6?3:fr>=.3?2:1;const prev=SAVE.camp[G.stageSel]||0;if(!prev){gain+=150;extra.push('Includes 150 XP first clear bonus');}if(stars>prev)SAVE.camp[G.stageSel]=stars;if(G.stageSel===TYR_M)SAVE.tyrant=true;if(G.stageSel===ARCH_M)SAVE.ch5=true;if(G.stageSel===CAMP.length-1)SAVE.ch6=true;}
  if(G.mode==='ranked'){const k=rkState();k.played++;G.rkMsg=[];G.rkFrom=k.tier;
   if(won){k.wins++;k.streak++;const d=k.streak>=3?2:1;k.stars+=d;G.rkMsg.push(`+${d} star${d>1?'s':''}`+(d>1?` (${k.streak} win streak)`:''));while(k.tier<6&&k.stars>=RKS){k.stars-=RKS;k.tier++;G.rkMsg.push('Promoted to '+RKT[k.tier]);}}
   else if(!draw){k.streak=0;if(k.stars>0){k.stars--;G.rkMsg.push('-1 star');}}
@@ -3707,11 +3805,11 @@ function endMatch(){
  const after=rankInfo(SAVE.xp);
  $('resReward').innerHTML=`<b>+${gain} XP · +${bolts} bolts</b><div class="xpbar"><i style="transform:scaleX(${after.frac})"></i></div><small>Rank ${after.L} · ${after.name}${after.L>before.L?' · rank up':''}${before.L<3&&after.L>=3?' · gold paint unlocked':''}</small>`+extra.map(x=>`<small>${x}</small>`).join('');
  if(G.mode==='campaign'){
-  const lastM=G.stageSel>=CAMP.length-1,tyrM=G.stageSel===TYR_M;
-  t.textContent=won?(lastM?'Architect defeated':tyrM?'Forge reclaimed':'Mission complete'):'Mission failed';if(won)sfx('win');
-  sub=won&&lastM?'Architect is now a playable frame':won&&tyrM?'Tyrant is now a playable frame · Chapter 5 is open':`Mission ${G.stageSel+1} · ${CAMP[G.stageSel].name}`;
+  const lastM=G.stageSel>=CAMP.length-1,tyrM=G.stageSel===TYR_M,archM=G.stageSel===ARCH_M;
+  t.textContent=won?(lastM?'Omega defeated':archM?'Architect defeated':tyrM?'Forge reclaimed':'Mission complete'):'Mission failed';if(won)sfx('win');
+  sub=won&&lastM?'Omega is now a playable frame':won&&archM?'Architect is now a playable frame · Chapter 6 is open':won&&tyrM?'Tyrant is now a playable frame · Chapter 5 is open':`Mission ${G.stageSel+1} · ${CAMP[G.stageSel].name}`;
   if(won)lad.innerHTML=`<span class="done">${stars} of 3 stars</span>`+(stars<3?'<span>Finish with 60% armor left for 3 stars</span>':'');
-  if(won&&!lastM)B(tyrM?'Start chapter 5':'Next mission',()=>{G.stageSel++;launchMission();},true);
+  if(won&&!lastM)B(tyrM?'Start chapter 5':archM?'Start chapter 6':'Next mission',()=>{G.stageSel++;launchMission();},true);
   B(won?'Replay':'Retry',()=>beginMatch(),!won||lastM);B('Missions',goSelect);
  }else if(G.mode==='ranked'){
   const k=rkState();t.textContent=k.tier>G.rkFrom?'Promoted':won?'Victory':draw?'Draw':'Defeat';if(won)sfx('win');
