@@ -1434,8 +1434,8 @@ function unfight(root,eps){eps=eps||.004;for(let pass=0;pass<3;pass++){root.upda
  root.updateMatrixWorld(true);}
 function metal(c,m,r){return new THREE.MeshStandardMaterial({color:lin(c),metalness:m,roughness:r,flatShading:true});}
 const TIRE=metal(0x121417,.2,.85);TIRE.polygonOffset=true;TIRE.polygonOffsetUnits=-1;
-function mkMats(p){return patApply(p,polyRank({a:metal(p[0],.72,.3),b:metal(p[1],.78,.27),c:metal(p[2],.95,.3),dk:metal(0x14171b,.9,.4),chrome:metal(0xc2ccd6,1,.16),
- glass:new THREE.MeshStandardMaterial({color:lin(0x1c3344),metalness:1,roughness:.06}),gl:p[4]?metal(p[1],.85,.28):glowMat(p[3]),eye:glowMat(p[4]?0xfff4dc:p[3],p[4]?2.4:undefined),red:glowMat(0xff2a2a,1.6),white:glowMat(0xfff4dc,2.4),tire:TIRE}));}
+function mkMats(p){return patApply(p,polyRank({a:metal(p[0],.72,.3),b:metal(p[1],.78,.27),c:metal(new THREE.Color(p[2]).multiplyScalar(1.75).getHex(),.95,.3),dk:metal(0x14171b,.9,.4),chrome:metal(0xc2ccd6,1,.16),
+ glass:new THREE.MeshStandardMaterial({color:lin(0x1c3344),metalness:1,roughness:.06}),gl:p[4]?metal(p[1],.85,.28):glowMat(p[3]),eye:glowMat(p[4]?0xfff4dc:p[3],p[4]?2.6:3.4),red:glowMat(0xff2a2a,1.6),white:glowMat(0xfff4dc,2.4),tire:TIRE}));}
 /* a fixed front-to-back order for touching surfaces of different materials, as a backstop for shapes that are not boxes */
 /* paint patterns on the main armor color */
 const PATC={};
@@ -1482,7 +1482,7 @@ function sigil(d,pal){
 
 /* ================= robot builder ================= */
 function buildRobot(d,pal){
- const M=mkMats(pal);const B=d.bulk,L=d.leg,TW=d.torsoW,TH=d.torsoH,k=d.kind,pk=d.parts||{head:k,chest:k,arms:k,legs:k};
+ const M=mkMats(pal);const B=d.bulk,L=d.leg*1.1,TW=d.torsoW,TH=d.torsoH,k=d.kind,pk=d.parts||{head:k,chest:k,arms:k,legs:k};
  const root=new THREE.Group();const body=grp(root);
  const pelvis=grp(body,0,L,0);
  bx(.95*B,.3,.6*B,M.c,0,0,0,pelvis);
@@ -1500,24 +1500,24 @@ function buildRobot(d,pal){
  bx(TW*.72,TH*.5,.28*B,M.c,0,0,-.13*B,back);vents(back,0,0,-.28*B,TW*.46,TH*.34,5,M.dk);
  const front=.4*B;
  const ctx={M,B,L,TW,TH,front,chest,torso,back,d,pal};
- cyl(.12,.22,M.dk,torso,0,TH*.98,0,null,10);
- const head=grp(torso,0,TH*1.03,0);ctx.head=head;
+ cyl(.12,.3,M.dk,torso,0,TH*1.02,0,null,10);cyl(.15,.06,M.chrome,torso,0,TH*.93,0,null,12);
+ const head=grp(torso,0,TH*1.1,0);head.scale.setScalar(1.12);ctx.head=head;
  const P={torso,head,body,chest,fpl,skR:skirt[1],skL:skirt[-1],headY:head.position.y};chest.updateMatrix();P.chestInv=chest.matrix.clone().invert();P.cb={hx:TW/2+.12,hx2:TW*.3+.12,hy:TH*.42,lo:-TH*.95,hz:.4*B+.2};
- KIT[pk.chest].chest(ctx);KIT[pk.head].head(ctx);const ad=d.adds,addOn=(sl,...a)=>String(ad[sl]||'').split('+').forEach(n=>ADDON[sl][n](...a));if(ad){addOn('chest',ctx);addOn('head',ctx);}
+ KIT[pk.chest].chest(ctx);KIT[pk.head].head(ctx);faceKit(ctx);absKit(ctx);const ad=d.adds,addOn=(sl,...a)=>String(ad[sl]||'').split('+').forEach(n=>ADDON[sl][n](...a));if(ad){addOn('chest',ctx);addOn('head',ctx);}
  for(const s of [1,-1]){
   const kk=s>0?'R':'L';
   const sh=grp(torso,s*(TW/2+.2*B),TH*.86,0);
   cyl(.17*B,.22,M.chrome,sh,-s*.04,0,0,'x',12);
   bx(.26*B,.5,.26*B,M.c,0,-.3,0,sh);
   bx(.31*B,.26,.31*B,M.b,0,-.36,.01,sh);
-  const pg=grp(sh,0,0,0);P['pad'+kk]=pg;KIT[pk.arms].pad(ctx,pg,s);
+  const pg=grp(sh,0,0,0);pg.scale.setScalar(.88);P['pad'+kk]=pg;KIT[pk.arms].pad(ctx,pg,s);
   const el=grp(sh,0,-.62,0);
   cyl(.13*B,.34*B,M.chrome,el,0,0,0,'x',12);
   bx(.3*B,.48,.32*B,M.c,0,-.3,0,el);
   bx(.4*B,.1,.42*B,M.c,0,-.52,0,el);
   bx(.04,.3,.2*B,M.gl,s*.19*B,-.28,0,el);
   piston(el,[0,-.08,-.2*B],[0,-.46,-.2*B],.04,M);
-  const hd=grp(el,0,-.7,0);P['hd'+kk]=hd;
+  const hd=grp(el,0,-.7,0);hd.scale.setScalar(1.2);P['hd'+kk]=hd;
   bx(.3*B,.18,.3*B,M.c,0,0,0,hd);
   for(let i=0;i<3;i++){const f=grp(hd,(i-1)*.09*B,-.09,.07*B);f.rotation.x=-.6;bx(.075*B,.16,.08*B,M.dk,0,-.08,0,f);}
   const th=grp(hd,-s*.15*B,-.02,.08*B);th.rotation.z=s*.5;bx(.07*B,.14,.08*B,M.dk,0,-.07,0,th);
@@ -1551,6 +1551,14 @@ function buildRobot(d,pal){
  unfight(root);unfight(V.v);
  return {root,body,P,M,mats:[M.a,M.b,M.c],veh:V.v,wheels:V.wheels,vehY:V.y||0};
 }
+/* a face for every robot: a chrome mouth guard with vents and cheek plates under the eyes, sized to the head it sits on */
+function faceKit(c){const{M,head}=c,hb=head.children.find(o=>o.isMesh&&o.geometry&&o.geometry.type==='BoxGeometry');if(!hb)return;
+ const p=hb.geometry.parameters,w=p.width,h=p.height,fz=hb.position.z+p.depth/2,y0=hb.position.y;
+ const mw=Math.min(.34,w*.6),my=y0-h*.3;
+ bx(mw,h*.2,.05,M.chrome,0,my,fz+.03,head);for(let i=-1;i<=1;i++)bx(.025,h*.14,.02,M.dk,i*mw*.25,my,fz+.065,head);
+ for(const s of [1,-1]){const ck=bx(w*.16,h*.26,.05,M.b,s*(mw/2+w*.07),my+h*.04,fz+.02,head);ck.rotation.y=s*.35;}}
+/* stomach armor: a segmented plate between the hips and the chest */
+function absKit(c){const{M,TW,TH,torso,B}=c,z=.2*B+.035;for(let i=0;i<2;i++){bx(TW*.34-i*.04,TH*.11,.05,i?M.b:M.a,0,TH*(.12+i*.13),z,torso);}bx(.03,TH*.24,.02,M.dk,0,TH*.18,z+.03,torso);}
 /* layered armor shards over an exposed mechanical frame; the layout is seeded per robot so each one is consistent */
 function rng(seed){let a=seed>>>0;return()=>{a=(a+0x6D2B79F5)|0;let t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296;};}
 function hashStr(str){let h=2166136261;for(let i=0;i<str.length;i++){h^=str.charCodeAt(i);h=Math.imul(h,16777619);}return h>>>0;}
@@ -1559,8 +1567,8 @@ function gear(p,M,rad,x,y,z){const g=grp(p,x,y,z);cyl(rad,.06,M.dk,g,0,0,0,'x',1
 function cable(p,M,a,b,rad){const A=new V3(...a),Bv=new V3(...b),dir=Bv.clone().sub(A),len=dir.length(),me=cyl(rad||.022,len,M.dk,p,0,0,0,null,5);me.position.copy(A).lerp(Bv,.5);me.quaternion.setFromUnitVectors(UP,dir.normalize());return me;}
 function plating(c,P,d){const{M,B,L,TW,TH,front,chest,torso,back,head}=c,R=rng(hashStr((d.id||'x')+(d.parts?JSON.stringify(d.parts)+JSON.stringify(d.adds||''):''))),pm=()=>R()<.6?M.a:M.b;
  /* random panels are designed for one side, then mirrored onto the other */
- for(let row=0;row<4;row++){const m=pm(),w=TW*(.2+R()*.14),h=TH*(.12+R()*.1),rz=.2+R()*.5,x=Math.max(TW*(.14+R()*.22),w/2*Math.cos(rz)+h/2*Math.sin(rz)+.02),y=TH*(.2-row*.13)+R()*.04,z=front+.06+R()*.05,rx=(R()-.5)*.3,ry=.15+R()*.3;
-  for(const sd of [1,-1])plate(chest,m,w,h,sd*x,y,z,rx,sd*ry,sd*rz);}
+ for(let row=0;row<4;row++){const m=pm(),w=TW*(.2+R()*.14),h=TH*(.12+R()*.1),rz=.15+R()*.25,skip=row%2,x=Math.max(TW*(.14+R()*.22),w/2*Math.cos(rz)+h/2*Math.sin(rz)+.02),y=TH*(.2-row*.13)+R()*.04,z=front+.06+R()*.05,rx=(R()-.5)*.16,ry=.12+R()*.2;
+  if(!skip)for(const sd of [1,-1])plate(chest,m,w,h,sd*x,y,z,rx,sd*ry,sd*rz);}
  for(const sd of [1,-1]){plate(chest,M.b,TW*.3,TH*.2,sd*TW*.3,TH*.36,front-.1,-.5,sd*.3,sd*.5);plate(chest,M.a,.36*B,TH*.36,sd*(TW/2+.02),-TH*.02,.08*B,0,sd*1.4,sd*.12);}
  for(let i=0;i<4;i++)cyl(.08*B,.05,M.chrome,torso,0,TH*(.05+i*.09),0,null,8);
  for(const sd of [1,-1]){cable(torso,M,[sd*.1*B,TH*.02,.17*B],[sd*TW*.3,TH*.42,.3*B]);cable(torso,M,[sd*.16*B,TH*.02,-.14*B],[sd*TW*.28,TH*.4,-.3*B]);piston(torso,[sd*.2*B,TH*.04,0],[sd*TW*.36,TH*.36,0],.03,M);}
@@ -1570,9 +1578,9 @@ function plating(c,P,d){const{M,B,L,TW,TH,front,chest,torso,back,head}=c,R=rng(h
  const limbSeed=Math.floor(R()*1e9);
  for(const sd of [1,-1]){const R=rng(limbSeed),pm=()=>R()<.6?M.a:M.b;const k=sd>0?'R':'L',sh=P['sh'+k],el=P['el'+k],hip=P['hip'+k],kn=P['kn'+k];
   gear(sh,M,.14*B,-sd*.02,0,0);
-  for(let i=0;i<3;i++)plate(sh,pm(),.34*B,.22,sd*(.12+i*.07),.24+i*.1,(i-1)*.14*B,0,0,sd*(.5+i*.3));
+  plate(sh,pm(),.34*B,.22,sd*.14,.28,0,0,0,sd*.35);
   cable(sh,M,[0,-.1,-.12*B],[0,-.56,-.14*B],.02);
-  for(let i=0;i<3;i++)plate(el,pm(),.22*B,.24,sd*.18*B,-.14-i*.14,(i-1)*.09*B,0,sd*1.57,sd*(R()-.5)*.5);
+  for(let i=0;i<2;i++)plate(el,pm(),.22*B,.24,sd*.18*B,-.14-i*.14,(i-1)*.09*B,0,sd*1.57,sd*(R()-.5)*.5);
   plate(el,pm(),.28*B,.34,0,-.3,.17*B+.02,.15,0,sd*(R()-.5)*.2);
   gear(hip,M,.13*B,sd*.19*B,0,0);
   for(let i=0;i<3;i++)plate(hip,pm(),.3*B,L*.16,sd*.03*i,-L*(.1+i*.11),.22*B+.012*i,-.15,sd*.2,sd*(R()-.5)*.3);
