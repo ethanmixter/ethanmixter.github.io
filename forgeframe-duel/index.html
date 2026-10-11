@@ -4146,9 +4146,9 @@ function startRound(){
  G.p1.reset(-3.5,1);G.p2.reset(3.5,-1);if(G.p1b){G.p1b.reset(-3.5,1);G.p1b.root.visible=false;G.p1b.veh.visible=false;}G.tagAuto=0;G.tagCD=0;G.p1.rotY=.95;G.p2.rotY=-.95;
  {const m=G.mod,a=G.p1,b=G.p2;if(m.foeHp)b.maxHp=b.hp=b.trail=Math.round(b.maxHp*m.foeHp);if(m.myHp)a.hp=a.trail=a.maxHp*m.myHp;if(m.myHpMax){a.maxHp=Math.round(a.maxHp*m.myHpMax);a.hp=a.trail=a.maxHp;}}
  G.enraged=false;G.phase2=null;G.fin=null;document.body.classList.remove('fin');if(G.hz&&G.hz.warn&&G.hz.warn.rock)scene.remove(G.hz.warn.rock);G.hz=null;if(G.p2.baseDef){G.p2.def=G.p2.baseDef;G.p2.baseDef=null;}if(G.mode==='campaign'&&G.arena!==CAMP[G.stageSel].arena)applyArena(CAMP[G.stageSel].arena);if(G.mode==='bossrush'&&G.rush){const b=G.rush[Math.min(G.wave-1,G.rush.length-1)];G.mod=Object.assign({},G.rushMod);if(G.arena!==b.arena)applyArena(b.arena);}G.koFx=null;G.firstHit=false;G.focusT=0;G.slowT=0;
- {const ent=G.mode!=='training'&&(G.p1.enter||G.p2.enter);cine(ent);if(ent)showVS();}
+ {const solo=!!MINI[G.mode],ent=G.mode!=='training'&&!solo&&(G.p1.enter||G.p2.enter);cine(ent);if(ent)showVS();if(solo)G.p2.enter=false;}
  clearProj();G.timer=G.mode==='training'?Infinity:(G.mod.timer||60);G.phase='intro';G.introT=0;G.fightShown=false;G.timeScale=1;G.roundWinner=null;
- const rl=G.mode==='bossrush'&&G.rush?`Boss ${G.wave} of ${G.rush.length}`:G.nextFoe?'Wave '+G.wave:'Round '+G.round;
+ const rl=MINI[G.mode]?'Get ready':G.mode==='bossrush'&&G.rush?`Boss ${G.wave} of ${G.rush.length}`:G.nextFoe?'Wave '+G.wave:'Round '+G.round;
  $('roundLbl').textContent=G.mode==='training'?'Free practice':rl;
  if(G.mode==='training'){announce('Training','',900);G.introT=1.2;}
  else announce(G.need>1&&G.wins[0]===G.need-1&&G.wins[1]===G.need-1?'Final round':rl,'',1100);
@@ -4257,7 +4257,7 @@ function endMatch(){
 function phaseTick(dt){
  if(G.phase==='intro'){
   G.introT+=dt;
-  if(!G.fightShown&&G.introT>1.25){G.fightShown=true;if(G.mode!=='training'){announce(G.mini?'Go!':'Fight!','go',650);sfx('go');if(G.round===1&&G.wave<=1){const a=Math.random()<.5?G.p1:G.p2;voice(a,'start',true);}}}
+  if(!G.fightShown&&G.introT>1.25){G.fightShown=true;if(G.mode!=='training'){announce(G.mini?'Go!':'Fight!','go',650);sfx('go');if(G.round===1&&G.wave<=1){const a=G.mini||Math.random()<.5?G.p1:G.p2;voice(a,'start',true);}}}
   if(G.introT>1.75){G.phase='fight';clearPressed();G.p1.enter=G.p2.enter=false;G.p1.morph=G.p2.morph=0;cine(false);}
  }else if(G.phase==='fight'){
   if(G.mini){G.timer-=dt;if(G.timer<=0){G.timer=0;miniEnd();}return;}
