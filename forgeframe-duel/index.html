@@ -508,6 +508,34 @@ body.fin #stage{filter:saturate(.35) contrast(1.15) brightness(1.05)}
 .chips button{background:transparent;border:1px solid var(--line);padding:6px 10px;font-family:var(--f-label);font-weight:700;letter-spacing:.08em;font-size:13px;color:var(--muted);cursor:pointer}
 .chips button[aria-pressed="true"]{background:var(--amber);border-color:var(--amber);color:#16110a}
 .chips button:disabled{opacity:.35;cursor:default}
+/* main menu: big buttons on the garage screen; each one opens its own full screen with a Back button */
+.shopTabs{display:none!important}
+.sel-panel{margin-top:0}
+.sel-in > .pilot{display:none}
+.hub{position:absolute;left:16px;top:calc(env(safe-area-inset-top,0px) + 140px);bottom:128px;width:min(340px,calc(100% - 32px));display:flex;flex-direction:column;justify-content:center;gap:8px;z-index:2}
+.hub[hidden]{display:none}
+.hubPilot{display:grid;grid-template-columns:1fr auto;gap:4px 10px;align-items:baseline;padding:10px 14px;background:rgba(10,13,17,.82);box-shadow:inset 0 0 0 1px var(--line)}
+.hubPilot b{font-family:var(--f-label);font-weight:800;letter-spacing:.14em;text-transform:uppercase;font-size:14px}
+.hubPilot em{font-style:normal;font-family:var(--f-label);font-weight:700;color:var(--amber);font-size:15px}
+.hubPilot .xpbar{grid-column:1 / 3}
+.hb{position:relative;display:grid;grid-template-columns:40px minmax(0,1fr);align-items:center;gap:0 12px;text-align:left;padding:11px 16px;background:linear-gradient(90deg,rgba(18,23,29,.95),rgba(14,18,23,.78));border:1px solid var(--line);box-shadow:inset 3px 0 0 var(--line);cursor:pointer;clip-path:polygon(0 0,calc(100% - 14px) 0,100% 14px,100% 100%,0 100%);transition:transform .12s,border-color .12s,box-shadow .12s}
+.hb i{grid-row:1 / 3;font-style:normal;font-size:22px;color:var(--amber);text-align:center;line-height:1}
+.hb b{font-family:var(--f-display);font-weight:400;font-size:26px;line-height:1}
+.hb small{font-family:var(--f-label);font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.hb:hover,.hb:focus-visible{transform:translateX(6px);border-color:var(--amber);box-shadow:inset 3px 0 0 var(--amber)}
+.hb.main{background:linear-gradient(90deg,var(--amber),#ffc651);border-color:var(--amber)}
+.hb.main b,.hb.main i{color:#16110a}.hb.main small{color:rgba(22,17,10,.75)}
+.hb .badge{position:absolute;right:18px;top:50%;transform:translateY(-50%);font-style:normal;width:22px;height:22px;border-radius:50%;background:var(--hot);color:#fff;font-family:var(--f-label);font-weight:800;display:flex;align-items:center;justify-content:center}
+.secHead{position:sticky;top:0;z-index:3;display:flex;align-items:center;gap:14px;padding:12px 18px;background:linear-gradient(180deg,#14181e,#101317);border-bottom:2px solid var(--amber)}
+.secHead h2{margin:0;font-family:var(--f-display);font-weight:400;font-size:clamp(26px,4vw,38px);line-height:1;flex:1}
+#secBolts{font-family:var(--f-label);font-weight:700;color:var(--amber);letter-spacing:.06em;white-space:nowrap}
+@media (max-width:760px){
+ .hub{top:auto;bottom:calc(env(safe-area-inset-bottom,0px) + 150px);left:16px;right:16px;width:auto;display:grid;grid-template-columns:1fr 1fr;gap:6px}
+ .hubPilot{grid-column:1 / 3;padding:7px 10px}.hubPilot small{display:none}
+ .hb{grid-template-columns:24px minmax(0,1fr);gap:0 8px;padding:8px 10px}.hb i{font-size:17px}.hb b{font-size:19px}.hb small{font-size:10px}
+ .hb.main{grid-column:1 / 3}
+ .hb .badge{right:10px;width:18px;height:18px;font-size:12px}
+}
 #fail{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;padding-inline:16px;text-align:center;font-family:var(--f-label);letter-spacing:.08em;color:var(--muted)}
 </style>
 
@@ -535,8 +563,18 @@ body.fin #stage{filter:saturate(.35) contrast(1.15) brightness(1.05)}
 
 <section id="select" class="screen" hidden>
   <div class="sel-title"><h2 id="selName">BULWARK</h2><p id="selRole">Siege frame</p></div>
-  <button id="shopBtn" class="btn small corner" aria-expanded="false">Menu</button>
+  <button id="shopBtn" class="btn small corner" aria-expanded="false" hidden>Menu</button>
+  <nav id="hub" class="hub" aria-label="Main menu">
+    <div class="hubPilot" id="hubPilot"></div>
+    <button class="hb main" data-go="play"><i>▶</i><b>Play</b><small id="hs_play"></small></button>
+    <button class="hb" data-go="robots"><i>◆</i><b>Robots</b><small id="hs_robots"></small></button>
+    <button class="hb" data-go="workshop"><i>✚</i><b>Build</b><small id="hs_workshop"></small></button>
+    <button class="hb" data-go="crates"><i>▣</i><b>Crates</b><small id="hs_crates"></small></button>
+    <button class="hb" data-go="progress"><i>★</i><b>Rewards</b><small id="hs_progress"></small><em class="badge" id="hb_badge" hidden>!</em></button>
+    <button class="hb" data-go="settings"><i>≡</i><b>Settings</b><small id="hs_settings"></small></button>
+  </nav>
   <div class="sel-panel" id="selPanel" hidden>
+  <div class="secHead"><button class="btn small" id="secBack">◀ Back</button><h2 id="secTitle"></h2><span id="secBolts"></span></div>
   <nav class="shopTabs" id="shopTabs" aria-label="Shop sections">
     <button data-tab="play" aria-pressed="true">Play</button><button data-tab="robots" aria-pressed="false">Robots</button><button data-tab="workshop" aria-pressed="false">Build</button><button data-tab="crates" aria-pressed="false">Crates</button><button data-tab="progress" aria-pressed="false">Rewards</button><button data-tab="settings" aria-pressed="false">Settings</button>
   </nav><div class="sel-in">
@@ -3132,6 +3170,7 @@ window.addEventListener('keydown',e=>{
  if(G.tour){e.preventDefault();if(e.code==='Escape')tourEnd();else if(e.code==='Enter'||e.code==='ArrowRight')tourGo(G.tour.i+1);else if(e.code==='ArrowLeft')tourGo(G.tour.i-1);return;}
  if(e.code==='Enter'){if(G.phase==='title'){e.preventDefault();onStart();return;}if(G.phase==='select'){e.preventDefault();startMatch();return;}}
  if(G.phase==='photo'){if(e.code==='Escape')exitPhoto();return;}
+ if(G.phase==='select'&&e.code==='Escape'&&G.shop){setShop(false);sfx('ui');return;}
  if(e.code==='Escape'||e.code==='KeyP'){togglePause();return;}
  if(G.phase==='select'&&(e.code==='ArrowLeft'||e.code==='ArrowRight')){e.preventDefault();stepFrame(e.code==='ArrowRight'?1:-1);return;}
  if(G.phase==='select'&&e.code==='Escape'&&G.shop){setShop(false);return;}
@@ -3306,7 +3345,7 @@ function renderRoster(){
 function newCustom(){if(rookie()||SAVE.slots>=MAXC)return;if(SAVE.bolts<SLOT_COST){short(SLOT_COST,'a new custom robot');return;}
  SAVE.bolts-=SLOT_COST;const i=SAVE.slots;SAVE.slots++;persist();applyCustom(i,true);layoutShow();sfx('transform');
  const idx=DEFS.findIndex(d=>d.custom&&d.slot===i);renderPilot();renderBoxes();pickFrame(idx);if(!G.shop)setShop(true);setTab('workshop');toast(`Custom ${i+1} built. Give it parts and colors in the Workshop.`,1);}
-function setTab(t){G.shopTab=t;document.querySelectorAll('#shopTabs button').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.tab===t)));
+function setTab(t){G.shopTab=t;$('secTitle').textContent={play:'Play',robots:'Robots',workshop:'Build',crates:'Crates',progress:'Rewards',settings:'Settings'}[t]||'';document.querySelectorAll('#shopTabs button').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.tab===t)));
  document.querySelectorAll('.tabp').forEach(p=>p.classList.toggle('tabOff',p.dataset.tab!==t));const sp=$('selPanel');if(sp)sp.scrollTop=0;if(t==='crates')renderBoxes();if(t==='progress')renderWeekly();if(t==='workshop')renderWorkshop();}
 function renderWorkshop(){const W=$('workshop');if(!W)return;const d=DEFS[G.sel];
  const built=DEFS.map((x,i)=>[x,i]).filter(([x,i])=>x.custom&&!slotOff(i));
@@ -3399,14 +3438,16 @@ function wireBuilder(d){const i=d.slot,c=customOf(i),D=$('workshop');
  D.querySelectorAll('[data-dd]').forEach(b=>b.addEventListener('click',()=>{if(!b.dataset.arm){b.dataset.arm=1;b.textContent='Sure?';setTimeout(()=>{if(b.isConnected){delete b.dataset.arm;b.textContent='Delete';}},3000);return;}SAVE.designs.splice(+b.dataset.dd,1);persist();sfx('ui');renderDetail();}));}
 function applyCustom(i,quiet){const idx=DEFS.findIndex(d=>d.custom&&d.slot===i);Object.assign(DEFS[idx],computeCustom(i));rebuildShowcase(idx,0);if(quiet)return;persist();renderPilot();renderRoster();renderDetail();renderChals();renderOpp();}
 function toggleVeh(){G.showVeh=!G.showVeh;const v=$('vehBtn');if(v)v.textContent=G.showVeh?'Show robot':'Show vehicle';$('dockVeh').textContent=G.showVeh?'Robot':'Vehicle';sfx('transform');}
-function renderDock(){const d=DEFS[G.sel];$('dockName').textContent=d.name;
+function renderDock(){renderHub();const d=DEFS[G.sel];$('dockName').textContent=d.name;
  $('dockInfo').textContent=(G.mode==='campaign'?`Mission ${G.stageSel+1} · ${CAMP[G.stageSel].name}`:G.mode[0].toUpperCase()+G.mode.slice(1)+' mode')+' · '+SAVE.bolts+' bolts';
  $('dockVeh').textContent=G.showVeh?'Robot':'Vehicle';}
-function setShop(open){G.shop=open;const p=$('selPanel');p.hidden=!open;p.classList.toggle('open',open);
+function setShop(open){G.shop=open;const p=$('selPanel');p.hidden=!open;p.classList.toggle('open',open);$('hub').hidden=open;if(!open)renderHub();
  $('shopBtn').textContent=open?'Close menu':'Menu';$('shopBtn').setAttribute('aria-expanded',String(open));
  document.querySelector('.sel-title').hidden=open;if(open){sfx('transform');renderDetail();renderBoxes();}}
 function stepFrame(dir){const n=DEFS.length;let i=G.sel;for(let k=0;k<n;k++){i=(i+(dir>0?1:n-1))%n;if(!locked(i))break;}pickFrame(i);}
 $('shopBtn').addEventListener('click',()=>setShop(!G.shop));
+$('secBack').addEventListener('click',()=>{setShop(false);sfx('ui');});
+document.querySelectorAll('#hub [data-go]').forEach(b=>b.addEventListener('click',()=>{const t=b.dataset.go;if((t==='workshop'||t==='crates')&&rookie()){toast('Build and Crates unlock after your first five fights.');return;}sfx('ui');setShop(true);setTab(t);}));
 $('prevBtn').addEventListener('click',()=>stepFrame(-1));
 $('nextBtn').addEventListener('click',()=>stepFrame(1));
 $('dockVeh').addEventListener('click',toggleVeh);
@@ -3534,7 +3575,20 @@ setInterval(()=>{if(G.phase==='select'&&!$('selPanel').hidden)renderSave();},150
 cloudInit();
 $('boxRev').addEventListener('click',()=>{const rv=$('boxRev');if(rv.classList.contains('open'))rv.hidden=true;});
 function upRows(d){const u=upOf(d.id);return UPS.map(([k,n,desc])=>{const l=u[k],cost=100*(l+1);return `<div class="up"><b>${n}</b><span class="meter">${[0,1,2,3,4].map(j=>`<i class="${j<l?'on':''}"></i>`).join('')}</span><button class="buy" data-up="${k}" ${l>=5?'disabled':''}>${l>=5?'Max':cost+' bolts'}</button><span>${desc}</span></div>`;}).join('');}
-function renderPilot(){const k=rankInfo(SAVE.xp);$('pilot').innerHTML=`<b>Rank ${k.L} · ${k.name}</b><em>${SAVE.bolts} bolts</em><div class="xpbar"><i style="transform:scaleX(${k.frac})"></i></div><small>${k.max?'Top rank reached':k.next+' XP to next rank'} · ${SAVE.wins} wins${SAVE.rk&&SAVE.rk.played?' · Ranked '+RKT[SAVE.rk.tier]:''}${rookie()?' · '+(ROOKIE_FIGHTS-SAVE.fights)+' more fights unlock every robot and the Workshop':''}</small>`;}
+/* the main menu buttons show a short status so you know what is waiting behind each one */
+function renderHub(){try{renderHub0();}catch(e){}}
+function renderHub0(){const h=$('hub');if(!h)return;const k=rankInfo(SAVE.xp),rk=rookie();
+ $('hubPilot').innerHTML=`<b>Rank ${k.L} · ${k.name}</b><em>${SAVE.bolts} bolts</em><div class="xpbar"><i style="transform:scaleX(${k.frac})"></i></div>`;
+ const mn={campaign:'Campaign',versus:'Versus',arcade:'Arcade',survival:'Survival',training:'Training',ranked:'Ranked',daily:'Daily Boss',bossrush:'Boss Rush'}[G.mode];
+ $('hs_play').textContent=G.mode==='campaign'?`Campaign · mission ${G.stageSel+1}`:mn;
+ $('hs_robots').textContent=`${DEFS.filter((d,i)=>!d.enemy&&!locked(i)).length} robots · weapons · upgrades`;
+ $('hs_workshop').textContent=rk?'Unlocks after 5 fights':`${SAVE.slots} custom robot${SAVE.slots>1?'s':''}`;
+ const own=Object.values(PART).filter(p=>p.price>0&&ownsPart(p)).length,all=Object.values(PART).filter(p=>p.price>0).length;
+ $('hs_crates').textContent=rk?'Unlocks after 5 fights':`${own} of ${all} parts found`;
+ let wk=false;try{const W=weekly();wk=W.list.some(c=>(W.prog[c.k]||0)>=c.goal&&!W.claimed[c.k]);}catch(e){}
+ const dr=SAVE.tutDone&&dailyState().ready;$('hs_progress').textContent=dr?'Daily reward ready':wk?'Weekly reward ready':`${CHALS.filter(c=>SAVE.done[c[0]]).length} of ${CHALS.length} achievements`;
+ $('hb_badge').hidden=!(dr||wk);$('hs_settings').textContent='Controls · sound · voices';}
+function renderPilot(){const k=rankInfo(SAVE.xp);$('secBolts').textContent=SAVE.bolts+' bolts';renderHub();$('pilot').innerHTML=`<b>Rank ${k.L} · ${k.name}</b><em>${SAVE.bolts} bolts</em><div class="xpbar"><i style="transform:scaleX(${k.frac})"></i></div><small>${k.max?'Top rank reached':k.next+' XP to next rank'} · ${SAVE.wins} wins${SAVE.rk&&SAVE.rk.played?' · Ranked '+RKT[SAVE.rk.tier]:''}${rookie()?' · '+(ROOKIE_FIGHTS-SAVE.fights)+' more fights unlock every robot and the Workshop':''}</small>`;}
 function pickFrame(i){if(i===G.sel||locked(i))return;if(showcase[G.sel].pal!==0)rebuildShowcase(G.sel,0);G.sel=i;G.pal=0;renderRoster();renderDetail();sfx('ui');}
 function renderMode(){
  $('modes').querySelectorAll('button').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.m===G.mode)));
@@ -3636,7 +3690,7 @@ function goSelect(){audioInit();cleanupMatch();G.chapView=undefined;G.phase='sel
  G.diff=G.userDiff;G.stageSel=Math.min(G.stageSel,campOpen());setShop(false);$('boxRev').hidden=true;renderPilot();renderBoxes();renderRoster();renderDetail();renderOpp();renderChals();renderMode();renderSave();renderWeekly();sfx('ui');setTimeout(()=>{if(G.phase==='select'&&!SAVE.tour2Done&&SAVE.fights>=ROOKIE_FIGHTS&&!G.tour)tourStart();else checkDaily();},700);}
 /* garage tour: after the first five fights everything unlocks at once, so walk through each shop tab and point at what matters */
 const TOUR=[
- {tab:null,sel:'#shopBtn',t:'Everything is unlocked',d:'You have finished your first five fights, so every robot, the Workshop and the crates are open. This quick tour shows where everything is. Tap Next, or skip it any time. You can watch it again from Settings.'},
+ {tab:null,sel:'#hub',t:'Everything is unlocked',d:'You have finished your first five fights, so every robot, the Build menu and the crates are open. This is your main menu: each button opens its own screen, and Back brings you here. This quick tour shows what is inside each one. Tap Next, or skip it any time. You can watch it again from Settings.'},
  {tab:'play',sel:'#modes',t:'Play: pick a mode',d:'Modes are split into Story, Quick play and Challenges. Campaign is the story. Survival keeps sending enemies until you fall. Arcade is eight fights in a row. Versus is one match against anyone, or a friend on the same keyboard. Ranked climbs from Bronze to Legend. Daily Boss is one tough boss a day with a big reward. Boss Rush opens after you beat the Tyrant. Training is for practice.'},
  {tab:'play',sel:'#partnerOpt',t:'Partner and hazards',d:'Once you beat the Tyrant you can pick a partner to fight as a tag team. Press T or tap TAG to swap robots. The one resting does not repair, so plan your swaps. Hazards turn falling rocks, fire and lightning on or off on maps that have them.'},
  {tab:'robots',sel:'#roster',t:'Robots: your garage',d:'Every robot you can fight with is here. Each one turns into a different vehicle. Pick one, then pick its paint below.'},
