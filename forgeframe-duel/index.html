@@ -282,6 +282,11 @@ body.cine #movelist,body.cine #pauseBtn{opacity:0}
 #ultBtn{position:fixed;right:18px;bottom:calc(48% + env(safe-area-inset-bottom,0px));z-index:6;width:74px;height:74px;border-radius:50%;border:3px solid #fff;background:radial-gradient(circle,#ffd23a,#ff5a2e);color:#000;font:700 18px/1 var(--f-label);letter-spacing:.08em;box-shadow:0 0 24px #ff8a2e;animation:ultPulse .8s ease-in-out infinite alternate}
 @keyframes ultPulse{to{transform:scale(1.1);box-shadow:0 0 40px #ffd23a}}
 .ult{color:#ffd23a!important;animation:ultPulse .6s ease-in-out infinite alternate}
+.mast{margin:14px 0;padding:12px;border:1px solid rgba(255,210,58,.35);border-radius:10px;background:rgba(255,210,58,.05)}
+.mast h4{margin:0 0 8px}.mast small{display:block;margin-top:6px;opacity:.8}
+.mast ol{list-style:none;margin:10px 0 0;padding:0;display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:4px}
+.mast li{display:flex;gap:8px;align-items:center;font-size:12px;opacity:.55}.mast li.got{opacity:1;color:#ffd23a}
+.mast li b{display:inline-grid;place-items:center;min-width:22px;height:22px;border-radius:50%;border:1px solid currentColor;font-size:11px}
 #callout{position:absolute;top:27%;left:0;right:0;text-align:center;font-family:var(--f-display);font-size:clamp(20px,3.6vw,40px);color:var(--amber);text-shadow:0 3px 0 #000;opacity:0;pointer-events:none;letter-spacing:.04em;text-transform:uppercase}
 #callout.show{animation:callIn 1.1s ease-out forwards}
 @keyframes callIn{0%{opacity:0;transform:scale(1.5) skewX(-8deg)}15%{opacity:1;transform:scale(1) skewX(-8deg)}75%{opacity:1;transform:skewX(-8deg)}100%{opacity:0;transform:translateY(-10px) skewX(-8deg)}}
@@ -839,6 +844,9 @@ const DEFS=[
   blurb:'The machine that took the Forge. Crushing reach, a beam that crosses the whole arena, and armor to spare.',stats:{Armor:5,Speed:2,Power:5},specials:['beam','tslam']}
 ];
 DEFS.forEach(d=>{d.pals.push([0xd4a83a,0x2b2b30,0x1a1a1c,0xfff2a0]);d.palNames.push('Gold');});
+const MLV=[0,300,800,1500,2500,4000,6000,8500,11500,15000];
+const MREW={2:['bolts',50,'Recruit title'],3:['paint','Bronze paint'],4:['bolts',100,'Veteran title'],5:['pose','Victory fireworks'],6:['paint','Chrome paint · Ace title'],7:['bolts',200],8:['title','Champion title'],9:['bolts',300],10:['paint','Master paint, aura and title']};
+const MPAL=[['Bronze',[0x9a5a2c,0x3a2a22,0x1c1714,0xffa860],3],['Chrome',[0xc8d0d8,0x5a6470,0x22262c,0x7fe8ff],6],['Master',[0x1a1030,0xd4a83a,0x0c0a14,0xff4de0],10]];
 const RANKS=['Recruit','Scrapper','Brawler','Enforcer','Veteran','Ace','Warlord','Titan','Vanguard','Juggernaut','Warbringer','Ironlord','Stormcaller','Colossus','Forgemaster','Apex','Mythic','Legend','Prime Commander','Forge Legend'];
 const UPS=[['armor','Armor','+6% armor per level'],['power','Power','+5% damage per level'],['energy','Reactor','+12% energy gain per level']];
 const PATS=['None','Stripes','Camo','Flames','Hazard','Digital','Carbon'];
@@ -1291,6 +1299,7 @@ const CUTS={
 const CHALS=[
  ['first','First win','Win any match',50,s=>s.wins>=1],
  ['combo','Combo artist','Land a 5-hit combo',100,s=>(s.st.combo||0)>=5],
+ ['mast5','Dedicated','Reach mastery level 5 with any robot',150,s=>(s.st.mastMax||0)>=5],
  ['ult','Showstopper','Land an ultimate move',80,s=>(s.st.ults||0)>=1],
  ['perfect','Untouchable','Win a round without taking damage',150,s=>!!s.st.perfect],
  ['rush','Finisher','Knock out an enemy with your Rush move',100,s=>!!s.st.rushKO],
@@ -3000,7 +3009,7 @@ function applyArena(i){
 const POSE_KEYS=['sR','eR','sL','eL','zR','zL','hR','kR','hL','kL','tw','lean','bob','fall'];
 class Fighter{
  constructor(def,cpu,pal){
-  this.def=def;this.cpu=cpu;this.pal=pal||0;this.up=cpu?{armor:0,power:0,energy:0}:upOf(def.id);this.glow=def.pals[this.pal][3];
+  mastPals(def);if((pal||0)>=def.pals.length)pal=0;this.def=def;this.cpu=cpu;this.pal=pal||0;this.up=cpu?{armor:0,power:0,energy:0}:upOf(def.id);this.glow=def.pals[this.pal][3];
   const r=buildRobot(def,def.pals[this.pal]);this.weapon=cpu?WEAP.fists:weaponOf(def);if(this.weapon.build&&r.P.hdR){const g=grp(r.P.hdR,0,0,0);this.weapon.build(g,r.M,def.pals[this.pal][3]);g.traverse(o=>{if(o.isMesh)o.castShadow=true;});}Object.assign(this,{root:r.root,body:r.body,P:r.P,mats:r.mats,veh:r.veh,wheels:r.wheels,vehY:r.vehY});
   scene.add(this.root);scene.add(this.veh);this.veh.visible=false;
   {const R=rng(hashStr(def.id||'v')+7);for(const c of this.veh.children){const u=c.userData;u.hp=c.position.clone();u.hq=c.quaternion.clone();u.hs=c.scale.clone();
@@ -3521,7 +3530,7 @@ function renderRoster(){
  const r=$('roster');r.innerHTML='';
  DEFS.forEach((d,i)=>{if(d.enemy||slotOff(i))return;
   if(d.id==='tyrant'&&SAVE.slots<MAXC){const nb=document.createElement('button');nb.className='rbtn newc';nb.disabled=rookie();nb.innerHTML=`<b>+ New custom</b><small>${rookie()?lockWhy(3):SLOT_COST+' bolts · '+SAVE.slots+' of '+MAXC+' built'}</small>`;nb.addEventListener('click',newCustom);r.appendChild(nb);}
-  const b=document.createElement('button');b.className='rbtn';b.setAttribute('aria-pressed',String(i===G.sel));b.disabled=locked(i);b.innerHTML=`<b>${locked(i)?'LOCKED':d.name}</b><small>${locked(i)?lockWhy(i):d.role.replace(' frame','')+(SAVE.champs[d.id]?' · champion':'')}</small><i style="background:${hex(d.pals[0][3])}"></i>`;b.addEventListener('click',()=>pickFrame(i));r.appendChild(b);});
+  const b=document.createElement('button');b.className='rbtn';b.setAttribute('aria-pressed',String(i===G.sel));b.disabled=locked(i);b.innerHTML=`<b>${locked(i)?'LOCKED':d.name}</b><small>${locked(i)?lockWhy(i):d.role.replace(' frame','')+(SAVE.champs[d.id]?' · champion':'')+(mastLv(d)>1?' · Lv '+mastLv(d):'')}</small><i style="background:${hex(d.pals[0][3])}"></i>`;b.addEventListener('click',()=>pickFrame(i));r.appendChild(b);});
 }
 function newCustom(){if(rookie()||SAVE.slots>=MAXC)return;if(SAVE.bolts<SLOT_COST){short(SLOT_COST,'a new custom robot');return;}
  SAVE.bolts-=SLOT_COST;const i=SAVE.slots;SAVE.slots++;persist();applyCustom(i,true);layoutShow();sfx('transform');
@@ -3545,12 +3554,13 @@ function renderDetail(){
  const d=DEFS[G.sel];
  $('selName').textContent=d.name;$('selRole').textContent=d.role+' · becomes a '+d.vehicle.toLowerCase();
  const stats=Object.entries(d.stats).map(([k,v])=>`<span>${k}</span><span class="meter">${[0,1,2,3,4].map(j=>`<i class="${j<v?'on':''}"></i>`).join('')}</span>`).join('');
- $('detail').innerHTML=`<h3>${d.name}<small>${d.role}</small></h3><p class="blurb">${d.blurb}</p><div class="vrow"><span>Vehicle: ${d.vehicle}</span><button class="buy" id="vehBtn">${G.showVeh?'Show robot':'Show vehicle'}</button><button class="buy" id="photoBtn">Photo mode</button></div><div class="stats">${stats}</div>${weapHTML(d)}<div class="movelistSel">${moveRows(d)}</div><div class="ups"><h4>Upgrades for ${d.name}</h4>${upRows(d)}</div>`;
+ $('detail').innerHTML=`<h3>${d.name}<small>${d.role}</small></h3><p class="blurb">${d.blurb}</p><div class="vrow"><span>Vehicle: ${d.vehicle}</span><button class="buy" id="vehBtn">${G.showVeh?'Show robot':'Show vehicle'}</button><button class="buy" id="photoBtn">Photo mode</button></div><div class="stats">${stats}</div>${weapHTML(d)}${mastHTML(d)}<div class="movelistSel">${moveRows(d)}</div><div class="ups"><h4>Upgrades for ${d.name}</h4>${upRows(d)}</div>`;
  $('detail').querySelectorAll('.buy[data-up]').forEach(b=>b.addEventListener('click',()=>{const k=b.dataset.up,u=upOf(d.id),cost=100*(u[k]+1);if(u[k]>=5)return;if(SAVE.bolts<cost){short(cost,'this upgrade');return;}SAVE.bolts-=cost;u[k]++;persist();checkChals();sfx('go');renderPilot();renderDetail();renderChals();}));
  renderPartner();wireWeap(d);$('vehBtn').addEventListener('click',toggleVeh);$('photoBtn').addEventListener('click',enterPhoto);renderDock();
  renderWorkshop();
  const gold=rankInfo(SAVE.xp).L>=3||d.custom;
- seg($('paint'),d.palNames.map((n,i)=>[i,n]).filter(([i])=>i<2||gold),G.pal,v=>{G.pal=v;rebuildShowcase(G.sel);});
+ mastPals(d);seg($('paint'),d.palNames.map((n,i)=>[i,n]).filter(([i])=>MPAL.some(m=>m[0]===d.palNames[i])?mastPalOK(d,i):(i<2||gold||d.custom)),G.pal,v=>{G.pal=v;rebuildShowcase(G.sel);});
+ {const nx=MPAL.find(m=>!d.custom&&mastLv(d)<m[2]);if(nx){const b=document.createElement('button');b.textContent=`${nx[0]} · mastery ${nx[2]}`;b.disabled=true;$('paint').appendChild(b);}}
  if(!gold&&!d.custom){const b=document.createElement('button');b.textContent='Gold · rank 3';b.disabled=true;$('paint').appendChild(b);}
 }
 const THUMB={};let thumbRT=null,thumbScene=null,thumbCam=null;
@@ -4009,6 +4019,24 @@ function renderTourney(){const el=$('tnBox');if(!el)return;const T=tnSetup(),rb=
  el.querySelectorAll('[data-tn]').forEach(x=>{x.addEventListener('input',()=>{T.p[+x.dataset.tn].name=x.value.trim().slice(0,10)||'Player '+(+x.dataset.tn+1);});x.addEventListener('keydown',e=>e.stopPropagation());});
  el.querySelectorAll('[data-tr]').forEach(x=>x.addEventListener('change',()=>{T.p[+x.dataset.tr].robot=+x.value;}));
  el.querySelectorAll('[data-tc]').forEach(x=>x.addEventListener('click',()=>{const p=T.p[+x.dataset.tc];p.cpu=!p.cpu;x.textContent=p.cpu?'CPU':'Human';sfx('ui');}));}
+/* ================= robot mastery =================
+   Every robot levels up from 1 to 10 with the XP you earn while piloting it.
+   Rewards: bolts, titles shown on your name tag, Bronze, Chrome and Master paint, a victory fireworks pose and a Master aura. */
+function mastXP(d){return ((SAVE.mast||{})[d&&d.id])||0;}
+function mastLv(d){const x=mastXP(d);let l=1;for(let i=1;i<MLV.length;i++)if(x>=MLV[i])l=i+1;return l;}
+function mastTitle(l){return l>=10?'Master':l>=8?'Champion':l>=6?'Ace':l>=4?'Veteran':l>=2?'Recruit':'';}
+function mastPals(d){if(!d||d.custom||d.palNames.includes('Bronze'))return;for(const [n,c] of MPAL){d.pals.push(c);d.palNames.push(n);}}
+function mastPalOK(d,i){const n=d.palNames[i],m=MPAL.find(x=>x[0]===n);return !m||mastLv(d)>=m[2];}
+function mastAdd(d,xp){const out=[];if(!d||!xp)return out;SAVE.mast=SAVE.mast||{};const l0=mastLv(d);SAVE.mast[d.id]=mastXP(d)+Math.round(xp);const l1=mastLv(d);
+ for(let l=l0+1;l<=l1;l++){const r=MREW[l];if(!r)continue;if(r[0]==='bolts')SAVE.bolts+=r[1];out.push(`${d.name} mastery level ${l}! `+(r[0]==='bolts'?`+${r[1]} bolts${r[2]?' · '+r[2]:''}`:r[1]));}
+ if(l1>l0){sfx('win');SAVE.st.mastMax=Math.max(SAVE.st.mastMax||0,l1);}return out;}
+function mastLine(d){const l=mastLv(d),x=mastXP(d);return l>=10?`${d.name} mastery · level 10 · maxed`:`${d.name} mastery · level ${l} · ${x-MLV[l-1]} / ${MLV[l]-MLV[l-1]} XP to level ${l+1}`;}
+function mastHTML(d){if(!d)return '';const l=mastLv(d),x=mastXP(d),fr=l>=10?1:(x-MLV[l-1])/(MLV[l]-MLV[l-1]),t=mastTitle(l);
+ const rows=Object.entries(MREW).map(([lv,r])=>`<li class="${l>=+lv?'got':''}"><b>${lv}</b>${r[0]==='bolts'?`+${r[1]} bolts${r[2]?' · '+r[2]:''}`:r[1]}</li>`).join('');
+ return `<div class="mast"><h4>Mastery · level ${l}${t?' · '+t:''}</h4><div class="xpbar"><i style="transform:scaleX(${fr})"></i></div><small>${l>=10?'Fully mastered.':`${x-MLV[l-1]} / ${MLV[l]-MLV[l-1]} XP to level ${l+1}. Earn mastery XP by winning and playing with ${d.name}.`}</small><ol>${rows}</ol></div>`;}
+function mastFx(dt){const f=G.p1;if(!f||!G.mlv)return;
+ if(G.mlv>=10&&f.state!=='ko'&&Math.random()<.3)addPart(f.x+(Math.random()-.5)*1.4,f.y+Math.random()*2.6,(Math.random()-.5)*.6,0,1.6,0,.6,Math.random()<.5?0xffd23a:f.glow,0,1.3,3);
+ if(G.fw){G.fw.t+=dt;if(G.fw.t>=G.fw.n*.28&&G.fw.n<7){G.fw.n++;const x=f.x+(Math.random()-.5)*5,y=4+Math.random()*2.5,c=[0xffd23a,f.glow,0xff4de0,0x5dffb0][G.fw.n%4];sparks(x,y,c,28,10);ring(x,y,c,2.6);sfx('zap',.6);}if(G.fw.t>2.4)G.fw=null;}}
 /* ================= ultimate moves =================
    Once per match per robot. It unlocks when energy is full and either robot is at half health or less.
    Three styles: Overdrive Cannon (beam), Thousand Fists (barrage) and Titan Drop (meteor slam). */
@@ -4206,12 +4234,12 @@ function miniDraw(dt){const m=G.mini;if(!m)return;
    if(lf<=0||(o.hit&&o.age-o.hitAt>.2)){if(!o.hit&&G.mini.mult>1){G.mini.mult=1;miniHud();}miniDrop(o);m.objs.splice(i,1);}}
   else if(o.kind==='coin'){o.g.rotation.y+=dt*5;}}}
 function miniEnd(){const m=G.mini;if(!m)return;G.phase='matchEnd';cine(false);const type=m.type,score=m.score;SAVE.mini=SAVE.mini||{};const best=score>(SAVE.mini[type]||0);if(best)SAVE.mini[type]=score;
- const bolts=Math.min(70,Math.round(score/45)),xp=Math.min(250,Math.round(score/8));SAVE.bolts+=bolts;SAVE.xp+=xp;SAVE.st.earned=(SAVE.st.earned||0)+bolts;SAVE.st.minis=(SAVE.st.minis||0)+1;weekAdd('earned',bolts);persist();
+ const bolts=Math.min(70,Math.round(score/45)),xp=Math.min(250,Math.round(score/8));const mx=mastAdd(DEFS[G.sel],xp);G.miniMast=[...mx,mastLine(DEFS[G.sel])];SAVE.bolts+=bolts;SAVE.xp+=xp;SAVE.st.earned=(SAVE.st.earned||0)+bolts;SAVE.st.minis=(SAVE.st.minis||0)+1;weekAdd('earned',bolts);persist();
  const ach=checkChals(false);
  $('resTitle').textContent='Time!';$('resTitle').className='win';sfx('win');
  const det=type==='smash'?`${Math.round(m.hits)} hits`:type==='target'?`${m.hits} targets hit`:`${Math.round(m.dist)} m · ${m.coins} bolts · ${m.smashed} smashed · ${m.cps} checkpoint${m.cps===1?'':'s'} · ${m.crashes} crash${m.crashes===1?'':'es'}`;
  $('resSub').textContent=`${MINI_N[type]} · ${det}`;
- $('resReward').innerHTML=`<b>Score ${score.toLocaleString('en-US')}</b><small>${best?'New best score!':'Best: '+(SAVE.mini[type]||0).toLocaleString('en-US')}</small><small>+${xp} XP · +${bolts} bolts</small>`+ach.map(c=>`<small>Achievement unlocked: ${c[1]} · +${c[3]} bolts</small>`).join('');
+ $('resReward').innerHTML=`<b>Score ${score.toLocaleString('en-US')}</b><small>${best?'New best score!':'Best: '+(SAVE.mini[type]||0).toLocaleString('en-US')}</small><small>+${xp} XP · +${bolts} bolts</small>`+(G.miniMast||[]).map(x=>`<small>${x}</small>`).join('')+ach.map(c=>`<small>Achievement unlocked: ${c[1]} · +${c[3]} bolts</small>`).join('');
  const btns=$('resBtns');btns.innerHTML='';const B=(l,fn,pr)=>{const b=document.createElement('button');b.className='btn'+(pr?' primary':'');b.textContent=l;b.addEventListener('click',fn);btns.appendChild(b);};
  B('Play again',()=>startMatch(),true);B('Change setup',goSelect);B('Title',goTitle);$('resLadder').hidden=true;show(['hud','result']);}
 const MINI_N={smash:'Car Smash',target:'Target Range',race:'Highway Run'};
@@ -4274,7 +4302,7 @@ function hintsFor(){const H=G.hint;if(!H)return [];const out=[],D=H.dmg,top=Obje
  if(G.mode==='campaign'){const n=(G.losses[G.stageSel]=(G.losses[G.stageSel]||0)+1);if(n>=2&&G.campDiff!=='story'&&out.length<3)out.push('Stuck on this mission? Try Story difficulty in Play, or buy upgrades and a weapon in Robots.');else if(n>=2&&out.length<3)out.push('Stuck? Upgrade your robot in Robots, or try a robot with more armor.');}
  return out.slice(0,2);}
 function beginMatch(){G.hint={dmg:{},hits:0,block:0,full:0,sp:0,gb:0,t:0};G.losses=G.losses||{};
- cleanupMatch();G.twoP=G.mode==='versus'&&!!G.p2human||G.mode==='tourney'&&!!G.tnTwo;G.coop=G.mode==='campaign'&&!!G.coopOn&&!G.tut;G.assistCD=0;setupMode();for(const k in held2)held2[k]=false;$('tag1').textContent=G.twoP||G.coop?'P1':'YOU';$('tag2').textContent=G.twoP?'P2':'CPU';
+ cleanupMatch();G.twoP=G.mode==='versus'&&!!G.p2human||G.mode==='tourney'&&!!G.tnTwo;G.coop=G.mode==='campaign'&&!!G.coopOn&&!G.tut;G.assistCD=0;setupMode();for(const k in held2)held2[k]=false;G.mlv=G.twoP?0:mastLv(DEFS[G.sel]);G.fw=null;$('tag1').textContent=G.twoP||G.coop?'P1':'YOU'+(mastTitle(G.mlv)?' · '+mastTitle(G.mlv).toUpperCase():'');$('tag2').textContent=G.twoP?'P2':'CPU';
  G.showVeh=false;showcase.forEach(f=>{f.root.visible=false;f.veh.visible=false;f.morph=0;});
  G.p1=new Fighter(DEFS[G.sel],false,G.pal);G.p1.enter=true;G.p1b=null;G.tagAuto=0;G.tagCD=0;
  if(G.coop&&!(G.partner>=0&&G.partner!==G.sel&&!locked(G.partner)))G.partner=DEFS.findIndex((d,i)=>!d.enemy&&!locked(i)&&i!==G.sel);
@@ -4303,6 +4331,7 @@ function startRound(){
 function roundOver(winner){
  if(G.phase!=='fight')return;
  if(winner===G.p1&&G.p1.hp>=G.p1.maxHp&&G.mode!=='training'&&!G.twoP){SAVE.st.perfect=true;weekAdd('perfect');}
+ if(winner===G.p1&&G.mlv>=5&&!G.twoP)G.fw={t:-.6,n:0};
  G.phase='roundEnd';G.endT=0;G.roundWinner=winner;G.timeScale=.25;announce('K.O.','ko',1600);sfx('ko');flash();clearPressed();cine(true);
  if(G.wins[winner===G.p1?0:1]+1>=G.need&&!G.nextFoe){G.timeScale=.14;G.hitstop=.2;}
  if(winner.hp>=winner.maxHp)callout('Perfect');else if(winner.hp<winner.maxHp*.2)callout('Comeback');
@@ -4354,7 +4383,7 @@ function endMatch(){
  if(G.mode==='daily'&&G.dbFirst)bolts+=250;
  if(G.mode==='ranked'){bolts=won?40+10*rkState().tier:20;bolts+=G.rkPromo||0;}
  if(champion)bolts+=40;
- SAVE.xp+=gain;SAVE.bolts+=bolts;SAVE.st.earned=(SAVE.st.earned||0)+bolts;if(won)SAVE.wins++;
+ SAVE.xp+=gain;SAVE.bolts+=bolts;if(G.mode!=='training'){extra.push(...mastAdd(DEFS[G.sel],gain));if(G.p1b&&G.partner>=0)mastAdd(DEFS[G.partner],gain/2);extra.push(mastLine(DEFS[G.sel]));}SAVE.st.earned=(SAVE.st.earned||0)+bolts;if(won)SAVE.wins++;
  weekAdd('fights');weekAdd('earned',bolts);weekMax('combo',G.bestCombo);if(G.mode==='survival')weekMax('surv',G.wins[0]);
  if(won){weekAdd('wins');if(G.p1.def.custom)weekAdd('customWin');if(G.mode==='campaign')weekAdd('camp');if(G.mode==='arcade')weekAdd('arcade');}
  persist();
@@ -4530,7 +4559,7 @@ function step(dt){
   }
   poseFighter(G.p1,dt);poseFighter(G.p2,dt);drawFighter(G.p1,dt);drawFighter(G.p2,dt);
   if(G.mini){G.p2.root.visible=false;G.p2.veh.visible=false;miniDraw(dt);}
-  dmgTick(dt);
+  dmgTick(dt);mastFx(dt);
  }
  updateParts(dt);updateAmb(dt);ARENAS[G.arena].update(dt);
 }
