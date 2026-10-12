@@ -598,7 +598,7 @@ body.fin #stage{filter:saturate(.35) contrast(1.15) brightness(1.05)}
 #mhNitro span{position:absolute;inset:0;display:grid;place-items:center;font:700 9px/1 var(--f-label);letter-spacing:.2em;color:#fff;text-shadow:0 1px 0 #000}
 #mhKeys{white-space:pre-line;line-height:1.6;margin-top:6px;font-size:11px!important;letter-spacing:.06em!important;text-transform:none!important;opacity:.85;max-width:90vw;text-align:center}
 #miniHud small{font-family:var(--f-label);font-weight:700;font-size:13px;letter-spacing:.16em;text-transform:uppercase;color:var(--text)}
-#hud.mini .side.p2{visibility:hidden}#hud.race #movelist,#hud.tgt #movelist{display:none}#hud.race #touch .acts .tb:not([data-h=kick]){visibility:hidden}#hud.mini .side.p1 .hp,#hud.mini .side.p1 .pips{visibility:hidden}#hud.mini #roundLbl{display:none}
+#hud.mini .side.p2{visibility:hidden}#hud.race #movelist,#hud.tgt #movelist{display:none}#hud.race #touch .acts .tb:not([data-h=kick]){visibility:hidden}#hud.mini .side.p1 .hp,#hud.mini .side.p1 .pips{visibility:hidden}#hud.mini #roundLbl,#hud.koth #roundLbl{display:none}
 #fail{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;padding-inline:16px;text-align:center;font-family:var(--f-label);letter-spacing:.08em;color:var(--muted)}
 </style>
 
@@ -654,7 +654,7 @@ body.fin #stage{filter:saturate(.35) contrast(1.15) brightness(1.05)}
       <h4 class="grpH">With friends</h4>
       <div class="mgrid"><button class="mcard" data-m="coop" aria-pressed="false"><b>Co-op</b><small data-sub="coop"></small></button><button class="mcard" data-m="tourney" aria-pressed="false"><b>Tournament</b><small data-sub="tourney"></small></button></div>
       <h4 class="grpH">Mini-games</h4>
-      <div class="mgrid"><button class="mcard" data-m="smash" aria-pressed="false"><b>Car Smash</b><small data-sub="smash"></small></button><button class="mcard" data-m="target" aria-pressed="false"><b>Target Range</b><small data-sub="target"></small></button><button class="mcard" data-m="race" aria-pressed="false"><b>Highway Run</b><small data-sub="race"></small></button></div>
+      <div class="mgrid"><button class="mcard" data-m="smash" aria-pressed="false"><b>Car Smash</b><small data-sub="smash"></small></button><button class="mcard" data-m="target" aria-pressed="false"><b>Target Range</b><small data-sub="target"></small></button><button class="mcard" data-m="race" aria-pressed="false"><b>Highway Run</b><small data-sub="race"></small></button><button class="mcard" data-m="soccer" aria-pressed="false"><b>Robot Soccer</b><small data-sub="soccer"></small></button><button class="mcard" data-m="koth" aria-pressed="false"><b>King of the Hill</b><small data-sub="koth"></small></button><button class="mcard" data-m="dodge" aria-pressed="false"><b>Dodge the Boss</b><small data-sub="dodge"></small></button></div>
       <h4 class="grpH">Challenges</h4>
       <div class="mgrid"><button class="mcard" data-m="ranked" aria-pressed="false"><b>Ranked</b><small data-sub="ranked"></small></button><button class="mcard" data-m="daily" aria-pressed="false"><b>Daily Boss</b><small data-sub="daily"></small></button><button class="mcard" data-m="bossrush" aria-pressed="false"><b>Boss Rush</b><small data-sub="bossrush"></small></button></div>
     </div>
@@ -1320,6 +1320,9 @@ const CHALS=[
  ['rushAll','Boss slayer','Clear Boss Rush',300,s=>!!s.st.brClear],
  ['mSmash','Junkyard king','Score 2,500 in Car Smash',150,s=>((s.mini||{}).smash||0)>=2500],
  ['mTarget','Sharpshooter','Score 3,000 in Target Range',150,s=>((s.mini||{}).target||0)>=3000],
+ ['mSoccer','Striker','Win a Robot Soccer match',150,s=>((s.mini||{}).soccer||0)>=1600],
+ ['mKoth','Hill holder','Score 3,000 in King of the Hill',150,s=>((s.mini||{}).koth||0)>=3000],
+ ['mDodge','Untouchable','Survive 60 seconds in Dodge the Boss',150,s=>((s.mini||{}).dodge||0)>=6000],
  ['mRace','Road warrior','Score 12,000 in Highway Run',150,s=>((s.mini||{}).race||0)>=12000],
  ['hard10','Iron pilot','Clear 10 campaign missions on Hard',300,s=>Object.keys(s.campHard||{}).length>=10],
  ['dboss','Boss of the day','Beat a daily boss',150,s=>(s.st.dboss||0)>=1],
@@ -1389,6 +1392,9 @@ const MODES={
  daily:{note:'',btn:'Fight the daily boss'},
  ranked:{note:'',btn:'Find a match'},
  tourney:{note:'A knockout bracket for 2 to 8 players taking turns on one computer. Name each player, pick a robot, and choose Human or CPU. When two humans meet, Player 1 uses the left keys (A D W S, J K, U I O) and Player 2 the right keys (arrows, comma, period, [ ] \\). CPU players fight each other off screen.',btn:'Start tournament'},
+ soccer:{note:'One on one against a CPU robot with a giant ball. Punch, kick and heavy-hit it into the green goal, push it with shots and head it by jumping. Hits on the other robot only knock it around. Most goals after 75 seconds wins.',btn:'Kick off'},
+ koth:{note:'Stand inside the glowing zone to score, and score faster the longer you hold it. A CPU robot fights you for it and gets tougher every two knockouts. Knock it out for +300; get knocked out and you lose 200. The zone moves every 14 seconds.',btn:'Take the hill'},
+ dodge:{note:'A giant Tyrant you cannot hurt attacks nonstop: shockwaves you jump, red circles where rocks fall, and pink orbs you dodge through. You have three lives. It gets faster the longer you last.',btn:'Survive'},
  smash:{note:'Bonus stage. Junk cars drop into the arena. Smash as many as you can in 45 seconds with punches, kicks, specials and your Rush. Wreck cars quickly in a row to build a multiplier.',btn:'Start smashing'},
  target:{note:'Targets pop up down the range for 40 seconds, and the camera sits right behind your robot. Shoot them with your blaster (J or H, or PUNCH on touch buttons) and your special shots. Follow the red laser sight, jump for high targets, and watch for moving ones. Gold targets are worth triple.',btn:'Start shooting'},
  race:{note:'Your robot turns into its vehicle and races down the highway. Jump barriers (W or JUMP), jump again in the air to flip, and stay low under drones. Bolts fill your nitro: fire it with KICK to blast through anything. Faster frames start quicker and reach a higher top speed. Hit ramps for big air, scrape past obstacles for close-call points, and drive through green checkpoints for +6 seconds.',btn:'Start the race'},
@@ -2464,7 +2470,7 @@ function updateProj(dt){
    if(p.d.stun&&o.state==='hit')o.stun=p.d.stun;
    if(p.d.sk)elImpact(p.d.sk,p.x,p.y);
   }
-  if(G.mini&&G.mini.type==='target'&&p.owner===G.p1&&!p.dead)miniShot(p);
+  if(G.mini&&G.mini.type==='target'&&p.owner===G.p1&&!p.dead)miniShot(p);if(G.mini&&G.mini.type==='soccer'&&!p.dead)socShot(p);
   if(p.life<=0||Math.abs(p.x)>ARENA+5)p.dead=1;
  }
  for(let i=0;i<G.proj.length;i++)for(let j=i+1;j<G.proj.length;j++){
@@ -3060,7 +3066,7 @@ function tryHit(att,def,a){
  return true;
 }
 function applyHit(att,def,dmg,kb,lift,srcX,hx,hy){
- if(G.mini&&def===G.p2){miniHit(att,dmg*att.def.power,hx,hy);return;}
+ if(G.mini&&!SOLO2[G.mini.type]&&def===G.p2){miniHit(att,dmg*att.def.power,hx,hy);return;}
  if(def.state==='ko'||def.inv>0)return;
  if(G.tut&&att===G.p1)G.tut.hit=att.state==='attack'?att.atkName.replace('air',''):'special';
  const dir=Math.sign(def.x-srcX)||att.facing;
@@ -3095,6 +3101,7 @@ function applyHit(att,def,dmg,kb,lift,srcX,hx,hy){
  }
  att.energy=Math.min(100,att.energy);def.energy=Math.min(100,def.energy);
  if(G.mode==='training'&&def.hp<1)def.hp=1;
+ if(def.hp<=0&&G.mini&&SOLO2[G.mini.type]){miniKO(def,att);return;}
  if(def.hp<=0){
   if(att===G.p1&&att.state==='special'&&(att.sp===SPECIALS.rush||att.sp===SPECIALS.barrage)&&!G.twoP&&G.mode!=='training'){SAVE.st.rushKO=true;weekAdd('rushKO');}
   G.koFx={f:def,t:0,n:0};voice(def,'ko',true);G.focus=def;G.focusT=1.3;G.kick=1;
@@ -3116,7 +3123,7 @@ function updateFighter(f,foe,inp,dt){
   if(f.buf&&!inp.p_punch&&!inp.p_kick&&(free||(f.state==='attack'&&f.hitDone&&f.t>f.atk.st+f.atk.ac&&f.combo<2)))inp['p_'+f.buf]=true;
   if(free||f.state==='block'){
    if(inp.p_ult&&f.onGround&&ultReady(f,foe)){ultStart(f,foe);return;}
-   if(f.onGround&&f.state!=='jump')f.facing=foe.x>=f.x?1:-1;
+   if(f.onGround&&f.state!=='jump')f.facing=(f.faceX!==undefined&&G.mini?f.faceX:foe.x)>=f.x?1:-1;
    if(inp.block&&f.onGround){if(f.state!=='block'){setState(f,'block');f.vx=0;}}
    else if(f.state==='block')setState(f,'idle');
    const dir=(inp.right?1:0)-(inp.left?1:0);
@@ -3242,7 +3249,7 @@ function drawFighter(f,dt){
  const tr=f.showRot!==undefined?f.showRot:f.facing*.95;
  f.rotY+=(tr-f.rotY)*Math.min(1,dt*14);f.root.rotation.y=f.rotY;f.root.rotation.z=0;
  if(f.state==='special'&&f.sp&&f.sp.sk){const v=f.sp.sk.pv,k=Math.min(1,f.t/Math.min(.6,f.sp.dur));if(v===1)f.root.rotation.y+=f.facing*k*Math.PI*2;else if(v===2)f.root.rotation.z=Math.sin(k*Math.PI*2)*.42;}
- const fs=f.def.scale||1,m=f.morph,sm=x=>x<=0?0:x>=1?1:x*x*(3-2*x);
+ const fs=(f.def.scale||1)*(f.bigS||1),m=f.morph,sm=x=>x<=0?0:x>=1?1:x*x*(3-2*x);
  /* transform: the robot folds down, then shrinks inside the vehicle as its panels fly in and lock */
  f.root.scale.setScalar(Math.max(.04,(1-sm((m-.5)/.42))*(1-f.fade*.9))*fs);
  f.root.visible=m<.94&&f.fade<.95&&!(f.inv>0&&Math.floor(G.clock*18)%2);
@@ -3630,7 +3637,7 @@ function wireBuilder(d){const i=d.slot,c=customOf(i),D=$('workshop');
 function applyCustom(i,quiet){const idx=DEFS.findIndex(d=>d.custom&&d.slot===i);Object.assign(DEFS[idx],computeCustom(i));rebuildShowcase(idx,0);if(quiet)return;persist();renderPilot();renderRoster();renderDetail();renderChals();renderOpp();}
 function toggleVeh(){G.showVeh=!G.showVeh;const v=$('vehBtn');if(v)v.textContent=G.showVeh?'Show robot':'Show vehicle';$('dockVeh').textContent=G.showVeh?'Robot':'Vehicle';sfx('transform');}
 function renderDock(){renderHub();const d=DEFS[G.sel];$('dockName').textContent=d.name;
- $('dockInfo').textContent=(G.mode==='campaign'?`${G.coopOn?'Co-op · ':''}Mission ${G.stageSel+1} · ${CAMP[G.stageSel].name}`:({smash:'Car Smash',target:'Target Range',race:'Highway Run',tourney:'Tournament',bossrush:'Boss Rush',daily:'Daily Boss'}[G.mode]||G.mode[0].toUpperCase()+G.mode.slice(1))+' mode')+' · '+SAVE.bolts+' bolts';
+ $('dockInfo').textContent=(G.mode==='campaign'?`${G.coopOn?'Co-op · ':''}Mission ${G.stageSel+1} · ${CAMP[G.stageSel].name}`:({smash:'Car Smash',target:'Target Range',race:'Highway Run',soccer:'Robot Soccer',koth:'King of the Hill',dodge:'Dodge the Boss',tourney:'Tournament',bossrush:'Boss Rush',daily:'Daily Boss'}[G.mode]||G.mode[0].toUpperCase()+G.mode.slice(1))+' mode')+' · '+SAVE.bolts+' bolts';
  $('dockVeh').textContent=G.showVeh?'Robot':'Vehicle';}
 function setShop(open){G.shop=open;const p=$('selPanel');p.hidden=!open;p.classList.toggle('open',open);$('hub').hidden=open;if(!open)renderHub();
  $('shopBtn').textContent=open?'Close menu':'Menu';$('shopBtn').setAttribute('aria-expanded',String(open));
@@ -3814,9 +3821,9 @@ function pickFrame(i){if(i===G.sel||locked(i))return;if(showcase[G.sel].pal!==0)
 function renderMode(){
  {const co=G.mode==='campaign'&&!!G.coopOn;$('modes').querySelectorAll('button').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.m==='coop'?co:b.dataset.m===G.mode&&!(b.dataset.m==='campaign'&&co))));}
  {const k=rkState(),D=dbState(),rk=rookie(),sub={campaign:[SAVE.ch6?'All 6 chapters cleared':`Mission ${campOpen()+1} of ${CAMP.length} · chapter ${chapOf(campOpen())+1}`,0],versus:['One match vs anyone',0],arcade:['8 fights in a row',0],survival:[`Best: ${SAVE.st.surv||0} defeated`,0],training:['Practice, no timer',0],
-  ranked:[rk?'After 5 fights':`${RKT[k.tier]} · ${k.tier>=6?k.stars+' pts':k.stars+'/'+RKS+' stars'}`,rk],daily:[rk?'After 5 fights':D.won?'Beaten today':'New boss today',rk],bossrush:[SAVE.tyrant?`${rushList().length} bosses`:'Beat the Tyrant',!SAVE.tyrant],coop:['2 players, one keyboard',0],smash:[`Best: ${(SAVE.mini||{}).smash||0}`,0],target:[`Best: ${(SAVE.mini||{}).target||0}`,0],race:[`Best: ${(SAVE.mini||{}).race||0}`,0],tourney:[G.tn&&!G.tn.champ?`Round ${G.tn.rn} in progress`:'2 to 8 players',0]};
+  ranked:[rk?'After 5 fights':`${RKT[k.tier]} · ${k.tier>=6?k.stars+' pts':k.stars+'/'+RKS+' stars'}`,rk],daily:[rk?'After 5 fights':D.won?'Beaten today':'New boss today',rk],bossrush:[SAVE.tyrant?`${rushList().length} bosses`:'Beat the Tyrant',!SAVE.tyrant],coop:['2 players, one keyboard',0],smash:[`Best: ${(SAVE.mini||{}).smash||0}`,0],target:[`Best: ${(SAVE.mini||{}).target||0}`,0],race:[`Best: ${(SAVE.mini||{}).race||0}`,0],soccer:[`Best: ${(SAVE.mini||{}).soccer||0}`,0],koth:[`Best: ${(SAVE.mini||{}).koth||0}`,0],dodge:[`Best: ${(SAVE.mini||{}).dodge||0}`,0],tourney:[G.tn&&!G.tn.champ?`Round ${G.tn.rn} in progress`:'2 to 8 players',0]};
   for(const m in sub){const el=document.querySelector(`[data-sub="${m}"]`);if(el){el.textContent=sub[m][0];el.parentElement.classList.toggle('lk',!!sub[m][1]);}}
-  $('modeTitle').textContent=G.mode==='campaign'&&G.coopOn?'Co-op Campaign':{smash:'Car Smash',target:'Target Range',race:'Highway Run',tourney:'Tournament',campaign:'Campaign',versus:'Versus',arcade:'Arcade',survival:'Survival',training:'Training',ranked:'Ranked',daily:'Daily Boss',bossrush:'Boss Rush'}[G.mode];}
+  $('modeTitle').textContent=G.mode==='campaign'&&G.coopOn?'Co-op Campaign':{smash:'Car Smash',target:'Target Range',race:'Highway Run',soccer:'Robot Soccer',koth:'King of the Hill',dodge:'Dodge the Boss',tourney:'Tournament',campaign:'Campaign',versus:'Versus',arcade:'Arcade',survival:'Survival',training:'Training',ranked:'Ranked',daily:'Daily Boss',bossrush:'Boss Rush'}[G.mode];}
  $('modeNote').textContent=(G.mode==='campaign'&&G.coopOn?'Play the campaign with a friend on one keyboard. Player 1 picks the robot in the garage, Player 2 picks theirs below. One robot fights at a time: tag with T (Player 1) or Enter (Player 2). The player waiting can call an air strike on the enemy with their punch key every few seconds. Player 1: A D W S, J K Y H, U I O, Left Shift. Player 2: arrow keys, comma, period, slash, M, [ ] \\, Right Shift.':MODES[G.mode].note)+(G.mode==='campaign'?{story:' Story difficulty: enemies are weaker and you get 30% more armor. Up to 2 stars per mission.',normal:'',hard:' Hard difficulty: tougher enemies, 50% more bolts and XP, and a crown on every mission you clear.'}[G.campDiff||'normal']:'')+(G.mode==='versus'&&G.p2human?' Two players on one keyboard. Player 1: A D W S, J K Y H, U I O, Left Shift. Player 2: arrow keys, comma, period, slash, M, [ ] \\, Right Shift. Pick Player 2’s robot under Opponent.':'')+(G.mode==='survival'?' Best run: '+(SAVE.st.surv||0)+' defeated.':'')+(G.mode==='daily'?dailyNote():'')+(G.mode==='ranked'?rankedNote():'')+(G.mode==='bossrush'?(SAVE.tyrant?` ${rushList().length} bosses: ${rushList().map(b=>DEFS[b.i].name).join(', ')}. Best: ${SAVE.st.brBest||0}.`:' Locked for now.'):'');$('fightBtn').textContent=MODES[G.mode].btn;
  document.querySelectorAll('[data-for]').forEach(el=>{el.hidden=!el.dataset.for.split(' ').includes(G.mode);});
  if(G.mode==='campaign'){if(G.arena!==CAMP[G.stageSel].arena)applyArena(CAMP[G.stageSel].arena);renderMissions();}
@@ -4122,25 +4129,135 @@ function dmgTick(dt){if(!G.dmgN.length)return;const W=window.innerWidth,H=window
    Car Smash: junk cars drop in; the invisible stand-in enemy sits on the nearest car so every punch, special and rush lands on it.
    Target Range: targets pop up; only shots count.
    Highway Run: your robot stays in vehicle mode, the road scrolls, and you jump barriers and grab bolts. */
-const MINI={smash:{time:45,arena:'scrap'},target:{time:40,arena:'rooftop'},race:{time:50,arena:'track'}};
+const MINI={smash:{time:45,arena:'scrap'},target:{time:40,arena:'rooftop'},race:{time:50,arena:'track'},soccer:{time:75,arena:'track'},koth:{time:60,arena:'fort'},dodge:{time:Infinity,arena:'throne'}};
+/* ================= mini-games, part two =================
+   Robot Soccer: knock the giant ball into the green goal before the CPU scores on you.
+   King of the Hill: stand inside the glowing zone to score while a CPU robot tries to knock you out of it.
+   Dodge the Boss: a huge Tyrant you cannot hurt throws shockwaves, falling rocks and orbs. Three lives; survive. */
+const SOLO2={soccer:1,koth:1};
+function m2Ball(){const cv=document.createElement('canvas');cv.width=256;cv.height=128;const c=cv.getContext('2d');c.fillStyle='#f4f6f8';c.fillRect(0,0,256,128);c.fillStyle='#1b1f25';
+ for(let i=0;i<8;i++)for(let j=0;j<4;j++)if((i+j)%2){c.beginPath();c.arc(i*32+16,j*32+16,11,0,Math.PI*2);c.fill();}
+ const tex=new THREE.CanvasTexture(cv),mat=new THREE.MeshStandardMaterial({map:tex,roughness:.45,metalness:.1}),g=new THREE.Mesh(new THREE.SphereGeometry(.8,24,16),mat);g.castShadow=true;scene.add(g);return {g,mats:[mat],tex};}
+function m2Goal(side,col){const g=new THREE.Group(),gm=glowMat(col,2.4),x=side*(ARENA+.6);
+ for(const z of[-1.7,1.7]){const p=new THREE.Mesh(boxGeo(.18,3.2,.18),gm);p.position.set(0,1.6,z);g.add(p);}
+ const bar=new THREE.Mesh(boxGeo(.18,.18,3.6),gm);bar.position.y=3.2;g.add(bar);
+ const nm=new THREE.MeshBasicMaterial({color:col,transparent:true,opacity:.14,side:THREE.DoubleSide,depthWrite:false}),net=new THREE.Mesh(new THREE.PlaneGeometry(3.4,3.2),nm);net.rotation.y=Math.PI/2;net.position.set(side*.7,1.6,0);g.add(net);
+ g.position.set(x,0,0);scene.add(g);return {g,mats:[gm,nm]};}
+function m2Start(m){const p=G.p1,p2=G.p2;
+ if(m.type==='soccer'){p2.ghost=false;p.reset(-4,1);p2.reset(4,-1);const B=m2Ball();m.ball={x:0,y:6,vx:0,vy:0,...B};m.goals=[0,0];m.pause=0;m.gl=m2Goal(-1,0xff4d2e);m.gr=m2Goal(1,0x5dffb0);setTimeout(()=>{if(G.mini===m)callout('Score in the green goal');},900);}
+ else if(m.type==='koth'){p2.ghost=false;p.reset(-4,1);p2.reset(5,-1);m.zx=0;m.zoneT=14;m.kos=0;m.downs=0;m.hold=0;
+  const zm=glowMat(0xffd23a,2.2),ring=new THREE.Mesh(new THREE.TorusGeometry(2,.07,8,48),zm);ring.rotation.x=Math.PI/2;ring.position.y=.06;
+  const cm=new THREE.MeshBasicMaterial({color:0xffd23a,transparent:true,opacity:.1,depthWrite:false,side:THREE.DoubleSide}),cyl=new THREE.Mesh(new THREE.CylinderGeometry(2,2,4.2,40,1,true),cm);cyl.position.y=2.1;
+  const zg=new THREE.Group();zg.add(ring,cyl);scene.add(zg);m.zone={g:zg,mats:[zm,cm],cm,zm};}
+ else if(m.type==='dodge'){p2.ghost=true;p2.bigS=1.7;p2.reset(ARENA-1,-1);p2.ghost=true;p.reset(-6,1);m.lives=3;m.t=0;m.dodges=0;m.spawnT=1.6;m.bossT=0;}}
+function m2Clear(m){if(m.ball){scene.remove(m.ball.g);m.ball.mats.forEach(x=>x.dispose());m.ball.tex.dispose();}
+ for(const k of['gl','gr','zone'])if(m[k]){scene.remove(m[k].g);m[k].mats.forEach(x=>x.dispose());}if(G.p2)G.p2.bigS=1;}
+function m2Hud(m){if(m.type==='soccer')return `You ${m.goals[0]} – ${m.goals[1]} CPU`;
+ if(m.type==='koth'){const pin=Math.abs(G.p1.x-m.zx)<2,cin=Math.abs(G.p2.x-m.zx)<2&&G.p2.state!=='ko';return (pin&&!cin?'Holding the hill':pin&&cin?'Contested!':'Get in the zone')+` · zone moves in ${Math.ceil(m.zoneT)}s`;}
+ if(m.type==='dodge')return `${'♥'.repeat(Math.max(0,m.lives))}${'♡'.repeat(Math.max(0,3-m.lives))} · ${Math.floor(m.t)}s survived`;return '';}
+/* ---- soccer ---- */
+function socAI(me,dt){const m=G.mini,b=m.ball,I={},D=DIFF[G.diff]||DIFF.veteran;me.ai=me.ai||{t:0};const A=me.ai;A.t-=dt;
+ const tx=b.x+1.35,dx=tx-me.x;if(Math.abs(dx)>.5){I[dx>0?'right':'left']=true;}
+ if(me.x<b.x-.4&&Math.abs(b.x-me.x)<2&&b.y<2.4&&me.onGround&&A.t<=0){I.p_jump=true;A.t=.6;}
+ if(A.t<=0&&Math.abs(b.x-(me.x-1.2))<1.4&&b.x<me.x&&b.y<3.2){const r=Math.random();I[r<.25?'p_heavy':r<.65?'p_kick':'p_punch']=true;A.t=D.react*1.4+Math.random()*.3;}
+ else if(A.t<=0&&b.y>2.6&&Math.abs(b.x-me.x)<1.5&&me.onGround){I.p_jump=true;A.t=.5;}
+ else if(A.t<=0&&Math.abs(G.p1.x-me.x)<1.8&&Math.random()<.02){I.p_punch=true;A.t=.5;}
+ return I;}
+function socShot(p){const b=G.mini.ball;if(Math.abs(p.x-b.x)<1.1&&Math.abs(p.y-b.y)<1.1){b.vx+=Math.sign(p.vx)*7;b.vy=Math.max(b.vy,3);if(!p.d.pierce)p.dead=1;sparks(b.x,b.y,0xffffff,8,5);sfx('block');}}
+function socKicks(f,b,dt){f._kick=Math.max(0,(f._kick||0)-dt);
+ const act=f.state==='attack'||f.state==='special';if(act&&f._kick<=0&&f.t>.05&&f.t<.5){const hx=f.x+f.facing*1.1;if(Math.abs(b.x-hx)<1.5&&b.y<f.y+3.2&&b.y>f.y-.6){
+  const n=f.state==='special'?'sp':f.atkName||'punch',P={punch:[11,4],kick:[13,8],heavy:[18,6],lunge:[15,5],airpunch:[12,-3],airkick:[13,2],sp:[21,7]}[n]||[12,5];
+  b.vx=f.facing*P[0];b.vy=P[1]+(b.y<1?1:0);f._kick=.4;sparks(b.x-f.facing*.6,b.y,f.glow,14,8);ring(b.x,b.y,f.glow,1.8);shake(.18);sfx('hit',n==='heavy'||n==='sp'?1.3:.9);G.hitstop=.03;}}
+ /* bumping and headers */
+ const dx=b.x-f.x,top=f.y+2.6*(f.def.scale||1);if(Math.abs(dx)<1.55&&b.y<top+.6&&b.y>f.y-.4){
+  if(b.y>top-.2&&b.vy<0){b.vy=Math.abs(b.vy)*.7+3;b.vx+=f.facing*2;}else{const sd=Math.sign(dx)||f.facing;b.x=f.x+sd*1.56;b.vx=sd*Math.max(Math.abs(b.vx)*.5,Math.abs(f.vx)+2.5);}}}
+function socTick(m,i1,dt,live){const p=G.p1,p2=G.p2,b=m.ball;
+ for(const f of[p,p2]){if(f.hp<f.maxHp)f.hp=f.maxHp;f.energy=Math.min(100,f.energy);}
+ if(m.pause>0){m.pause-=dt;if(m.pause<=0){b.x=0;b.y=6;b.vx=(Math.random()-.5)*2;b.vy=0;p.reset(-4,1);p2.reset(4,-1);callout('Kick off!');sfx('go');}
+  b.g.position.set(b.x,b.y,0);return;}
+ p.faceX=b.x;p2.faceX=b.x;
+ const i2=live?(G.twoP?playerIntent2():socAI(p2,dt)):{};
+ if(live){updateFighter(p,p2,i1,dt);updateFighter(p2,p,i2,dt);}
+ if(!live)return;
+ socKicks(p,b,dt);socKicks(p2,b,dt);
+ b.vy-=22*dt;b.x+=b.vx*dt;b.y+=b.vy*dt;b.vx*=Math.pow(.55,dt);
+ if(b.y<.8){b.y=.8;b.vy=Math.abs(b.vy)>2?-b.vy*.55:0;if(Math.abs(b.vy)>3)dust(b.x,0,3);}
+ if(b.y>11){b.y=11;b.vy=-Math.abs(b.vy)*.5;}
+ if(Math.abs(b.x)>ARENA+.2){const sd=Math.sign(b.x);if(b.y<3.1){/* goal */const me=sd>0;m.goals[me?0:1]++;if(me){m.score+=600;}
+   for(let i=0;i<4;i++)ring(sd*ARENA,1.6,me?0x5dffb0:0xff4d2e,2+i*.8);sparks(sd*ARENA,1.6,me?0x5dffb0:0xff4d2e,40,12);shake(.5);flash();sfx(me?'win':'ko');
+   announce(me?'GOAL!':'CPU scores','go',1100);m.pause=1.6;b.vx=0;b.vy=0;b.x=sd*(ARENA+1.2);}
+  else{b.x=sd*(ARENA+.2);b.vx=-b.vx*.6;}}
+ b.g.position.set(b.x,b.y,0);b.g.rotation.z-=b.vx*dt/.8;miniHud();}
+/* ---- king of the hill ---- */
+function kothTick(m,i1,dt,live){const p=G.p1,p2=G.p2;
+ if(live){m.zoneT-=dt;if(m.zoneT<=0){let nx=0;for(let k=0;k<10;k++){nx=(Math.random()*2-1)*(ARENA-3);if(Math.abs(nx-m.zx)>5)break;}m.zx=nx;m.zoneT=14;callout('The hill moved');sfx('zap');ring(nx,.3,0xffd23a,3,true);}}
+ m.zone.g.position.x+=(m.zx-m.zone.g.position.x)*Math.min(1,dt*6);
+ let i2={};if(live){i2=G.twoP?playerIntent2():aiIntent(p2,p,dt);const off=Math.abs(p2.x-m.zx)>1.6,far=Math.abs(p.x-p2.x)>3.2;if(!G.twoP&&off&&(far||Math.random()<.4)&&p2.state!=='hit'){i2.left=m.zx<p2.x;i2.right=m.zx>p2.x;}}
+ if(live){updateFighter(p,p2,i1,dt);updateFighter(p2,p,i2,dt);}
+ const pin=p.state!=='ko'&&Math.abs(p.x-m.zx)<2,cin=p2.state!=='ko'&&Math.abs(p2.x-m.zx)<2;
+ if(live&&pin&&!cin){m.hold+=dt;m.score+=Math.round(60*dt*(1+Math.min(1,m.hold/8)));}else m.hold=0;
+ const c=pin&&!cin?0x5dffb0:pin&&cin?0xff8a2e:cin?0xff4d2e:0xffd23a;m.zone.zm.color.setHex(c);m.zone.cm.color.setHex(c);m.zone.cm.opacity=pin&&!cin?.16+Math.sin(G.clock*8)*.04:.1;
+ if(live&&pin&&!cin&&Math.random()<.3)addPart(m.zx+(Math.random()-.5)*3.6,.2,(Math.random()-.5),0,3,0,.6,0x5dffb0,0,1.4,3);
+ miniHud();}
+/* a robot dropping to zero in King of the Hill (or Soccer) respawns instead of ending the match */
+function miniKO(def,att){const m=G.mini;def.hp=def.maxHp;const x=def.x;for(let i=0;i<3;i++){sparks(x,1.4,0xffb040,14,9);ring(x,1.4,0xff8030,2.4+i);}debris(x,1.4,10);smoke(x,1);shake(.5);sfx('boom');
+ if(m.type==='koth'){if(def===G.p2){m.kos++;m.score+=300;callout('Knocked out! +300');const sd=Math.sign(def.x-m.zx)||1;def.reset(Math.max(-ARENA+1,Math.min(ARENA-1,m.zx+sd*7)),-sd);def.inv=1;if(m.kos%2===0)G.diff=G.diff==='rookie'?'veteran':'prime';}
+  else{m.downs++;m.score=Math.max(0,m.score-200);callout('You got knocked out · -200');const sd=Math.sign(def.x-m.zx)||-1;def.reset(Math.max(-ARENA+1,Math.min(ARENA-1,m.zx+sd*7)),-sd);def.inv=1.5;}}
+ else{def.state='hit';def.stun=.6;}miniHud();}
+/* ---- dodge the boss ---- */
+function dodgeAtk(m){const p=G.p1,b=G.p2,lv=1+m.t/18,r=Math.random();b.atkT=.6;startAttack(b,'heavy');b.vx=0;
+ const wave=(delay,spd)=>m.objs.push({kind:'wave',x:b.x-1.5,y:0,spd,delay,h:1,g:null});
+ if(r<.34){wave(0,8+lv*1.6);if(lv>1.6&&Math.random()<.6)wave(.55,9+lv*1.6);if(lv>2.4&&Math.random()<.5)wave(1.1,7+lv*1.4);sfx('boom');shake(.3);}
+ else if(r<.67){const n=Math.min(6,2+Math.floor(lv));for(let i=0;i<n;i++){const x=Math.max(-ARENA+1,Math.min(ARENA-4.5,(i===0?p.x:(Math.random()*2-1)*(ARENA-2))));m.objs.push({kind:'rock',x,y:12,wait:.95-Math.min(.35,lv*.05),age:0,g:null});}sfx('special');}
+ else{const n=Math.min(4,1+Math.floor(lv*.8));for(let i=0;i<n;i++)m.objs.push({kind:'orb',x:b.x-1.6,y:1.2+Math.random()*1.6,spd:9+lv*1.5,delay:i*.35,g:null});sfx('zap');}
+ m.spawnT=Math.max(.9,2.6-lv*.22)+Math.random()*.5;}
+function dodgeMesh(o){let g;if(o.kind==='wave'){g=new THREE.Mesh(boxGeo(.5,1,2.6),glowMat(0xff6a2e,2.6));g.position.y=.5;}
+ else if(o.kind==='rock'){g=new THREE.Group();const rk=new THREE.Mesh(new THREE.DodecahedronGeometry(.9,0),metal(0x5a4030,.2,.9));rk.castShadow=true;const tel=new THREE.Mesh(new THREE.RingGeometry(.2,1.2,28),new THREE.MeshBasicMaterial({color:0xff3a2e,transparent:true,opacity:.6,side:THREE.DoubleSide,depthWrite:false}));tel.rotation.x=-Math.PI/2;tel.position.y=.05;g.add(rk,tel);o.rk=rk;o.tel=tel;}
+ else{g=new THREE.Mesh(new THREE.SphereGeometry(.42,14,10),glowMat(0xff4de0,3));}
+ scene.add(g);o.g=g;}
+function dodgeHurt(m,p,x){if(p.inv>0||p.ghost)return false;m.lives--;p.inv=1.6;p.flash=1;p.state='hit';p.t=0;p.stun=.35;p.vx=-6;p.vy=5;p.onGround=false;sparks(p.x,1.4,0xff6a2e,24,9);shake(.6);flash();sfx('hit',1.3);
+ callout(m.lives>0?`Hit! ${m.lives} ${m.lives===1?'life':'lives'} left`:'Down!');if(m.lives<=0)m.endT=1;miniHud();return true;}
+function dodgeTick(m,i1,dt,live){const p=G.p1,b=G.p2;b.hp=b.maxHp;b.x=ARENA-1;b.facing=-1;b.y=0;b.t+=dt;if(b.atkT>0){b.atkT-=dt;if(b.atkT<=0){b.state='idle';b.t=0;}}else if(b.state!=='idle'){b.state='idle';}
+ if(!live)return;if(m.lives<=0){updateFighter(p,b,{},dt);m.endT-=dt;if(m.endT<=0)miniEnd();return;}
+ m.t+=dt;m.score=Math.round(m.t*100)+m.dodges*50;
+ updateFighter(p,b,i1,dt);p.x=Math.min(ARENA-4.2,p.x);
+ m.spawnT-=dt;if(m.spawnT<=0)dodgeAtk(m);
+ for(let i=m.objs.length-1;i>=0;i--){const o=m.objs[i];
+  if(o.delay>0){o.delay-=dt;continue;}if(!o.g)dodgeMesh(o);
+  if(o.kind==='wave'){o.x-=o.spd*dt;o.g.position.x=o.x;o.g.scale.y=.8+Math.sin(G.clock*30)*.2;if(Math.random()<.4)dust(o.x,0,1);
+   if(!o.hitDone&&Math.abs(o.x-p.x)<.7){if(p.y<o.h){o.hitDone=1;dodgeHurt(m,p);}else if(!o.close){o.close=1;m.dodges++;callout('Jumped it!');}}
+   if(o.x<-ARENA-2){miniDrop(o);m.objs.splice(i,1);}}
+  else if(o.kind==='rock'){o.age+=dt;o.tel.material.opacity=.35+Math.sin(o.age*20)*.25;o.tel.scale.setScalar(1+Math.min(1,o.age/o.wait)*.2);
+   if(o.age>=o.wait){o.y-=dt*30;o.rk.position.y=o.y;o.rk.rotation.x+=dt*6;if(o.y<=.9&&!o.landed){o.landed=1;o.y=.9;o.rk.position.y=.9;dust(o.x,0,14);debris(o.x,.8,8);shake(.35);sfx('boom',.7);
+     if(Math.abs(o.x-p.x)<1.25&&p.y<2.4){dodgeHurt(m,p);}else if(Math.abs(o.x-p.x)<2.4){m.dodges++;}}}else o.rk.position.y=40;
+   if(o.landed){o.life=(o.life||0)+dt;o.tel.visible=false;if(o.life>.9){miniDrop(o);m.objs.splice(i,1);}}}
+  else if(o.kind==='orb'){o.x-=o.spd*dt;o.g.position.set(o.x,o.y,0);if(Math.random()<.5)addPart(o.x+.3,o.y,0,2,0,0,.3,0xff4de0,0,1.4,3);
+   if(!o.hitDone&&Math.abs(o.x-p.x)<.7&&o.y>p.y-.2&&o.y<p.y+2.6){if(p.ghost&&!o.close){o.close=1;m.dodges++;callout('Dodged!');}else if(!p.ghost){o.hitDone=1;dodgeHurt(m,p);}}
+   if(o.x<-ARENA-2||o.hitDone){miniDrop(o);m.objs.splice(i,1);}}}
+ miniHud();}
+function m2Tick(m,i1,dt,live){if(m.type==='soccer')socTick(m,i1,dt,live);else if(m.type==='koth')kothTick(m,i1,dt,live);else dodgeTick(m,i1,dt,live);}
+
 AID.rooftop=1;
-function miniStart(){miniClear();const M=MINI[G.mode];$('hud').classList.toggle('mini',!!M);$('hud').classList.toggle('race',G.mode==='race');$('hud').classList.toggle('tgt',G.mode==='target');$('miniHud').hidden=!M;if(!M){G.mini=null;return;}
+function miniStart(){miniClear();const M=MINI[G.mode];$('hud').classList.toggle('mini',!!M&&G.mode!=='koth');$('hud').classList.toggle('koth',G.mode==='koth');$('hud').classList.toggle('race',G.mode==='race');$('hud').classList.toggle('tgt',G.mode==='target'||G.mode==='dodge');$('miniHud').hidden=!M;if(!M){G.mini=null;return;}
  G.mini={type:G.mode,score:0,mult:1,chainT:0,objs:[],spawnT:.5,hits:0,best:(SAVE.mini||{})[G.mode]||0,v:11,dist:0,inv:0,coins:0,crashes:0,nitro:60,boostT:0,jumps:0,flip:0,cp:400,cps:0,smashed:0,air:0,lastK:''};
  if(G.mode==='target'){const L=new THREE.Mesh(boxGeo(18,.05,.05),new THREE.MeshBasicMaterial({color:0xff3a2e,transparent:true,opacity:.4,depthWrite:false}));scene.add(L);G.mini.laser=L;G.p1.x=-7;}
  $('mhNitro').hidden=G.mode!=='race';$('mhKeys').hidden=!M;$('mhKeys').textContent=miniKeys(G.mode);
  if(G.mode==='race'){const m=G.mini,sp=Math.max(1,Math.min(5,Math.round(((G.p1.def.stats||{}).Speed)||3)));m.sp=sp;m.v=m.v0=8+sp*1.2;m.vmax=22+sp*2.6;m.acc=.3+sp*.06;
   $('mhKeys').textContent=`${G.p1.def.name}: speed ${'■'.repeat(sp)}${'□'.repeat(5-sp)} · top speed ${Math.round(m.vmax*3.6)} km/h\n`+$('mhKeys').textContent;}
- const p2=G.p2;p2.ghost=G.mode!=='smash';p2.x=ARENA;
+ const p2=G.p2;p2.ghost=G.mode!=='smash';p2.x=ARENA;m2Start(G.mini);
  if(G.mode==='race'){const A=ARENAS[G.arena];G.mini.floor=null;A.group.traverse(o=>{if(!G.mini.floor&&o.isMesh&&o.geometry&&o.geometry.type==='PlaneGeometry'&&o.material&&o.material.map&&o.geometry.parameters.width>=100)G.mini.floor=o;});}
  miniHud();}
 function miniKeys(t){const touch=coarse&&G.touchMode==='gesture',btn=coarse&&!touch;
+ if(t==='soccer')return touch?'Tap to punch the ball · hold for a heavy blast · swipe up to jump':'Punch, kick or heavy-hit the ball into the green goal · shots push it · head it by jumping';
+ if(t==='koth')return 'Stand in the glowing zone to score · knock the enemy out for +300 · the zone moves every 14 seconds';
+ if(t==='dodge')return touch?'Swipe up to jump the shockwaves · move off the red circles · swipe sideways to dodge through orbs':'Jump the shockwaves · move off the red circles · dodge (Shift) through the pink orbs';
  if(t==='race')return touch?'Tap to jump, tap again in the air to flip · hold to fire nitro':btn?'JUMP or PUNCH to jump, twice to flip · KICK fires nitro':'W / Space to jump, twice to flip · K fires nitro · smash through anything while boosting';
  if(t==='target')return touch?'Tap to shoot · swipe up to jump for high targets':btn?'PUNCH shoots · JUMP for high targets':'J or H shoots · W jumps for high targets · step with A / D';return '';}
-function miniClear(){const m=G.mini;if(m){for(const o of m.objs)miniDrop(o);m.objs=[];if(m.laser){scene.remove(m.laser);m.laser.material.dispose();}}G.fovAdd=0;if(G.p1&&G.p1.veh)G.p1.veh.rotation.z=0;G.mini=null;$('hud').classList.remove('mini','race','tgt');$('miniHud').hidden=true;}
+function miniClear(){const m=G.mini;if(m){m2Clear(m);for(const o of m.objs)miniDrop(o);m.objs=[];if(m.laser){scene.remove(m.laser);m.laser.material.dispose();}}G.fovAdd=0;if(G.p1&&G.p1.veh)G.p1.veh.rotation.z=0;G.mini=null;$('hud').classList.remove('mini','race','tgt','koth');$('miniHud').hidden=true;}
 function miniDrop(o){scene.remove(o.g);if(o.mats)o.mats.forEach(x=>x.dispose());}
 function miniHud(){const m=G.mini;if(!m)return;$('mhScore').textContent=m.score.toLocaleString('en-US');
  if(m.type==='race'){const n=$('mhNitro');n.firstChild.style.transform=`scaleX(${m.boostT>0?m.boostT/2.2:m.nitro/100})`;n.classList.toggle('on',m.boostT>0);n.classList.toggle('ready',m.boostT<=0&&m.nitro>=40);}
- $('mhInfo').textContent=m.type==='race'?`${Math.round(m.v*3.6)} km/h · ${Math.round(m.dist)} m${m.mult>1?' · x'+m.mult:''}`:`${m.mult>1?'x'+m.mult+' combo · ':''}best ${m.best.toLocaleString('en-US')}`;}
+ $('mhInfo').textContent=SOLO2[m.type]||m.type==='dodge'?m2Hud(m):m.type==='race'?`${Math.round(m.v*3.6)} km/h · ${Math.round(m.dist)} m${m.mult>1?' · x'+m.mult:''}`:`${m.mult>1?'x'+m.mult+' combo · ':''}best ${m.best.toLocaleString('en-US')}`;}
 function miniAdd(n,x,y,col){const m=G.mini;m.score+=n;miniHud();const el=document.createElement('div');}
 function carSpawn(){const m=G.mini,kinds=['swift','heavy','guard','stealth','brute'],k=kinds[Math.random()*kinds.length|0];
  const pal=[PCOL[Math.random()*PCOL.length|0],PCOL[Math.random()*PCOL.length|0],0x2a2d31,0xffb21e],M=mkMats(pal),V=VEH[k](M);
@@ -4182,7 +4299,7 @@ function miniHit(att,dmg,hx,hy){const m=G.mini;if(!m||m.type!=='smash'||att!==G.
 function miniShot(p){const m=G.mini;for(const o of m.objs){if(o.kind!=='target'||o.hit)continue;if(Math.abs(p.x-o.x)<.65&&Math.abs(p.y-o.y)<.65){o.hit=1;if(!p.d.pierce)p.dead=1;
   const quick=o.age<1.2,pts=(o.gold?300:100)+(quick?50:0);m.mult=Math.min(5,m.chainT>0?m.mult+1:1);m.chainT=2;m.score+=pts*m.mult;m.hits++;
   for(let i=0;i<3;i++)ring(o.x,o.y,o.gold?0xffd23a:0xffffff,1.6+i*.6);sparks(o.x,o.y,o.gold?0xffd23a:0x46d7ff,16,8);sfx(o.gold?'win':'block');if(o.gold)callout('Gold target!');else if(quick)callout('Quick shot');miniHud();return;}}}
-function miniTick(i1,dt,live){const m=G.mini,p=G.p1,p2=G.p2;if(!m)return;m.chainT=Math.max(0,m.chainT-dt);if(m.chainT<=0&&m.type!=='race'&&m.mult>1){m.mult=1;miniHud();}
+function miniTick(i1,dt,live){const m=G.mini,p=G.p1,p2=G.p2;if(!m)return;if(SOLO2[m.type]||m.type==='dodge'){m2Tick(m,i1,dt,live);return;}m.chainT=Math.max(0,m.chainT-dt);if(m.chainT<=0&&m.type!=='race'&&m.mult>1){m.mult=1;miniHud();}
  p2.hp=p2.maxHp;p2.state='idle';p2.vx=0;p2.vy=0;p2.inv=0;p2.energy=0;
  if(m.type==='smash'){let near=null,bd=1e9;for(const o of m.objs)if(o.kind==='car'&&o.y<.5){const d=Math.abs(o.x-p.x);if(d<bd){bd=d;near=o;}}p2.ghost=!near;p2.x=near?near.x:ARENA;p2.y=0;
   if(live){m.spawnT-=dt;if(m.spawnT<=0&&m.objs.length<3){carSpawn();m.spawnT=1.2;}}
@@ -4233,16 +4350,18 @@ function miniDraw(dt){const m=G.mini;if(!m)return;
   else if(o.kind==='target'){o.age+=dt;const lf=o.life-o.age;const s=o.hit?Math.max(0,1-(o.age-o.hitAt||0)):Math.min(1,o.age*5)*(lf<.4?Math.max(.01,lf/.4):1);if(o.hit&&o.hitAt===undefined)o.hitAt=o.age;o.g.scale.setScalar(Math.max(.01,o.hit?Math.max(0,1-(o.age-o.hitAt)*5):s));o.g.children[0].rotation.y+=dt*2;o.g.rotation.y=Math.atan2(camera.position.x-o.x,camera.position.z);if(o.mv&&!o.hit){o.y=Math.max(1.3,Math.min(4,o.y0+Math.sin(o.age*2.4+o.ph)*1.1));o.g.position.y=o.y;}
    if(lf<=0||(o.hit&&o.age-o.hitAt>.2)){if(!o.hit&&G.mini.mult>1){G.mini.mult=1;miniHud();}miniDrop(o);m.objs.splice(i,1);}}
   else if(o.kind==='coin'){o.g.rotation.y+=dt*5;}}}
-function miniEnd(){const m=G.mini;if(!m)return;G.phase='matchEnd';cine(false);const type=m.type,score=m.score;SAVE.mini=SAVE.mini||{};const best=score>(SAVE.mini[type]||0);if(best)SAVE.mini[type]=score;
+function miniEnd(){const m=G.mini;if(!m)return;if(m.type==='soccer'&&m.goals[0]>m.goals[1])m.score+=1000;G.phase='matchEnd';cine(false);const type=m.type,score=m.score;SAVE.mini=SAVE.mini||{};const best=score>(SAVE.mini[type]||0);if(best)SAVE.mini[type]=score;
  const bolts=Math.min(70,Math.round(score/45)),xp=Math.min(250,Math.round(score/8));const mx=mastAdd(DEFS[G.sel],xp);G.miniMast=[...mx,mastLine(DEFS[G.sel])];SAVE.bolts+=bolts;SAVE.xp+=xp;SAVE.st.earned=(SAVE.st.earned||0)+bolts;SAVE.st.minis=(SAVE.st.minis||0)+1;weekAdd('earned',bolts);persist();
  const ach=checkChals(false);
  $('resTitle').textContent='Time!';$('resTitle').className='win';sfx('win');
- const det=type==='smash'?`${Math.round(m.hits)} hits`:type==='target'?`${m.hits} targets hit`:`${Math.round(m.dist)} m · ${m.coins} bolts · ${m.smashed} smashed · ${m.cps} checkpoint${m.cps===1?'':'s'} · ${m.crashes} crash${m.crashes===1?'':'es'}`;
+ if(type==='soccer'){const g=m.goals,w=g[0]>g[1];$('resTitle').textContent=w?'You win!':g[0]===g[1]?'Draw':'CPU wins';$('resTitle').className=w?'win':'lose';}
+ if(type==='dodge')$('resTitle').textContent=`Survived ${Math.floor(m.t)}s`;
+ const det=type==='soccer'?`You ${m.goals[0]} – ${m.goals[1]} CPU`:type==='koth'?`${m.kos} knockouts · knocked out ${m.downs} time${m.downs===1?'':'s'}`:type==='dodge'?`${Math.floor(m.t)} seconds survived · ${m.dodges} close dodges`:type==='smash'?`${Math.round(m.hits)} hits`:type==='target'?`${m.hits} targets hit`:`${Math.round(m.dist)} m · ${m.coins} bolts · ${m.smashed} smashed · ${m.cps} checkpoint${m.cps===1?'':'s'} · ${m.crashes} crash${m.crashes===1?'':'es'}`;
  $('resSub').textContent=`${MINI_N[type]} · ${det}`;
  $('resReward').innerHTML=`<b>Score ${score.toLocaleString('en-US')}</b><small>${best?'New best score!':'Best: '+(SAVE.mini[type]||0).toLocaleString('en-US')}</small><small>+${xp} XP · +${bolts} bolts</small>`+(G.miniMast||[]).map(x=>`<small>${x}</small>`).join('')+ach.map(c=>`<small>Achievement unlocked: ${c[1]} · +${c[3]} bolts</small>`).join('');
  const btns=$('resBtns');btns.innerHTML='';const B=(l,fn,pr)=>{const b=document.createElement('button');b.className='btn'+(pr?' primary':'');b.textContent=l;b.addEventListener('click',fn);btns.appendChild(b);};
  B('Play again',()=>startMatch(),true);B('Change setup',goSelect);B('Title',goTitle);$('resLadder').hidden=true;show(['hud','result']);}
-const MINI_N={smash:'Car Smash',target:'Target Range',race:'Highway Run'};
+const MINI_N={smash:'Car Smash',target:'Target Range',race:'Highway Run',soccer:'Robot Soccer',koth:'King of the Hill',dodge:'Dodge the Boss'};
 function startMatch(){
  audioInit();
  if(G.mode==='campaign'){launchMission();return;}
@@ -4250,7 +4369,7 @@ function startMatch(){
  if(G.mode==='daily'&&rookie()){toast('The daily boss unlocks after your first five fights.');return;}
  if(G.mode==='ranked'&&rookie()){toast('Ranked unlocks after your first five fights.');return;}
  if(G.mode==='tourney'){tnGo();return;}
- if(MINI[G.mode]){const o=others();G.cpuIdx=o[0];beginMatch();return;}
+ if(MINI[G.mode]){const o=others();G.cpuIdx=SOLO2[G.mode]?o[Math.random()*o.length|0]:o[0];beginMatch();return;}
  if(G.mode==='arcade'){G.ladder=shuffle(others()).slice(0,8);G.stage=0;G.cpuIdx=G.ladder[0];}
  else if(G.mode==='versus'){const o=others();G.cpuIdx=G.opp>=0?G.opp:o[Math.random()*o.length|0];}
  else{const o=others();G.cpuIdx=o[Math.random()*o.length|0];}
@@ -4267,7 +4386,7 @@ function setupMode(){
  else if(G.mode==='daily'){const B=dailyBoss();R=1;G.diff='prime';G.cpuDef=B.def;G.mod=Object.assign({},B.mod);G.dboss=B;if(G.arena!==B.arena)applyArena(B.arena);}
  else if(G.mode==='bossrush'){R=1;G.diff='veteran';G.rush=rushList();G.rushMod={foeHp:1.2,foeDmg:1.1,enrage:1};G.mod=Object.assign({},G.rushMod);G.cpuIdx=G.rush[0].i;let qi=0;G.nextFoe=()=>++qi<G.rush.length?G.rush[qi].i:null;}
  else if(G.mode==='survival'){R=1;G.diff='rookie';G.nextFoe=()=>{const n=G.wave+1,o=others();G.diff=n>=6?'prime':n>=3?'veteran':'rookie';G.mod={foeHp:1+.1*(n-1),foeDmg:1+.06*(n-1),foeEnergy:1+.15*(n-1)};G.cpuDef=Math.random()<.35?randomEnemy():null;return o[Math.random()*o.length|0];};}
- if(MINI[G.mode]){R=1;G.diff='rookie';G.mod={timer:MINI[G.mode].time};const ai=AID[MINI[G.mode].arena];if(G.arena!==ai)applyArena(ai);}
+ if(MINI[G.mode]){R=1;G.diff=G.mode==='soccer'?(G.userDiff||'veteran'):'rookie';G.mod={timer:MINI[G.mode].time};if(G.mode==='dodge')G.cpuDef=DEFS.find(d=>d.id==='tyrant');const ai=AID[MINI[G.mode].arena];if(G.arena!==ai)applyArena(ai);}
  if(G.mode==='tourney'){R=G.rounds;G.diff=G.userDiff;const ai=2+(Math.random()*(ARENAS.length-2)|0);if(G.arena!==ai)applyArena(ai);}
  G.maxRounds=R;G.need=G.mode==='training'?99:Math.ceil(R/2);
 }
@@ -4506,6 +4625,9 @@ function updateCamera(dt){
   if(G.phase==='intro'&&G.introT<1.2){tz+=2.5-G.introT*2;ty+=1-G.introT*.8;}
   if(G.ult){const U=G.ult,f=U.f,o=U.o;if(U.t<.8){lx=f.x;ly=f.y+1.5;tx=f.x+U.side*2.8;tz=4.4;ty=f.y+1.8;}else{const m=(f.x+o.x)/2;lx=m;ly=1.5+f.y*.55;tx=m-U.side*(U.type==='beam'?2:1.2);tz=U.type==='beam'?10:U.type==='meteor'?10:7.6;ty=2.4+f.y*.6;}}
   if(port){tz*=1.55;ty+=.6;}
+  if(G.mini&&G.mini.type==='soccer'&&G.mini.ball){const bx=Math.max(-4.8,Math.min(4.8,(G.mini.ball.x*2+a.x)/3));tx=lx=bx;tz=(port?20:13.6);ty=3.4+Math.min(3,G.mini.ball.y*.25)+(port?.8:0);ly=1.9+Math.min(2,G.mini.ball.y*.2);}
+  if(G.mini&&G.mini.type==='koth'){const xs=[a.x,G.p2.x,G.mini.zx],lo=Math.min(...xs),hi=Math.max(...xs),c=(lo+hi)/2,d=hi-lo;tx=lx=c;tz=(8.6+d*.42+1.5)*(port?1.55:1);ty=2.9+my*.35;ly=1.6+my*.3;}
+  if(G.mini&&G.mini.type==='dodge'){const bx=G.p2.x,c=(a.x+bx)/2-.5,d=bx-a.x+7;tx=lx=c;tz=(8.6+d*.45)*(port?1.5:1);ty=4.6+a.y*.3;ly=3.1+a.y*.2;}
   /* Target Range: over-the-shoulder view looking down the range */
   if(G.mini&&G.mini.type==='target'&&!(G.phase==='intro'&&G.introT<.6)){const sc=a.def.scale||1;tx=a.x-(4.6+sc*1.4)-(port?2.5:0);ty=3.3+sc+a.y*.4+(port?.6:0);tz=3.6+sc*1.2+(port?.8:0);lx=a.x+11;ly=2.3+a.y*.25;lz=0;}
   /* Highway Run: lower chase angle that swings out wider as you speed up */
@@ -4554,11 +4676,11 @@ function step(dt){
    if(live&&G.coop){const a=i1,b=playerIntent2(),act=G.p1.ctl===2?b:a,idle=G.p1.ctl===2?a:b;i1=act;if(a.p_tag||b.p_tag){delete a.p_tag;delete b.p_tag;tagSwap();}if(idle.p_punch||idle.p_shoot)coopAssist();}
    if(i1.p_tag){delete i1.p_tag;tagSwap();}
    if(G.ult)ultTick(dt);else if(G.mini)miniTick(i1,dt,live);else{updateFighter(G.p1,G.p2,i1,dt);updateFighter(G.p2,G.p1,i2,dt);}
-   if(!G.ult){if(!G.mini||G.mini.type==='smash')separate(G.p1,G.p2);updateProj(dt);}
+   if(!G.ult){if(!G.mini||G.mini.type==='smash'||G.mini.type==='koth')separate(G.p1,G.p2);updateProj(dt);}
    if(!G.mini)extrasTick(dt,live&&!G.ult);
   }
   poseFighter(G.p1,dt);poseFighter(G.p2,dt);drawFighter(G.p1,dt);drawFighter(G.p2,dt);
-  if(G.mini){G.p2.root.visible=false;G.p2.veh.visible=false;miniDraw(dt);}
+  if(G.mini){if(!SOLO2[G.mini.type]&&G.mini.type!=='dodge'){G.p2.root.visible=false;G.p2.veh.visible=false;}miniDraw(dt);}
   dmgTick(dt);mastFx(dt);
  }
  updateParts(dt);updateAmb(dt);ARENAS[G.arena].update(dt);
