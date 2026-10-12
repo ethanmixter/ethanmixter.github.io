@@ -25,6 +25,7 @@ body{background:var(--void);color:var(--text);font-family:var(--f-body);margin:0
 #stage{position:fixed;inset:0;width:100%;height:100%;display:block}
 button{font:inherit;color:inherit}
 button:focus-visible{outline:2px solid var(--volt);outline-offset:3px}
+body.padNav :focus{outline:3px solid var(--amber)!important;outline-offset:3px}
 #flash{position:fixed;inset:0;background:#fff;opacity:0;pointer-events:none}
 #flash.on{animation:flash .35s ease-out}
 @keyframes flash{0%{opacity:.55}100%{opacity:0}}
@@ -3322,6 +3323,45 @@ document.querySelectorAll('#touch .tb').forEach(b=>{
 });
 const coarse=window.matchMedia&&window.matchMedia('(pointer:coarse)').matches;
 
+/* ================= controllers =================
+   Standard layout: A jump, X punch, Y kick, B heavy, RB blaster, LB or stick down block, right stick flick dodge,
+   RT special 1, LT special 2, both triggers or R3 Rush, Back tag, Start pause. Pad 1 plays P1, pad 2 plays P2 in two-player modes.
+   Outside fights the pad drives the menus: stick or d-pad moves the highlight, A presses, B goes back. */
+const PADMAP={0:'jump',2:'punch',3:'kick',1:'heavy',5:'shoot',4:'block',7:'s1',6:'s2',11:'rush',8:'tag'};
+const PADLBL={punch:'X',kick:'Y',heavy:'B',shoot:'RB',block:'LB',dodge:'R stick',s1:'RT',s2:'LT',rush:'LT+RT',jump:'A',tag:'Back'};
+const padS=[{},{}];G.padOn=false;
+window.addEventListener('pointerdown',()=>document.body.classList.remove('padNav'),true);
+window.addEventListener('gamepadconnected',e=>{G.padOn=true;toast(`Controller connected${e.gamepad.index?' · player '+(e.gamepad.index+1):''}`);if(G.p1)buildMovelist();});
+window.addEventListener('gamepaddisconnected',()=>{const any=[...(navigator.getGamepads?navigator.getGamepads():[])].some(Boolean);G.padOn=any;toast('Controller disconnected');if(G.p1)buildMovelist();});
+function padKey(code){window.dispatchEvent(new KeyboardEvent('keydown',{code,key:code,bubbles:true}));window.dispatchEvent(new KeyboardEvent('keyup',{code,key:code,bubbles:true}));}
+function padTargets(){return [...document.querySelectorAll('button,select,input,[tabindex="0"],.mcard,a[href]')].filter(el=>{if(el.disabled||el.closest('[hidden]'))return false;const r=el.getBoundingClientRect();return r.width>4&&r.height>4&&r.bottom>0&&r.top<innerHeight&&getComputedStyle(el).visibility!=='hidden';});}
+function padMove(dx,dy){const L=padTargets();if(!L.length)return;const cur=document.activeElement;
+ if(!cur||!L.includes(cur)){L[0].focus();document.body.classList.add('padNav');return;}
+ const a=cur.getBoundingClientRect(),ax=a.left+a.width/2,ay=a.top+a.height/2;let best=null,bs=1e9;
+ for(const el of L){if(el===cur)continue;const r=el.getBoundingClientRect(),x=r.left+r.width/2,y=r.top+r.height/2,px=(x-ax)*dx+(y-ay)*dy;if(px<=4)continue;const off=Math.abs(dx?y-ay:x-ax),sc=px+off*2.2;if(sc<bs){bs=sc;best=el;}}
+ if(best){best.focus();best.scrollIntoView({block:'nearest'});document.body.classList.add('padNav');sfx('ui');}}
+function padPoll(){if(!navigator.getGamepads)return;const pads=navigator.getGamepads();
+ const fight=G.p1&&(G.phase==='fight'||G.phase==='intro'||G.phase==='roundEnd');
+ for(let pi=0;pi<2;pi++){const gp=pads[pi];if(!gp||!gp.connected)continue;G.padOn=true;const S=padS[pi],B=i=>!!(gp.buttons[i]&&(gp.buttons[i].pressed||gp.buttons[i].value>.5)),ax=i=>gp.axes[i]||0;
+  const now={};for(const b in PADMAP)if(B(+b))now[PADMAP[b]]=true;
+  now.left=B(14)||ax(0)<-.45;now.right=B(15)||ax(0)>.45;if(B(13)||ax(1)>.7)now.block=true;if(B(12)||ax(1)<-.75)now.jump=true;
+  if(Math.hypot(ax(2),ax(3))>.75)now.dodge=true;if(B(6)&&B(7)){now.rush=true;delete now.s1;delete now.s2;}
+  now.start=B(9);now.a=B(0);now.b=B(1);now.lb=B(4);now.rb=B(5);now.up=B(12)||ax(1)<-.6;now.down=B(13)||ax(1)>.6;now.mleft=now.left;now.mright=now.right;
+  const edge=k=>now[k]&&!S[k];
+  if(edge('start')&&pi===0){if(G.phase==='title'||G.phase==='select')padKey('Enter');else if(fight||G.phase==='paused')padKey('Escape');}
+  const p2=pi===1&&twoP(),H=p2?held2:held,P=p2?pressed2:pressed;
+  if(fight&&(pi===0||p2)){
+   for(const k of ['left','right','block'])if(now[k])H[k]=true;else if(S[k])H[k]=false;
+   for(const k of ['jump','punch','kick','heavy','shoot','s1','s2','rush','dodge','tag'])if(edge(k))P[k]=true;
+   }
+  else if(pi===0&&G.phase!=='fight'){
+   if(G.phase==='cutscene'||G.tour){if(edge('a'))padKey('Enter');if(edge('b'))padKey('Escape');}
+   else{
+    if(edge('up'))padMove(0,-1);if(edge('down'))padMove(0,1);if(edge('mleft'))padMove(-1,0);if(edge('mright'))padMove(1,0);
+    if(edge('a')){const el=document.activeElement;if(el&&el!==document.body&&padTargets().includes(el))el.click();else padKey('Enter');}
+    if(edge('b')){if(G.phase==='select'&&G.shop)padKey('Escape');else if(G.phase==='paused')padKey('Escape');else if(G.phase==='photo')padKey('Escape');}
+    if(G.phase==='select'&&!G.shop){if(edge('lb'))stepFrame(-1);if(edge('rb'))stepFrame(1);}}}
+  padS[pi]=now;}}
 /* ================= audio ================= */
 let AC=null,master=null,NB=null;
 function audioInit(){if(AC)return;try{AC=new(window.AudioContext||window.webkitAudioContext)();master=AC.createGain();master.gain.value=.45;master.connect(AC.destination);}catch(e){AC=null;}}
@@ -3468,7 +3508,7 @@ function showCombo(f){if(f.chain===5)callout(f===G.p1?'Unstoppable':'Brutal comb
 const hex=c=>'#'+new THREE.Color(c).getHexString();
 
 function seg(el,items,cur,on){el.innerHTML='';items.forEach(([v,l])=>{const b=document.createElement('button');b.textContent=l;b.setAttribute('aria-pressed',String(v===cur));b.addEventListener('click',()=>{el.querySelectorAll('button').forEach(x=>x.setAttribute('aria-pressed','false'));b.setAttribute('aria-pressed','true');sfx('ui');on(v);});el.appendChild(b);});}
-function moveRows(d){const s=d.specials.map(k=>SPECIALS[k]);return [['U',s[0],sc(d,d.specials[0])],['I',s[1],sc(d,d.specials[1])],['O',SPECIALS[d.rush||'rush'],100]].map(([k,m,c])=>`<div class="mv"><kbd>${k}</kbd><b>${m.name}</b><em>${c}</em><span>${m.desc}</span></div>`).join('');}
+function moveRows(d){const s=d.specials.map(k=>SPECIALS[k]),K=G.padOn?PADLBL:{s1:'U',s2:'I',rush:'O'};return [[K.s1,s[0],sc(d,d.specials[0])],[K.s2,s[1],sc(d,d.specials[1])],[K.rush,SPECIALS[d.rush||'rush'],100]].map(([k,m,c])=>`<div class="mv"><kbd>${k}</kbd><b>${m.name}</b><em>${c}</em><span>${m.desc}</span></div>`).join('');}
 function renderRoster(){
  const r=$('roster');r.innerHTML='';
  DEFS.forEach((d,i)=>{if(d.enemy||slotOff(i))return;
@@ -4348,7 +4388,8 @@ function phaseTick(dt){
 let mlCache='';
 function buildMovelist(){
  const d=G.p1.def,s=d.specials.map(k=>SPECIALS[k]);
- const rows=[['J','Punch',''],['K','Kick',''],['Y','Heavy hit',''],['H','Blaster',''],['L','Block · tap to parry',''],['Shift','Dodge',''],['U',s[0].name,sc(d,d.specials[0])],['I',s[1].name,sc(d,d.specials[1])],['O',SPECIALS[d.rush||'rush'].name,100]];
+ const K=G.padOn?PADLBL:{punch:'J',kick:'K',heavy:'Y',shoot:'H',block:'L',dodge:'Shift',s1:'U',s2:'I',rush:'O'};
+ const rows=[[K.punch,'Punch',''],[K.kick,'Kick',''],[K.heavy,'Heavy hit',''],[K.shoot,'Blaster',''],[K.block,'Block · tap to parry',''],[K.dodge,'Dodge',''],[K.s1,s[0].name,sc(d,d.specials[0])],[K.s2,s[1].name,sc(d,d.specials[1])],[K.rush,SPECIALS[d.rush||'rush'].name,100]];
  $('movelist').innerHTML=rows.map((r,i)=>`<kbd data-r="${i}">${r[0]}</kbd><span data-r="${i}">${r[1]}</span><em data-r="${i}">${r[2]}</em>`).join('');
  $('ts1').textContent=s[0].short;$('ts2').textContent=s[1].short;mlCache='';
  const m2=$('movelist2');const p2f=G.coop?(G.p1.ctl===2?G.p1:G.p1b):G.p2;m2.hidden=!(G.twoP||(G.coop&&p2f));if(!m2.hidden){const e=p2f.def,t=e.specials.map(k=>SPECIALS[k]);m2.innerHTML=[['← →','Move',''],['↑','Jump',''],[',','Punch',''],['.','Kick',''],['/','Heavy',''],['M','Blaster',''],['↓','Block',''],['R Shift','Dodge',''],['[',t[0].name,''],[']',t[1].name,''],['\\',SPECIALS[e.rush||'rush'].name,'']].map(r=>`<kbd>${r[0]}</kbd><span>${r[1]}</span><em>${r[2]}</em>`).join('');}
@@ -4452,6 +4493,7 @@ function step(dt){
 }
 function frame(now){
  requestAnimationFrame(frame);
+ try{padPoll();}catch(e){}
  const real=Math.min(.1,(now-last)/1000);last=now;
  if(G.phase!=='paused'){
   phaseTick(real);
