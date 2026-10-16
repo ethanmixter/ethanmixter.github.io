@@ -2145,8 +2145,14 @@ function gunPistol(hd,M,c){const g=grp(hd,0,0,0),gm=glowMat(c,2.8);
  bx(.06,.14,.1,M.chrome,0,-.2,.27,g);/* sight */
  return gunDone(g);}
 function shoot(f,foe,o,i){if(f.gun){f.gunT=.65;}const color=f.glow,shp=o.sk&&o.sk.shape,mesh=new THREE.Mesh(PGEO[shp||o.geo],glowMat(color,2.6));mesh.scale.setScalar((o.scale||1)*(shp&&o.geo==='wave'?2.2:1));
- let ox=o.ox||1.1;if(!o.ox&&f.gun&&f.gun.scale.x>.8){f.gun.mz.getWorldPosition(UC.v);const d=(UC.v.x-f.x)*f.facing;if(d>.5&&d<4.6)ox=d+.1;}
- const y=f.y+o.y+(o.spread?(i-(o.n+1)/2)*o.spread:0),x=f.x+f.facing*ox;mesh.position.set(x,y,0);mesh.castShadow=true;scene.add(mesh);
+ let ox=o.ox||1.1,my=null;
+ /* bullets leave from the gun's muzzle: measured live once the gun is raised, otherwise from the muzzle offset saved the last time it was */
+ if(!o.ox&&f.gun){let mx=null;if(f.gun.scale.x>.6&&f.cur&&Math.abs(f.cur.sR+1.5)<.15){f.gun.mz.getWorldPosition(UC.v);mx=(UC.v.x-f.x)*f.facing;my=UC.v.y;}
+  else if(f.mzOff){f.P.shR.getWorldPosition(UC.v);mx=(UC.v.x-f.x)*f.facing+f.mzOff.dx;my=UC.v.y+f.mzOff.dy;}
+  if(mx!==null&&mx>.3&&mx<5)ox=mx-.15;else my=null;
+  if(o.low||o.y<1.3||o.y>2.7)my=null;}
+ const sprd=o.spread?(i-(o.n+1)/2)*o.spread:0,y=(my!==null?my:f.y+o.y)+sprd,x=f.x+f.facing*ox;
+ if(f.gun&&!o.ox){sparks(x+f.facing*.15,y,f.glow,6,4);sparks(x+f.facing*.15,y,0xffffff,3,3);}mesh.position.set(x,y,0);mesh.castShadow=true;scene.add(mesh);
  const d={dmg:o.dmg,kb:o.kb,lift:o.lift,low:o.low,mine:o.mine,stun:o.stun,pierce:o.pierce,sk:o.sk,tick(p,dt){
   if(o.home){const ty=p.foe.y+1.6;p.y+=(ty-p.y)*Math.min(1,dt*o.home);}
   if(o.arc){p.vy-=22*dt;p.y+=p.vy*dt;if(p.y<.25&&!p.dead){p.dead=1;p.life=0;ring(p.x,.05,p.color,2,true);dust(p.x,0,5);sfx('boom');shake(.2);if(Math.abs(p.foe.x-p.x)<1.5&&p.foe.y<1.2)ah(p.owner,p.foe,o,p.x,p.x,.8);}}
@@ -3283,7 +3289,8 @@ function unclip(P,c){
 function vehLock(f,c,on){if(G.clock-(f.clkT||-1)>.05){f.clkT=G.clock;sfx(on?'clank':'unclank');}
  if(on&&Math.random()<.3&&f.veh.visible){c.getWorldPosition(UC.v);sparks(UC.v.x,UC.v.y,0xffd27a,2,3);}}
 function drawFighter(f,dt){
- if(f.gun){f.gunT=Math.max(0,(f.gunT||0)-dt);const on=f.gunT>0&&!(f.morph>.3),sc=f.gun.scale.x,tg=on?(f.cls==='Heavy'?1.45:f.cls==='Medium'?1.15:.9):0,ns=sc+(tg-sc)*Math.min(1,dt*(on?22:10));f.gun.scale.setScalar(Math.max(.01,ns));f.gun.visible=ns>.05;if(f.wg)f.wg.visible=ns<.6;if(f.gun.spin)f.gun.spin.rotation.y+=dt*(f.gunT>.3?28:f.gunT*60);}
+ if(f.gun){f.gunT=Math.max(0,(f.gunT||0)-dt);const on=f.gunT>0&&!(f.morph>.3),sc=f.gun.scale.x,tg=on?(f.cls==='Heavy'?1.45:f.cls==='Medium'?1.15:.9):0,ns=sc+(tg-sc)*Math.min(1,dt*(on?22:10));f.gun.scale.setScalar(Math.max(.01,ns));f.gun.visible=ns>.05;if(f.wg)f.wg.visible=ns<.6;if(f.gun.spin)f.gun.spin.rotation.y+=dt*(f.gunT>.3?28:f.gunT*60);
+  if(on&&f.gun.scale.x>tg*.95&&f.cur&&Math.abs(f.cur.sR+1.5)<.06&&Math.abs(f.cur.eR+.08)<.06){f.gun.mz.getWorldPosition(UC.v);const vx=UC.v.x,vy=UC.v.y;f.P.shR.getWorldPosition(UC.v);f.mzOff={dx:(vx-UC.v.x)*f.facing,dy:vy-UC.v.y};}}
  f.root.position.set(f.x,f.y,f.state==='dodge'&&f.side?f.side*Math.sin(Math.PI*Math.min(1,f.t/.32))*1.5:0);
  const tr=f.showRot!==undefined?f.showRot:f.facing*.95;
  f.rotY+=(tr-f.rotY)*Math.min(1,dt*14);f.root.rotation.y=f.rotY;f.root.rotation.z=0;
@@ -4202,7 +4209,7 @@ function socAI(me,dt){const m=G.mini,b=m.ball,I={},D=DIFF[G.diff]||DIFF.veteran;
  else if(A.t<=0&&b.y>2.6&&Math.abs(b.x-me.x)<1.5&&me.onGround){I.p_jump=true;A.t=.5;}
  else if(A.t<=0&&Math.abs(G.p1.x-me.x)<1.8&&Math.random()<.02){I.p_punch=true;A.t=.5;}
  return I;}
-function socShot(p){const b=G.mini.ball;if(Math.abs(p.x-b.x)<1.1&&Math.abs(p.y-b.y)<1.1){b.vx+=Math.sign(p.vx)*7;b.vy=Math.max(b.vy,3);if(!p.d.pierce)p.dead=1;sparks(b.x,b.y,0xffffff,8,5);sfx('block');}}
+function socShot(p){const b=G.mini.ball;if(Math.abs(p.x-b.x)<1.1&&Math.abs(p.y-b.y)<1.9){b.vx+=Math.sign(p.vx)*7;b.vy=Math.max(b.vy,3);if(!p.d.pierce)p.dead=1;sparks(b.x,b.y,0xffffff,8,5);sfx('block');}}
 function socKicks(f,b,dt){f._kick=Math.max(0,(f._kick||0)-dt);
  const act=f.state==='attack'||f.state==='special';if(act&&f._kick<=0&&f.t>.05&&f.t<.5){const hx=f.x+f.facing*1.1;if(Math.abs(b.x-hx)<1.5&&b.y<f.y+3.2&&b.y>f.y-.6){
   const n=f.state==='special'?'sp':f.atkName||'punch',P={punch:[11,4],kick:[13,8],heavy:[18,6],lunge:[15,5],airpunch:[12,-3],airkick:[13,2],sp:[21,7]}[n]||[12,5];
@@ -4304,7 +4311,7 @@ function carSpawn(){const m=G.mini,kinds=['swift','heavy','guard','stealth','bru
  const g=V.v;g.scale.setScalar(.85);g.rotation.y=Math.random()<.5?0:Math.PI;g.position.set(x,9,0);g.traverse(o=>{if(o.isMesh)o.castShadow=true;});scene.add(g);
  const hp=k==='heavy'||k==='guard'||k==='brute'?42:28;m.objs.push({g,x,y:9,vy:0,hp,max:hp,shake:0,kind:'car',mats:Object.values(M).filter(v=>v&&v.isMaterial&&v!==TIRE)});}
 function targetSpawn(){const m=G.mini;let x=0;for(let t=0;t<20;t++){x=-1+Math.random()*(ARENA+2);if(m.objs.every(o=>Math.abs(o.x-x)>1.6))break;}
- const gold=Math.random()<.12,y=1.5+Math.random()*2.3,c=gold?0xffd23a:[0xff4d2e,0x46d7ff,0x5dffb0][Math.random()*3|0];
+ const P1=G.p1;P1.P.shR.getWorldPosition(UC.v);const base=P1.mzOff?UC.v.y-P1.y+P1.mzOff.dy:1.95,gold=Math.random()<.12,y=base-.35+Math.random()*2.3,c=gold?0xffd23a:[0xff4d2e,0x46d7ff,0x5dffb0][Math.random()*3|0];
  const g=new THREE.Group(),rm=glowMat(c,2.6),r1=new THREE.Mesh(new THREE.TorusGeometry(.55,.07,8,28),rm),r2=new THREE.Mesh(new THREE.TorusGeometry(.3,.06,8,24),glowMat(0xffffff,2.4)),dot=new THREE.Mesh(new THREE.CircleGeometry(.12,16),glowMat(c,3));
  g.add(r1,r2,dot);const pole=new THREE.Mesh(boxGeo(.06,y,.06),metal(0x3a3e44,.6,.5));pole.position.y=-y/2;g.add(pole);g.position.set(x,y,0);g.scale.setScalar(.01);scene.add(g);
  const mv=!gold&&Math.random()<.3;if(mv)pole.visible=false;m.objs.push({g,x,y,y0:y,mv,ph:Math.random()*6,life:mv?3.6:3.2,age:0,gold,kind:'target',mats:[pole.material]});}
