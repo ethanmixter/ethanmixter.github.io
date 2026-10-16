@@ -2108,8 +2108,19 @@ function ah(f,foe,o,srcX,hx,hy){if(foe.state==='ko'||foe.ghost)return false;
  if(o.heal){f.hp=Math.min(f.maxHp,f.hp+o.heal);for(let i=0;i<6;i++)addPart(f.x+(Math.random()-.5)*1.4,f.y+Math.random()*2.4,0,0,2.5,0,.7,0x6dffa8,0,1.2,3);}
  return true;}
 function setBuff(f,o){f.bT=o.t;f.bDmg=o.dmg||1;f.bSpd=o.spd||1;f.bArm=o.arm||1;ring(f.x,f.y+1.4,f.glow,3.2);sfx('special');}
-function shoot(f,foe,o,i){const color=f.glow,shp=o.sk&&o.sk.shape,mesh=new THREE.Mesh(PGEO[shp||o.geo],glowMat(color,2.6));mesh.scale.setScalar((o.scale||1)*(shp&&o.geo==='wave'?2.2:1));
- const y=f.y+o.y+(o.spread?(i-(o.n+1)/2)*o.spread:0),x=f.x+f.facing*(o.ox||1.1);mesh.position.set(x,y,0);mesh.castShadow=true;scene.add(mesh);
+/* a hand blaster the robot pulls out whenever it fires anything; it sits in the right fist with the barrel running out past the knuckles */
+function buildGun(hd,M,c){const g=grp(hd,0,0,0),gm=glowMat(c,2.8);
+ bx(.16,.14,.2,M.dk,0,-.02,-.06,g);/* grip inside the fist */
+ bx(.2,.62,.24,M.b||M.c,0,-.36,.08,g);/* body */
+ bx(.22,.42,.06,M.dk,0,-.3,.22,g);/* top rail */
+ bx(.03,.36,.07,gm,.11,-.36,.1,g);bx(.03,.36,.07,gm,-.11,-.36,.1,g);/* glow strips */
+ cyl(.075,.34,M.chrome,g,0,-.8,.1,null,10);/* barrel */
+ cyl(.1,.06,M.dk,g,0,-.98,.1,null,12);g.mz=cyl(.065,.03,gm,g,0,-1.015,.1,null,12);/* muzzle */
+ bx(.06,.14,.1,M.chrome,0,-.2,.27,g);/* sight */
+ g.traverse(o=>{if(o.isMesh)o.castShadow=true;});g.visible=false;g.scale.setScalar(.01);return g;}
+function shoot(f,foe,o,i){if(f.gun){f.gunT=.65;}const color=f.glow,shp=o.sk&&o.sk.shape,mesh=new THREE.Mesh(PGEO[shp||o.geo],glowMat(color,2.6));mesh.scale.setScalar((o.scale||1)*(shp&&o.geo==='wave'?2.2:1));
+ let ox=o.ox||1.1;if(!o.ox&&f.gun&&f.gun.scale.x>1){f.gun.mz.getWorldPosition(UC.v);const d=(UC.v.x-f.x)*f.facing;if(d>.5&&d<3.5)ox=d+.1;}
+ const y=f.y+o.y+(o.spread?(i-(o.n+1)/2)*o.spread:0),x=f.x+f.facing*ox;mesh.position.set(x,y,0);mesh.castShadow=true;scene.add(mesh);
  const d={dmg:o.dmg,kb:o.kb,lift:o.lift,low:o.low,mine:o.mine,stun:o.stun,pierce:o.pierce,sk:o.sk,tick(p,dt){
   if(o.home){const ty=p.foe.y+1.6;p.y+=(ty-p.y)*Math.min(1,dt*o.home);}
   if(o.arc){p.vy-=22*dt;p.y+=p.vy*dt;if(p.y<.25&&!p.dead){p.dead=1;p.life=0;ring(p.x,.05,p.color,2,true);dust(p.x,0,5);sfx('boom');shake(.2);if(Math.abs(p.foe.x-p.x)<1.5&&p.foe.y<1.2)ah(p.owner,p.foe,o,p.x,p.x,.8);}}
@@ -3016,7 +3027,7 @@ const POSE_KEYS=['sR','eR','sL','eL','zR','zL','hR','kR','hL','kL','tw','lean','
 class Fighter{
  constructor(def,cpu,pal){
   mastPals(def);if((pal||0)>=def.pals.length)pal=0;this.def=def;this.cpu=cpu;this.pal=pal||0;this.up=cpu?{armor:0,power:0,energy:0}:upOf(def.id);this.glow=def.pals[this.pal][3];
-  const r=buildRobot(def,def.pals[this.pal]);this.weapon=cpu?WEAP.fists:weaponOf(def);if(this.weapon.build&&r.P.hdR){const g=grp(r.P.hdR,0,0,0);this.weapon.build(g,r.M,def.pals[this.pal][3]);g.traverse(o=>{if(o.isMesh)o.castShadow=true;});}Object.assign(this,{root:r.root,body:r.body,P:r.P,mats:r.mats,veh:r.veh,wheels:r.wheels,vehY:r.vehY});
+  const r=buildRobot(def,def.pals[this.pal]);this.weapon=cpu?WEAP.fists:weaponOf(def);if(this.weapon.build&&r.P.hdR){const g=grp(r.P.hdR,0,0,0);this.weapon.build(g,r.M,def.pals[this.pal][3]);g.traverse(o=>{if(o.isMesh)o.castShadow=true;});this.wg=g;}if(r.P.hdR&&this.weapon!==WEAP.blaster)this.gun=buildGun(r.P.hdR,r.M,def.pals[this.pal][3]);this.gunT=0;Object.assign(this,{root:r.root,body:r.body,P:r.P,mats:r.mats,veh:r.veh,wheels:r.wheels,vehY:r.vehY});
   scene.add(this.root);scene.add(this.veh);this.veh.visible=false;
   {const R=rng(hashStr(def.id||'v')+7);for(const c of this.veh.children){const u=c.userData;u.hp=c.position.clone();u.hq=c.quaternion.clone();u.hs=c.scale.clone();
     u.sp=new V3(u.hp.x*.22+(R()-.5)*.9,1.1+R()*1.5-this.vehY,u.hp.z*.3+(R()-.5)*.7);u.sq=new THREE.Quaternion().setFromEuler(new THREE.Euler((R()-.5)*5,(R()-.5)*5,(R()-.5)*5));u.st=R();}}
@@ -3041,6 +3052,7 @@ function startAttack(f,name){
  if(!f.onGround)name=name==='kick'?'airkick':'airpunch';
  const wm=f.weapon&&f.weapon.mod[name];f.atk=wm?Object.assign({},ATK[name],wm):ATK[name];f.atkName=name;f.state='attack';f.t=0;f.hitDone=false;
  if(name==='punch'||name==='airpunch')f.punchSide*=-1;
+ if(name==='blast'&&f.gun)f.gunT=Math.max(f.gunT,.75);
  if(f.onGround)f.vx=f.facing*(f.atk.dash||3);f.buf=null;
  sfx('whiff');
 }
@@ -3218,7 +3230,7 @@ function computePose(f){
  return T;
 }
 function poseFighter(f,dt){
- const T=computePose(f),rate=(f.state==='attack'||f.state==='special'||f.state==='hit'||f.state==='dodge')?30:12,k=1-Math.exp(-rate*dt),c=f.cur;
+ const T=computePose(f);if(f.gunT>0&&f.state!=='ko'&&f.state!=='hit'&&!(f.morph>.3)){T.sR=-1.5;T.eR=-.08;T.zR=0;}const rate=(f.state==='attack'||f.state==='special'||f.state==='hit'||f.state==='dodge')?30:12,k=1-Math.exp(-rate*dt),c=f.cur;
  for(const key of POSE_KEYS)c[key]+=(T[key]-c[key])*k;
  const P=f.P;
  P.shR.rotation.set(c.sR,0,c.zR);P.shL.rotation.set(c.sL,0,c.zL);
@@ -3245,6 +3257,7 @@ function unclip(P,c){
 function vehLock(f,c,on){if(G.clock-(f.clkT||-1)>.05){f.clkT=G.clock;sfx(on?'clank':'unclank');}
  if(on&&Math.random()<.3&&f.veh.visible){c.getWorldPosition(UC.v);sparks(UC.v.x,UC.v.y,0xffd27a,2,3);}}
 function drawFighter(f,dt){
+ if(f.gun){f.gunT=Math.max(0,(f.gunT||0)-dt);const on=f.gunT>0&&!(f.morph>.3),sc=f.gun.scale.x,tg=on?1.25:0,ns=sc+(tg-sc)*Math.min(1,dt*(on?22:10));f.gun.scale.setScalar(Math.max(.01,ns));f.gun.visible=ns>.05;if(f.wg)f.wg.visible=ns<.6;}
  f.root.position.set(f.x,f.y,f.state==='dodge'&&f.side?f.side*Math.sin(Math.PI*Math.min(1,f.t/.32))*1.5:0);
  const tr=f.showRot!==undefined?f.showRot:f.facing*.95;
  f.rotY+=(tr-f.rotY)*Math.min(1,dt*14);f.root.rotation.y=f.rotY;f.root.rotation.z=0;
