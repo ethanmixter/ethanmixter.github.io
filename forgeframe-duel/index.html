@@ -2108,8 +2108,34 @@ function ah(f,foe,o,srcX,hx,hy){if(foe.state==='ko'||foe.ghost)return false;
  if(o.heal){f.hp=Math.min(f.maxHp,f.hp+o.heal);for(let i=0;i<6;i++)addPart(f.x+(Math.random()-.5)*1.4,f.y+Math.random()*2.4,0,0,2.5,0,.7,0x6dffa8,0,1.2,3);}
  return true;}
 function setBuff(f,o){f.bT=o.t;f.bDmg=o.dmg||1;f.bSpd=o.spd||1;f.bArm=o.arm||1;ring(f.x,f.y+1.4,f.glow,3.2);sfx('special');}
-/* a hand blaster the robot pulls out whenever it fires anything; it sits in the right fist with the barrel running out past the knuckles */
-function buildGun(hd,M,c){const g=grp(hd,0,0,0),gm=glowMat(c,2.8);
+/* weight classes: Heavy, Medium or Light from Armor and Speed. Each class draws its own gun when it fires:
+   heavies a huge spinning minigun, mediums an assault rifle, lights a pistol. Guns sit in the right fist with the barrel along the forearm (-y). */
+function robotClass(d){const st=d&&d.stats||{},a=st.Armor||3,sp=st.Speed||3;if(a>=5||a-sp>=2)return 'Heavy';if(sp>=5||sp-a>=2)return 'Light';return 'Medium';}
+function buildGun(hd,M,c,cls){if(cls==='Heavy')return gunHeavy(hd,M,c);if(cls==='Medium')return gunRifle(hd,M,c);return gunPistol(hd,M,c);}
+function gunDone(g){g.traverse(o=>{if(o.isMesh)o.castShadow=true;});g.visible=false;g.scale.setScalar(.01);return g;}
+function gunHeavy(hd,M,c){const g=grp(hd,0,0,0),gm=glowMat(c,2.8);
+ bx(.18,.16,.22,M.dk,0,-.02,-.06,g);
+ bx(.42,.9,.46,M.b||M.c,0,-.42,.14,g);
+ bx(.46,.5,.12,M.dk,0,-.36,.42,g);
+ bx(.1,.34,.1,M.chrome,0,-.2,.5,g);bx(.1,.34,.1,M.chrome,0,-.6,.5,g);bx(.1,.5,.06,M.chrome,0,-.4,.56,g);
+ cyl(.3,.34,M.dk,g,.36,-.38,-.02,'x',14);bx(.04,.3,.3,gm,.54,-.38,-.02,g);
+ bx(.03,.7,.08,gm,.22,-.45,.14,g);bx(.03,.7,.08,gm,-.22,-.45,.14,g);
+ bx(.5,.24,.5,M.dk,0,.1,.14,g);
+ const sp=grp(g,0,-.9,.14);g.spin=sp;
+ cyl(.07,1.1,M.chrome,sp,0,-.55,0,null,8);
+ for(let i=0;i<6;i++){const a=i/6*Math.PI*2;cyl(.05,1.1,M.chrome,sp,Math.cos(a)*.15,-.55,Math.sin(a)*.15,null,8);}
+ for(const y of[-.15,-.95])cyl(.22,.08,M.dk,sp,0,y,0,null,14);
+ g.mz=cyl(.2,.05,gm,sp,0,-1.12,0,null,14);return gunDone(g);}
+function gunRifle(hd,M,c){const g=grp(hd,0,0,0),gm=glowMat(c,2.8);
+ bx(.14,.14,.2,M.dk,0,-.02,-.06,g);
+ bx(.22,.85,.26,M.b||M.c,0,-.4,.1,g);
+ bx(.16,.42,.26,M.dk,0,.3,.06,g);bx(.18,.14,.36,M.dk,0,.55,.0,g);
+ bx(.12,.16,.34,M.dk,0,-.34,-.2,g).rotation.x=.25;
+ bx(.03,.5,.08,gm,.12,-.42,.12,g);bx(.03,.5,.08,gm,-.12,-.42,.12,g);
+ bx(.08,.3,.12,M.chrome,0,-.32,.29,g);bx(.12,.1,.14,gm,0,-.18,.31,g);
+ cyl(.055,.5,M.chrome,g,0,-1.05,.1,null,10);bx(.1,.3,.14,M.dk,0,-.92,.04,g);
+ g.mz=cyl(.075,.06,gm,g,0,-1.32,.1,null,12);return gunDone(g);}
+function gunPistol(hd,M,c){const g=grp(hd,0,0,0),gm=glowMat(c,2.8);
  bx(.16,.14,.2,M.dk,0,-.02,-.06,g);/* grip inside the fist */
  bx(.2,.62,.24,M.b||M.c,0,-.36,.08,g);/* body */
  bx(.22,.42,.06,M.dk,0,-.3,.22,g);/* top rail */
@@ -2117,9 +2143,9 @@ function buildGun(hd,M,c){const g=grp(hd,0,0,0),gm=glowMat(c,2.8);
  cyl(.075,.34,M.chrome,g,0,-.8,.1,null,10);/* barrel */
  cyl(.1,.06,M.dk,g,0,-.98,.1,null,12);g.mz=cyl(.065,.03,gm,g,0,-1.015,.1,null,12);/* muzzle */
  bx(.06,.14,.1,M.chrome,0,-.2,.27,g);/* sight */
- g.traverse(o=>{if(o.isMesh)o.castShadow=true;});g.visible=false;g.scale.setScalar(.01);return g;}
+ return gunDone(g);}
 function shoot(f,foe,o,i){if(f.gun){f.gunT=.65;}const color=f.glow,shp=o.sk&&o.sk.shape,mesh=new THREE.Mesh(PGEO[shp||o.geo],glowMat(color,2.6));mesh.scale.setScalar((o.scale||1)*(shp&&o.geo==='wave'?2.2:1));
- let ox=o.ox||1.1;if(!o.ox&&f.gun&&f.gun.scale.x>1){f.gun.mz.getWorldPosition(UC.v);const d=(UC.v.x-f.x)*f.facing;if(d>.5&&d<3.5)ox=d+.1;}
+ let ox=o.ox||1.1;if(!o.ox&&f.gun&&f.gun.scale.x>.8){f.gun.mz.getWorldPosition(UC.v);const d=(UC.v.x-f.x)*f.facing;if(d>.5&&d<4.6)ox=d+.1;}
  const y=f.y+o.y+(o.spread?(i-(o.n+1)/2)*o.spread:0),x=f.x+f.facing*ox;mesh.position.set(x,y,0);mesh.castShadow=true;scene.add(mesh);
  const d={dmg:o.dmg,kb:o.kb,lift:o.lift,low:o.low,mine:o.mine,stun:o.stun,pierce:o.pierce,sk:o.sk,tick(p,dt){
   if(o.home){const ty=p.foe.y+1.6;p.y+=(ty-p.y)*Math.min(1,dt*o.home);}
@@ -3027,7 +3053,7 @@ const POSE_KEYS=['sR','eR','sL','eL','zR','zL','hR','kR','hL','kL','tw','lean','
 class Fighter{
  constructor(def,cpu,pal){
   mastPals(def);if((pal||0)>=def.pals.length)pal=0;this.def=def;this.cpu=cpu;this.pal=pal||0;this.up=cpu?{armor:0,power:0,energy:0}:upOf(def.id);this.glow=def.pals[this.pal][3];
-  const r=buildRobot(def,def.pals[this.pal]);this.weapon=cpu?WEAP.fists:weaponOf(def);if(this.weapon.build&&r.P.hdR){const g=grp(r.P.hdR,0,0,0);this.weapon.build(g,r.M,def.pals[this.pal][3]);g.traverse(o=>{if(o.isMesh)o.castShadow=true;});this.wg=g;}if(r.P.hdR&&this.weapon!==WEAP.blaster)this.gun=buildGun(r.P.hdR,r.M,def.pals[this.pal][3]);this.gunT=0;Object.assign(this,{root:r.root,body:r.body,P:r.P,mats:r.mats,veh:r.veh,wheels:r.wheels,vehY:r.vehY});
+  const r=buildRobot(def,def.pals[this.pal]);this.weapon=cpu?WEAP.fists:weaponOf(def);if(this.weapon.build&&r.P.hdR){const g=grp(r.P.hdR,0,0,0);this.weapon.build(g,r.M,def.pals[this.pal][3]);g.traverse(o=>{if(o.isMesh)o.castShadow=true;});this.wg=g;}if(r.P.hdR&&this.weapon!==WEAP.blaster)this.cls=robotClass(def);this.gun=buildGun(r.P.hdR,r.M,def.pals[this.pal][3],this.cls);this.gunT=0;Object.assign(this,{root:r.root,body:r.body,P:r.P,mats:r.mats,veh:r.veh,wheels:r.wheels,vehY:r.vehY});
   scene.add(this.root);scene.add(this.veh);this.veh.visible=false;
   {const R=rng(hashStr(def.id||'v')+7);for(const c of this.veh.children){const u=c.userData;u.hp=c.position.clone();u.hq=c.quaternion.clone();u.hs=c.scale.clone();
     u.sp=new V3(u.hp.x*.22+(R()-.5)*.9,1.1+R()*1.5-this.vehY,u.hp.z*.3+(R()-.5)*.7);u.sq=new THREE.Quaternion().setFromEuler(new THREE.Euler((R()-.5)*5,(R()-.5)*5,(R()-.5)*5));u.st=R();}}
@@ -3230,7 +3256,7 @@ function computePose(f){
  return T;
 }
 function poseFighter(f,dt){
- const T=computePose(f);if(f.gunT>0&&f.state!=='ko'&&f.state!=='hit'&&!(f.morph>.3)){T.sR=-1.5;T.eR=-.08;T.zR=0;}const rate=(f.state==='attack'||f.state==='special'||f.state==='hit'||f.state==='dodge')?30:12,k=1-Math.exp(-rate*dt),c=f.cur;
+ const T=computePose(f);if(f.gunT>0&&f.state!=='ko'&&f.state!=='hit'&&!(f.morph>.3)){T.sR=-1.5;T.eR=-.08;T.zR=0;if(f.cls!=='Light'&&(f.state!=='attack'||f.atkName==='blast')){T.sL=-1.2;T.eL=-.7;T.zL=-.35;}}const rate=(f.state==='attack'||f.state==='special'||f.state==='hit'||f.state==='dodge')?30:12,k=1-Math.exp(-rate*dt),c=f.cur;
  for(const key of POSE_KEYS)c[key]+=(T[key]-c[key])*k;
  const P=f.P;
  P.shR.rotation.set(c.sR,0,c.zR);P.shL.rotation.set(c.sL,0,c.zL);
@@ -3257,7 +3283,7 @@ function unclip(P,c){
 function vehLock(f,c,on){if(G.clock-(f.clkT||-1)>.05){f.clkT=G.clock;sfx(on?'clank':'unclank');}
  if(on&&Math.random()<.3&&f.veh.visible){c.getWorldPosition(UC.v);sparks(UC.v.x,UC.v.y,0xffd27a,2,3);}}
 function drawFighter(f,dt){
- if(f.gun){f.gunT=Math.max(0,(f.gunT||0)-dt);const on=f.gunT>0&&!(f.morph>.3),sc=f.gun.scale.x,tg=on?1.25:0,ns=sc+(tg-sc)*Math.min(1,dt*(on?22:10));f.gun.scale.setScalar(Math.max(.01,ns));f.gun.visible=ns>.05;if(f.wg)f.wg.visible=ns<.6;}
+ if(f.gun){f.gunT=Math.max(0,(f.gunT||0)-dt);const on=f.gunT>0&&!(f.morph>.3),sc=f.gun.scale.x,tg=on?(f.cls==='Heavy'?1.45:f.cls==='Medium'?1.15:.9):0,ns=sc+(tg-sc)*Math.min(1,dt*(on?22:10));f.gun.scale.setScalar(Math.max(.01,ns));f.gun.visible=ns>.05;if(f.wg)f.wg.visible=ns<.6;if(f.gun.spin)f.gun.spin.rotation.y+=dt*(f.gunT>.3?28:f.gunT*60);}
  f.root.position.set(f.x,f.y,f.state==='dodge'&&f.side?f.side*Math.sin(Math.PI*Math.min(1,f.t/.32))*1.5:0);
  const tr=f.showRot!==undefined?f.showRot:f.facing*.95;
  f.rotY+=(tr-f.rotY)*Math.min(1,dt*14);f.root.rotation.y=f.rotY;f.root.rotation.z=0;
@@ -3550,7 +3576,7 @@ function renderRoster(){
  const r=$('roster');r.innerHTML='';
  DEFS.forEach((d,i)=>{if(d.enemy||slotOff(i))return;
   if(d.id==='tyrant'&&SAVE.slots<MAXC){const nb=document.createElement('button');nb.className='rbtn newc';nb.disabled=rookie();nb.innerHTML=`<b>+ New custom</b><small>${rookie()?lockWhy(3):SLOT_COST+' bolts · '+SAVE.slots+' of '+MAXC+' built'}</small>`;nb.addEventListener('click',newCustom);r.appendChild(nb);}
-  const b=document.createElement('button');b.className='rbtn';b.setAttribute('aria-pressed',String(i===G.sel));b.disabled=locked(i);b.innerHTML=`<b>${locked(i)?'LOCKED':d.name}</b><small>${locked(i)?lockWhy(i):d.role.replace(' frame','')+(SAVE.champs[d.id]?' · champion':'')+(mastLv(d)>1?' · Lv '+mastLv(d):'')}</small><i style="background:${hex(d.pals[0][3])}"></i>`;b.addEventListener('click',()=>pickFrame(i));r.appendChild(b);});
+  const b=document.createElement('button');b.className='rbtn';b.setAttribute('aria-pressed',String(i===G.sel));b.disabled=locked(i);b.innerHTML=`<b>${locked(i)?'LOCKED':d.name}</b><small>${locked(i)?lockWhy(i):d.role.replace(' frame','')+' · '+robotClass(d)+(SAVE.champs[d.id]?' · champion':'')+(mastLv(d)>1?' · Lv '+mastLv(d):'')}</small><i style="background:${hex(d.pals[0][3])}"></i>`;b.addEventListener('click',()=>pickFrame(i));r.appendChild(b);});
 }
 function newCustom(){if(rookie()||SAVE.slots>=MAXC)return;if(SAVE.bolts<SLOT_COST){short(SLOT_COST,'a new custom robot');return;}
  SAVE.bolts-=SLOT_COST;const i=SAVE.slots;SAVE.slots++;persist();applyCustom(i,true);layoutShow();sfx('transform');
@@ -3572,9 +3598,9 @@ function wireWeap(d){document.querySelectorAll('[data-wp]').forEach(b=>b.addEven
  SAVE.wequip[d.id]=k;persist();sfx('go');rebuildShowcase(G.sel);renderPilot();renderDetail();renderBoxes();}));}
 function renderDetail(){
  const d=DEFS[G.sel];
- $('selName').textContent=d.name;$('selRole').textContent=d.role+' · becomes a '+d.vehicle.toLowerCase();
+ $('selName').textContent=d.name;$('selRole').textContent=d.role+' · '+robotClass(d)+' class · becomes a '+d.vehicle.toLowerCase();
  const stats=Object.entries(d.stats).map(([k,v])=>`<span>${k}</span><span class="meter">${[0,1,2,3,4].map(j=>`<i class="${j<v?'on':''}"></i>`).join('')}</span>`).join('');
- $('detail').innerHTML=`<h3>${d.name}<small>${d.role}</small></h3><p class="blurb">${d.blurb}</p><div class="vrow"><span>Vehicle: ${d.vehicle}</span><button class="buy" id="vehBtn">${G.showVeh?'Show robot':'Show vehicle'}</button><button class="buy" id="photoBtn">Photo mode</button></div><div class="stats">${stats}</div>${weapHTML(d)}${mastHTML(d)}<div class="movelistSel">${moveRows(d)}</div><div class="ups"><h4>Upgrades for ${d.name}</h4>${upRows(d)}</div>`;
+ $('detail').innerHTML=`<h3>${d.name}<small>${d.role} · ${robotClass(d)} class</small></h3><p class="blurb">${d.blurb}</p><div class="vrow"><span>Vehicle: ${d.vehicle}</span><button class="buy" id="vehBtn">${G.showVeh?'Show robot':'Show vehicle'}</button><button class="buy" id="photoBtn">Photo mode</button></div><div class="stats">${stats}</div>${weapHTML(d)}${mastHTML(d)}<div class="movelistSel">${moveRows(d)}</div><div class="ups"><h4>Upgrades for ${d.name}</h4>${upRows(d)}</div>`;
  $('detail').querySelectorAll('.buy[data-up]').forEach(b=>b.addEventListener('click',()=>{const k=b.dataset.up,u=upOf(d.id),cost=100*(u[k]+1);if(u[k]>=5)return;if(SAVE.bolts<cost){short(cost,'this upgrade');return;}SAVE.bolts-=cost;u[k]++;persist();checkChals();sfx('go');renderPilot();renderDetail();renderChals();}));
  renderPartner();wireWeap(d);$('vehBtn').addEventListener('click',toggleVeh);$('photoBtn').addEventListener('click',enterPhoto);renderDock();
  renderWorkshop();
@@ -3826,7 +3852,7 @@ function renderCxDet(){const el=$('cxDet');if(!G.cxSel){el.innerHTML='';return;}
  el.className='cxDet'+(I.met?'':' unk');
  if(!I.met){el.innerHTML=`${u?`<img src="${u}" alt="">`:'<span></span>'}<div><h3>???<small>Unknown robot</small></h3><p>You have not fought this robot yet.</p><div class="cxMeta">${I.where.length?'Found in: <b>'+I.where.join(', ')+'</b>':'Found in Survival, Arcade or Ranked.'}</div></div>`;return;}
  const st=Object.entries(d.stats).map(([k,v])=>`${k} ${'■'.repeat(v)}${'□'.repeat(5-v)}`).join(' · ');
- el.innerHTML=`${u?`<img src="${u}" alt="${d.name}">`:'<span></span>'}<div><h3>${d.name}<small>${d.role} · becomes a ${d.vehicle.toLowerCase()}</small></h3><p>${LORE[d.id]||d.blurb||''}</p>
+ el.innerHTML=`${u?`<img src="${u}" alt="${d.name}">`:'<span></span>'}<div><h3>${d.name}<small>${d.role} · ${robotClass(d)} class · becomes a ${d.vehicle.toLowerCase()}</small></h3><p>${LORE[d.id]||d.blurb||''}</p>
   <div class="cxMeta">${st}<br>Moves: <b>${d.specials.map(k=>SPECIALS[k].name).join('</b>, <b>')}</b>${BOSS2[d.id]?', and in phase two <b>'+BOSS2[d.id].specials.map(k=>SPECIALS[k].name).join('</b> and <b>')+'</b>':''}<br>
   ${I.where.length?'Found in: <b>'+I.where.join(', ')+'</b><br>':''}Times beaten: <b>${(SAVE.kos||{})[d.id]||0}</b>${I.own?' · <b>playable</b>':d.boss?' · playable after you '+lockWhy(I.i).toLowerCase():''}</div></div>`;}
 function renderPilot(){const k=rankInfo(SAVE.xp);$('secBolts').textContent=SAVE.bolts+' bolts';renderHub();$('pilot').innerHTML=`<b>Rank ${k.L} · ${k.name}</b><em>${SAVE.bolts} bolts</em><div class="xpbar"><i style="transform:scaleX(${k.frac})"></i></div><small>${k.max?'Top rank reached':k.next+' XP to next rank'} · ${SAVE.wins} wins${SAVE.rk&&SAVE.rk.played?' · Ranked '+RKT[SAVE.rk.tier]:''}${rookie()?' · '+(ROOKIE_FIGHTS-SAVE.fights)+' more fights unlock every robot and the Workshop':''}</small>`;}
