@@ -2112,6 +2112,31 @@ function setBuff(f,o){f.bT=o.t;f.bDmg=o.dmg||1;f.bSpd=o.spd||1;f.bArm=o.arm||1;r
    heavies a huge spinning minigun, mediums an assault rifle, lights a pistol. Guns sit in the right fist with the barrel along the forearm (-y). */
 function robotClass(d){const st=d&&d.stats||{},a=st.Armor||3,sp=st.Speed||3;if(a>=5||a-sp>=2)return 'Heavy';if(sp>=5||sp-a>=2)return 'Light';return 'Medium';}
 function buildGun(hd,M,c,cls){if(cls==='Heavy')return gunHeavy(hd,M,c);if(cls==='Medium')return gunRifle(hd,M,c);return gunPistol(hd,M,c);}
+/* find the left-arm angles that put the left hand on the gun's front handle (a small grid search, run once per robot) */
+/* two-handed guns (Heavy and Medium): the right hand holds the grip in front of the chest, the gun is turned to point straight at the
+   enemy, and the left hand is solved onto the front handle. The angles are searched once per robot and cached. */
+const GRIPK={rx:-.3,ry:.3,rz:.36};
+function twoHand(f){return !!(f.gun&&f.gun.fg);}
+function gunPose(f){if(!twoHand(f))return {sR:-1.5,eR:-.08,zR:0};const g=f.lgrip;return g?{sR:g.sR,eR:g.eR,zR:g.zR}:{sR:-1.1,eR:-.8,zR:0};}
+const GQ={m:new THREE.Matrix4(),q:new THREE.Quaternion(),q2:new THREE.Quaternion(),x:new THREE.Vector3(),y:new THREE.Vector3(),z:new THREE.Vector3(0,1,0)};
+function orientGun(f){const g=f.gun,hd=f.P.hdR;hd.updateWorldMatrix(true,false);f.P.torso.getWorldQuaternion(GQ.q);GQ.x.set(0,0,1).applyQuaternion(GQ.q);GQ.x.y=0;GQ.x.normalize();GQ.y.copy(GQ.x).negate();GQ.z.set(0,1,0);GQ.x.crossVectors(GQ.y,GQ.z);
+ GQ.m.makeBasis(GQ.x,GQ.y,GQ.z);GQ.q.setFromRotationMatrix(GQ.m);hd.getWorldQuaternion(GQ.q2);GQ.q2.invert();g.quaternion.copy(GQ.q2.multiply(GQ.q));}
+function armSolve(sh,el,hd,tgt,ranges){let best=null,bd=1e9;
+ const test=(a,z,e)=>{sh.rotation.set(a,0,z);el.rotation.x=e;sh.updateMatrixWorld(true);hd.getWorldPosition(UC.v);const d=UC.v.distanceToSquared(tgt);if(d<bd){bd=d;best={s:a,z,e};}};
+ for(let a=-2.2;a<=-.2;a+=.2)for(let z=-1.5;z<=1.5;z+=.2)for(let e=-2.1;e<=0;e+=.3)test(a,z,e);
+ const b0=best;for(let a=b0.s-.2;a<=b0.s+.2;a+=.04)for(let z=b0.z-.2;z<=b0.z+.2;z+=.04)for(let e=b0.e-.3;e<=b0.e+.3;e+=.05)test(a,z,Math.max(-2.2,Math.min(0,e)));
+ sh.rotation.set(best.s,0,best.z);el.rotation.x=best.e;sh.updateMatrixWorld(true);best.d=Math.sqrt(bd);return best;}
+function prepGrip(f){if(!f||!twoHand(f)||f.lgrip)return;let best=null;for(const k of [[-.3,.36],[-.45,.42],[-.15,.3]]){GRIPK.rx=k[0];GRIPK.rz=k[1];const g=solveGrip(f);if(g&&(!best||g.dR+g.dL<best.dR+best.dL))best=g;if(best&&best.dR+best.dL<.12)break;}f.lgrip=best;}
+function solveGrip(f){const P=f.P;if(!P.shL||!P.hdL||!P.shR)return null;
+ const keep=[P.shR.rotation.clone(),P.elR.rotation.x,P.shL.rotation.clone(),P.elL.rotation.x,P.torso.rotation.clone(),f.gun.scale.x];
+ P.torso.rotation.set(0,0,0);f.gun.scale.setScalar(f.cls==='Heavy'?1.05:1.1);f.root.updateMatrixWorld(true);
+ /* arm length in torso space */
+ P.shR.rotation.set(0,0,0);P.elR.rotation.x=0;P.torso.updateMatrixWorld(true);const sp=P.torso.worldToLocal(P.shR.getWorldPosition(new THREE.Vector3())),hp=P.torso.worldToLocal(P.hdR.getWorldPosition(new THREE.Vector3())),len=sp.distanceTo(hp);
+ const tR=P.torso.localToWorld(new THREE.Vector3(sp.x*GRIPK.rx,sp.y-len*GRIPK.ry,len*GRIPK.rz));
+ const r=armSolve(P.shR,P.elR,P.hdR,tR);orientGun(f);f.gun.updateMatrixWorld(true);
+ const tL=f.gun.fg.getWorldPosition(new THREE.Vector3());const l=armSolve(P.shL,P.elL,P.hdL,tL);
+ P.shR.rotation.copy(keep[0]);P.elR.rotation.x=keep[1];P.shL.rotation.copy(keep[2]);P.elL.rotation.x=keep[3];P.torso.rotation.copy(keep[4]);f.gun.scale.setScalar(keep[5]);f.root.updateMatrixWorld(true);
+ return {sR:r.s,zR:r.z,eR:r.e,sL:l.s,zL:l.z,eL:l.e,dR:r.d,dL:l.d};}
 function gunDone(g){g.traverse(o=>{if(o.isMesh)o.castShadow=true;});g.visible=false;g.scale.setScalar(.01);return g;}
 function gunHeavy(hd,M,c){const g=grp(hd,0,0,0),gm=glowMat(c,2.8);
  bx(.18,.16,.22,M.dk,0,-.02,-.06,g);
@@ -2125,7 +2150,9 @@ function gunHeavy(hd,M,c){const g=grp(hd,0,0,0),gm=glowMat(c,2.8);
  cyl(.07,1.1,M.chrome,sp,0,-.55,0,null,8);
  for(let i=0;i<6;i++){const a=i/6*Math.PI*2;cyl(.05,1.1,M.chrome,sp,Math.cos(a)*.15,-.55,Math.sin(a)*.15,null,8);}
  for(const y of[-.15,-.95])cyl(.22,.08,M.dk,sp,0,y,0,null,14);
- g.mz=cyl(.2,.05,gm,sp,0,-1.12,0,null,14);return gunDone(g);}
+ g.mz=cyl(.2,.05,gm,sp,0,-1.12,0,null,14);
+ bx(.12,.12,.32,M.dk,0,-.35,-.06,g);g.fg=grp(g,0,-.35,-.28);bx(.1,.12,.22,M.chrome,0,0,.04,g.fg);/* front handle for the left hand */
+ return gunDone(g);}
 function gunRifle(hd,M,c){const g=grp(hd,0,0,0),gm=glowMat(c,2.8);
  bx(.14,.14,.2,M.dk,0,-.02,-.06,g);
  bx(.22,.85,.26,M.b||M.c,0,-.4,.1,g);
@@ -2134,7 +2161,9 @@ function gunRifle(hd,M,c){const g=grp(hd,0,0,0),gm=glowMat(c,2.8);
  bx(.03,.5,.08,gm,.12,-.42,.12,g);bx(.03,.5,.08,gm,-.12,-.42,.12,g);
  bx(.08,.3,.12,M.chrome,0,-.32,.29,g);bx(.12,.1,.14,gm,0,-.18,.31,g);
  cyl(.055,.5,M.chrome,g,0,-1.05,.1,null,10);bx(.1,.3,.14,M.dk,0,-.92,.04,g);
- g.mz=cyl(.075,.06,gm,g,0,-1.32,.1,null,12);return gunDone(g);}
+ g.mz=cyl(.075,.06,gm,g,0,-1.32,.1,null,12);
+ g.fg=grp(g,0,-.42,-.14);bx(.08,.1,.16,M.dk,0,0,.04,g.fg);/* foregrip */
+ return gunDone(g);}
 function gunPistol(hd,M,c){const g=grp(hd,0,0,0),gm=glowMat(c,2.8);
  bx(.16,.14,.2,M.dk,0,-.02,-.06,g);/* grip inside the fist */
  bx(.2,.62,.24,M.b||M.c,0,-.36,.08,g);/* body */
@@ -2147,7 +2176,7 @@ function gunPistol(hd,M,c){const g=grp(hd,0,0,0),gm=glowMat(c,2.8);
 function shoot(f,foe,o,i){if(f.gun){f.gunT=.65;}const color=f.glow,shp=o.sk&&o.sk.shape,mesh=new THREE.Mesh(PGEO[shp||o.geo],glowMat(color,2.6));mesh.scale.setScalar((o.scale||1)*(shp&&o.geo==='wave'?2.2:1));
  let ox=o.ox||1.1,my=null;
  /* bullets leave from the gun's muzzle: measured live once the gun is raised, otherwise from the muzzle offset saved the last time it was */
- if(!o.ox&&f.gun){let mx=null;if(f.gun.scale.x>.6&&f.cur&&Math.abs(f.cur.sR+1.5)<.15){f.gun.mz.getWorldPosition(UC.v);mx=(UC.v.x-f.x)*f.facing;my=UC.v.y;}
+ if(!o.ox&&f.gun){let mx=null;if(f.gun.scale.x>.6&&f.cur&&Math.abs(f.cur.sR-gunPose(f).sR)<.15){f.gun.mz.getWorldPosition(UC.v);mx=(UC.v.x-f.x)*f.facing;my=UC.v.y;}
   else if(f.mzOff){f.P.shR.getWorldPosition(UC.v);mx=(UC.v.x-f.x)*f.facing+f.mzOff.dx;my=UC.v.y+f.mzOff.dy;}
   if(mx!==null&&mx>.3&&mx<5)ox=mx-.15;else my=null;
   if(o.low||o.y<1.3||o.y>2.7)my=null;}
@@ -3262,7 +3291,8 @@ function computePose(f){
  return T;
 }
 function poseFighter(f,dt){
- const T=computePose(f);if(f.gunT>0&&f.state!=='ko'&&f.state!=='hit'&&!(f.morph>.3)){T.sR=-1.5;T.eR=-.08;T.zR=0;if(f.cls!=='Light'&&(f.state!=='attack'||f.atkName==='blast')){T.sL=-1.2;T.eL=-.7;T.zL=-.35;}}const rate=(f.state==='attack'||f.state==='special'||f.state==='hit'||f.state==='dodge')?30:12,k=1-Math.exp(-rate*dt),c=f.cur;
+ const T=computePose(f);if(f.gunT>0&&f.state!=='ko'&&f.state!=='hit'&&!(f.morph>.3)){const gp=gunPose(f);T.sR=gp.sR;T.eR=gp.eR;T.zR=gp.zR;if(twoHand(f)){const g=f.lgrip||{sL:-1.3,zL:-.5,eL:-.5};T.sL=g.sL;T.eL=g.eL;T.zL=g.zL;T.tw=0;f.P.noUnclipL=true;}}
+ if(!(f.gunT>0))f.P.noUnclipL=false;const rate=(f.state==='attack'||f.state==='special'||f.state==='hit'||f.state==='dodge')?30:12,k=1-Math.exp(-rate*dt),c=f.cur;
  for(const key of POSE_KEYS)c[key]+=(T[key]-c[key])*k;
  const P=f.P;
  P.shR.rotation.set(c.sR,0,c.zR);P.shL.rotation.set(c.sL,0,c.zL);
@@ -3277,7 +3307,7 @@ const UC={v:new THREE.Vector3(),m:new THREE.Matrix4(),m2:new THREE.Matrix4()};
 function ucInside(v,cb){if(v.y>cb.hy||v.y<cb.lo||Math.abs(v.z)>cb.hz)return false;return Math.abs(v.x)<(v.y<-cb.hy?cb.hx2:cb.hx);}
 function unclip(P,c){
  for(const k of ['R','L']){const e='e'+k,kn='k'+k;if(c[e]<-2.2){c[e]=-2.2;P['el'+k].rotation.x=c[e];}if(c[kn]>2.05){c[kn]=2.05;P['kn'+k].rotation.x=c[kn];}}
- if(P.chestInv)for(const [k,s] of [['R',1],['L',-1]]){const sh=P['sh'+k],el=P['el'+k],zk='z'+k;
+ if(P.chestInv)for(const [k,s] of [['R',1],['L',-1]]){if(P.noUnclipL)continue;const sh=P['sh'+k],el=P['el'+k],zk='z'+k;
   for(let it=0;it<8;it++){sh.updateMatrix();el.updateMatrix();UC.m.multiplyMatrices(P.chestInv,sh.matrix);UC.m2.multiplyMatrices(UC.m,el.matrix);let hit=false;
    UC.v.set(0,-.35,0).applyMatrix4(UC.m);if(ucInside(UC.v,P.cb))hit=true;
    if(!hit)for(const y of [-.2,-.5,-.85]){UC.v.set(0,y,0).applyMatrix4(UC.m2);if(ucInside(UC.v,P.cb)){hit=true;break;}}
@@ -3289,8 +3319,9 @@ function unclip(P,c){
 function vehLock(f,c,on){if(G.clock-(f.clkT||-1)>.05){f.clkT=G.clock;sfx(on?'clank':'unclank');}
  if(on&&Math.random()<.3&&f.veh.visible){c.getWorldPosition(UC.v);sparks(UC.v.x,UC.v.y,0xffd27a,2,3);}}
 function drawFighter(f,dt){
- if(f.gun){f.gunT=Math.max(0,(f.gunT||0)-dt);const on=f.gunT>0&&!(f.morph>.3),sc=f.gun.scale.x,tg=on?(f.cls==='Heavy'?1.45:f.cls==='Medium'?1.15:.9):0,ns=sc+(tg-sc)*Math.min(1,dt*(on?22:10));f.gun.scale.setScalar(Math.max(.01,ns));f.gun.visible=ns>.05;if(f.wg)f.wg.visible=ns<.6;if(f.gun.spin)f.gun.spin.rotation.y+=dt*(f.gunT>.3?28:f.gunT*60);
-  if(on&&f.gun.scale.x>tg*.95&&f.cur&&Math.abs(f.cur.sR+1.5)<.06&&Math.abs(f.cur.eR+.08)<.06){f.gun.mz.getWorldPosition(UC.v);const vx=UC.v.x,vy=UC.v.y;f.P.shR.getWorldPosition(UC.v);f.mzOff={dx:(vx-UC.v.x)*f.facing,dy:vy-UC.v.y};}}
+ if(f.gun){f.gunT=Math.max(0,(f.gunT||0)-dt);const on=f.gunT>0&&!(f.morph>.3),sc=f.gun.scale.x,tg=on?(f.cls==='Heavy'?1.05:f.cls==='Medium'?1.1:.9):0,ns=sc+(tg-sc)*Math.min(1,dt*(on?22:10));f.gun.scale.setScalar(Math.max(.01,ns));f.gun.visible=ns>.05;if(f.wg)f.wg.visible=ns<.6;if(f.gun.spin)f.gun.spin.rotation.y+=dt*(f.gunT>.3?28:f.gunT*60);
+  if(on&&twoHand(f)&&!f.lgrip)prepGrip(f);if(on&&twoHand(f)&&f.gun.visible)orientGun(f);
+  if(on&&f.gun.scale.x>tg*.95&&f.cur&&Math.abs(f.cur.sR-gunPose(f).sR)<.06&&Math.abs(f.cur.eR-gunPose(f).eR)<.06&&(!twoHand(f)||f.lgrip)){f.gun.mz.getWorldPosition(UC.v);const vx=UC.v.x,vy=UC.v.y;f.P.shR.getWorldPosition(UC.v);f.mzOff={dx:(vx-UC.v.x)*f.facing,dy:vy-UC.v.y};}}
  f.root.position.set(f.x,f.y,f.state==='dodge'&&f.side?f.side*Math.sin(Math.PI*Math.min(1,f.t/.32))*1.5:0);
  const tr=f.showRot!==undefined?f.showRot:f.facing*.95;
  f.rotY+=(tr-f.rotY)*Math.min(1,dt*14);f.root.rotation.y=f.rotY;f.root.rotation.z=0;
@@ -4486,7 +4517,7 @@ function startRound(){
  {const m=G.mod,a=G.p1,b=G.p2;if(m.foeHp)b.maxHp=b.hp=b.trail=Math.round(b.maxHp*m.foeHp);if(m.myHp)a.hp=a.trail=a.maxHp*m.myHp;if(m.myHpMax){a.maxHp=Math.round(a.maxHp*m.myHpMax);a.hp=a.trail=a.maxHp;}}
  G.enraged=false;G.phase2=null;G.fin=null;document.body.classList.remove('fin');if(G.hz&&G.hz.warn&&G.hz.warn.rock)scene.remove(G.hz.warn.rock);G.hz=null;if(G.p2.baseDef){G.p2.def=G.p2.baseDef;G.p2.baseDef=null;}if(G.mode==='campaign'&&G.arena!==CAMP[G.stageSel].arena)applyArena(CAMP[G.stageSel].arena);if(G.mode==='bossrush'&&G.rush){const b=G.rush[Math.min(G.wave-1,G.rush.length-1)];G.mod=Object.assign({},G.rushMod);if(G.arena!==b.arena)applyArena(b.arena);}G.koFx=null;G.firstHit=false;G.focusT=0;G.slowT=0;
  {const solo=!!MINI[G.mode],ent=G.mode!=='training'&&!solo&&(G.p1.enter||G.p2.enter);cine(ent);if(ent)showVS();if(solo)G.p2.enter=false;}
- clearProj();extrasReset();ultClear();G.timer=G.mode==='training'?Infinity:(G.mod.timer||60);G.phase='intro';G.introT=0;G.fightShown=false;G.timeScale=1;G.roundWinner=null;
+ clearProj();extrasReset();ultClear();try{prepGrip(G.p1);prepGrip(G.p2);if(G.p1b)prepGrip(G.p1b);}catch(e){}G.timer=G.mode==='training'?Infinity:(G.mod.timer||60);G.phase='intro';G.introT=0;G.fightShown=false;G.timeScale=1;G.roundWinner=null;
  const rl=MINI[G.mode]?'Get ready':G.mode==='bossrush'&&G.rush?`Boss ${G.wave} of ${G.rush.length}`:G.nextFoe?'Wave '+G.wave:'Round '+G.round;
  $('roundLbl').textContent=G.mode==='training'?'Free practice':rl;
  if(G.mode==='training'){announce('Training','',900);G.introT=1.2;}
