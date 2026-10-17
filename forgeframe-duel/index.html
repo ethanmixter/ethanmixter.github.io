@@ -287,6 +287,11 @@ body.cine #movelist,body.cine #pauseBtn{opacity:0}
 .mast ol{list-style:none;margin:10px 0 0;padding:0;display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:4px}
 .mast li{display:flex;gap:8px;align-items:center;font-size:12px;opacity:.55}.mast li.got{opacity:1;color:#ffd23a}
 .mast li b{display:inline-grid;place-items:center;min-width:22px;height:22px;border-radius:50%;border:1px solid currentColor;font-size:11px}
+.binds{margin-top:18px}.binds h4{margin:0 0 4px}.binds .hint{text-transform:none;letter-spacing:0;font-size:13px}
+.bindGrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:6px;margin:10px 0 12px}
+.bindGrid button{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:8px 10px;border:1px solid rgba(255,255,255,.14);border-radius:8px;background:rgba(255,255,255,.04);color:var(--text);font:600 13px/1.2 var(--f-label);cursor:pointer;text-align:left}
+.bindGrid button:hover{border-color:var(--amber)}.bindGrid kbd{min-width:34px;text-align:center;padding:3px 8px;border-radius:5px;background:#000;border:1px solid rgba(255,255,255,.25);font:700 12px/1.2 var(--f-label);color:var(--amber)}
+.bindGrid button.wait{border-color:var(--amber);background:rgba(255,178,30,.12)}.bindGrid button.wait kbd{animation:ultPulse .5s infinite alternate}.bindGrid button.chg kbd{color:#5dffb0}
 #callout{position:absolute;top:27%;left:0;right:0;text-align:center;font-family:var(--f-display);font-size:clamp(20px,3.6vw,40px);color:var(--amber);text-shadow:0 3px 0 #000;opacity:0;pointer-events:none;letter-spacing:.04em;text-transform:uppercase}
 #callout.show{animation:callIn 1.1s ease-out forwards}
 @keyframes callIn{0%{opacity:0;transform:scale(1.5) skewX(-8deg)}15%{opacity:1;transform:scale(1) skewX(-8deg)}75%{opacity:1;transform:skewX(-8deg)}100%{opacity:0;transform:translateY(-10px) skewX(-8deg)}}
@@ -703,7 +708,7 @@ body.fin #stage{filter:saturate(.35) contrast(1.15) brightness(1.05)}
       <span>Help</span><div class="seg"><button id="tourBtn">Garage tour</button><button id="howBtn2">Fighting tutorial</button></div>
       <span>Progress</span><div class="seg"><button id="resetBtn">Reset</button></div>
     </div>
-    <div class="keys"><span><kbd>A</kbd><kbd>D</kbd> move</span><span><kbd>W</kbd> jump</span><span><kbd>J</kbd> punch</span><span><kbd>K</kbd> kick</span><span><kbd>L</kbd> block</span><span><kbd>Shift</kbd> dodge</span><span><kbd>H</kbd> blaster</span><span><kbd>Y</kbd> heavy hit</span><span><kbd>U</kbd><kbd>I</kbd> specials</span><span><kbd>O</kbd> transform rush</span><span><kbd>Esc</kbd> pause</span></div>
+    <div class="binds"><h4>Keyboard controls</h4><p class="hint">Click an action, then press the key you want for it. Esc cancels. Keys already used by another action swap over. Esc, Enter and P stay reserved for menus and pause.</p><div class="bindGrid" id="bindGrid"></div><button class="btn small" id="bindReset">Reset to default keys</button></div>
     </section>
   </div></div>
   <div class="dock" id="dock">
@@ -873,7 +878,7 @@ async function cloudInit(){try{
  else{setCloud('saving');cloudPush();}
 }catch(e){setCloud('error');}}
 function fixSave(){
- for(const k of ['parts','pow','beaten','seen','up','champs','camp','st','done','won','weap','wequip','plv','campHard','met','kos'])if(!SAVE[k]||typeof SAVE[k]!=='object')SAVE[k]={};
+ for(const k of ['parts','pow','beaten','seen','up','champs','camp','st','done','won','weap','wequip','plv','campHard','met','kos','binds'])if(!SAVE[k]||typeof SAVE[k]!=='object')SAVE[k]={};
  if(!Array.isArray(SAVE.custom))SAVE.custom=[];
  if(!SAVE.daily||typeof SAVE.daily!=='object')SAVE.daily={last:'',streak:0,total:0};
  for(const k of ['xp','bolts','wins'])if(!Number.isFinite(SAVE[k]))SAVE[k]=0;
@@ -881,7 +886,7 @@ function fixSave(){
  if(SAVE.fights>0)SAVE.tutDone=true;
  if(!Number.isFinite(SAVE.slots))SAVE.slots=SAVE.fights>0?5:1;SAVE.slots=Math.max(1,Math.min(MAXC,SAVE.slots|0));
  if(!Array.isArray(SAVE.designs))SAVE.designs=[];}
-function adoptSave(cs){SAVE=Object.assign(freshSave(),cs);fixSave();codexMigrate();try{layoutShow();}catch(e){}try{localStorage.setItem(SAVE_KEY,JSON.stringify(SAVE));}catch(e){}
+function adoptSave(cs){SAVE=Object.assign(freshSave(),cs);fixSave();codexMigrate();try{layoutShow();}catch(e){}try{rebuildKeys();renderBinds();}catch(e){}try{localStorage.setItem(SAVE_KEY,JSON.stringify(SAVE));}catch(e){}
  CUSTOMS.forEach(i=>applyCustom(i,true));if(locked(G.sel)){G.sel=0;G.pal=0;}G.stageSel=Math.min(G.stageSel||0,campOpen());
  renderPilot();renderBoxes();renderRoster();renderDetail();renderOpp();renderChals();renderMode();renderSave();if(G.phase==='select')checkDaily();}
 const saveCode=()=>'FF1:'+btoa(unescape(encodeURIComponent(JSON.stringify(SAVE))));
@@ -3392,13 +3397,27 @@ function aiIntent(me,foe,dt){
 }
 
 /* ================= input ================= */
-const KEYMAP={KeyA:'left',ArrowLeft:'left',KeyD:'right',ArrowRight:'right',KeyS:'block',ArrowDown:'block',KeyL:'block',KeyW:'jump',ArrowUp:'jump',Space:'jump',KeyJ:'punch',KeyK:'kick',KeyU:'s1',KeyI:'s2',KeyO:'rush',ShiftLeft:'dodge',ShiftRight:'dodge',Semicolon:'dodge',KeyH:'shoot',KeyY:'heavy',KeyT:'tag',KeyE:'ult'};
+/* key bindings: every action has a main key you can change in Settings, plus the original extra keys (arrows, Space, S...) as long as nothing else claims them */
+const BIND_ACTS=[['left','Move left'],['right','Move right'],['jump','Jump'],['block','Block'],['punch','Punch'],['kick','Kick'],['heavy','Heavy hit'],['shoot','Blaster'],['dodge','Dodge'],['s1','Special 1'],['s2','Special 2'],['rush','Transform Rush'],['ult','Ultimate'],['tag','Tag partner']];
+const BIND_DEF={left:['KeyA','ArrowLeft'],right:['KeyD','ArrowRight'],jump:['KeyW','ArrowUp','Space'],block:['KeyL','KeyS','ArrowDown'],punch:['KeyJ'],kick:['KeyK'],heavy:['KeyY'],shoot:['KeyH'],dodge:['ShiftLeft','ShiftRight','Semicolon'],s1:['KeyU'],s2:['KeyI'],rush:['KeyO'],ult:['KeyE'],tag:['KeyT']};
+const BIND_LOCK=['Escape','Enter','NumpadEnter','KeyP','Tab','MetaLeft','MetaRight'];
+const KEYMAP={};
+function bindMain(a){const b=(SAVE.binds||{})[a];return b||BIND_DEF[a][0];}
+function rebuildKeys(){for(const k in KEYMAP)delete KEYMAP[k];const mains={};for(const [a] of BIND_ACTS)mains[bindMain(a)]=a;
+ for(const [a] of BIND_ACTS){KEYMAP[bindMain(a)]=a;for(const c of BIND_DEF[a].slice(1))if(!mains[c]&&!KEYMAP[c])KEYMAP[c]=a;}}
+function keyName(code){if(!code)return '?';if(code.startsWith('Key'))return code.slice(3);if(code.startsWith('Digit'))return code.slice(5);if(code.startsWith('Numpad'))return 'Num '+code.slice(6);
+ return {ArrowLeft:'←',ArrowRight:'→',ArrowUp:'↑',ArrowDown:'↓',Space:'Space',ShiftLeft:'Shift',ShiftRight:'R Shift',ControlLeft:'Ctrl',ControlRight:'R Ctrl',AltLeft:'Alt',AltRight:'R Alt',Semicolon:';',Quote:"'",Comma:',',Period:'.',Slash:'/',Backslash:'\\',BracketLeft:'[',BracketRight:']',Minus:'-',Equal:'=',Backquote:'`',CapsLock:'Caps',Backspace:'Bksp'}[code]||code;}
+function kl(a){return keyName(bindMain(a));}
+function setBind(a,code){SAVE.binds=SAVE.binds||{};const old=bindMain(a);for(const [o] of BIND_ACTS)if(o!==a&&bindMain(o)===code)SAVE.binds[o]=old;SAVE.binds[a]=code;rebuildKeys();persist();}
+
 const held={},pressed={},held2={},pressed2={};
 const KEYMAP2={Enter:'tag',NumpadEnter:'tag',ArrowLeft:'left',ArrowRight:'right',ArrowUp:'jump',ArrowDown:'block',Comma:'punch',Period:'kick',Slash:'heavy',KeyM:'shoot',ShiftRight:'dodge',BracketLeft:'s1',BracketRight:'s2',Backslash:'rush',
  Numpad1:'punch',Numpad2:'kick',Numpad3:'heavy',Numpad4:'s1',Numpad5:'s2',Numpad6:'rush',Numpad0:'dodge',NumpadDecimal:'shoot',Numpad8:'jump',Quote:'ult',Numpad7:'ult'};
 const twoP=()=>!!((G.twoP||G.coop)&&G.p1&&G.phase!=='select'&&G.phase!=='title');
+try{rebuildKeys();}catch(e){rebuildKeys.pending=1;}
 function clearPressed(){for(const k in pressed)delete pressed[k];}
 window.addEventListener('keydown',e=>{
+ if(G.rebind){e.preventDefault();e.stopPropagation();const a=G.rebind;G.rebind=null;if(e.code!=='Escape'){if(BIND_LOCK.includes(e.code)){toast(keyName(e.code)+' is used for menus and can\'t be bound.');}else{setBind(a,e.code);sfx('ui');}}renderBinds();return;}
  if(e.target&&e.target.tagName==='INPUT'){if(e.code==='Enter')e.target.blur();return;}
  if(G.phase==='cutscene'){e.preventDefault();if(e.code==='Escape')csEnd();else if(!e.repeat&&(e.code==='Enter'||e.code==='Space'||e.code==='KeyJ'))csNext();return;}
  if(G.tour){e.preventDefault();if(e.code==='Escape')tourEnd();else if(e.code==='Enter'||e.code==='ArrowRight')tourGo(G.tour.i+1);else if(e.code==='ArrowLeft')tourGo(G.tour.i-1);return;}
@@ -3609,7 +3628,7 @@ function showCombo(f){if(f.chain===5)callout(f===G.p1?'Unstoppable':'Brutal comb
 const hex=c=>'#'+new THREE.Color(c).getHexString();
 
 function seg(el,items,cur,on){el.innerHTML='';items.forEach(([v,l])=>{const b=document.createElement('button');b.textContent=l;b.setAttribute('aria-pressed',String(v===cur));b.addEventListener('click',()=>{el.querySelectorAll('button').forEach(x=>x.setAttribute('aria-pressed','false'));b.setAttribute('aria-pressed','true');sfx('ui');on(v);});el.appendChild(b);});}
-function moveRows(d){const s=d.specials.map(k=>SPECIALS[k]),K=G.padOn?PADLBL:{s1:'U',s2:'I',rush:'O'};return [[K.s1,s[0],sc(d,d.specials[0])],[K.s2,s[1],sc(d,d.specials[1])],[K.rush,SPECIALS[d.rush||'rush'],100],[G.padOn?'L3':'E',{name:'Ultimate · '+ULTS[ultType(d)].n,desc:'Once per match. Unlocks when your energy is full and either robot is at half health or less. Nothing can block it.'},'ULT']].map(([k,m,c])=>`<div class="mv"><kbd>${k}</kbd><b>${m.name}</b><em>${c}</em><span>${m.desc}</span></div>`).join('');}
+function moveRows(d){const s=d.specials.map(k=>SPECIALS[k]),K=G.padOn?PADLBL:{s1:kl('s1'),s2:kl('s2'),rush:kl('rush')};return [[K.s1,s[0],sc(d,d.specials[0])],[K.s2,s[1],sc(d,d.specials[1])],[K.rush,SPECIALS[d.rush||'rush'],100],[G.padOn?'L3':kl('ult'),{name:'Ultimate · '+ULTS[ultType(d)].n,desc:'Once per match. Unlocks when your energy is full and either robot is at half health or less. Nothing can block it.'},'ULT']].map(([k,m,c])=>`<div class="mv"><kbd>${k}</kbd><b>${m.name}</b><em>${c}</em><span>${m.desc}</span></div>`).join('');}
 function renderRoster(){
  const r=$('roster');r.innerHTML='';
  DEFS.forEach((d,i)=>{if(d.enemy||slotOff(i))return;
@@ -3727,24 +3746,24 @@ $('prevBtn').addEventListener('click',()=>stepFrame(-1));
 $('nextBtn').addEventListener('click',()=>stepFrame(1));
 $('dockVeh').addEventListener('click',toggleVeh);
 const TUT=[
- ['Move','Hold A or D to walk. Try walking around.','Hold the ◀ or ▶ button to walk. Try walking around.',(p,T)=>Math.abs(p.x-T.x0)>1.5,'Dash in|Swipe toward the other robot to dash at it.'],
- ['Jump','Press W to jump.','Tap JUMP.',p=>!p.onGround||(p.state==='dodge'&&p.side),'Sidestep|Swipe up or down to sidestep. Nothing can hit you while you sidestep.'],
- ['Punch','Walk up to the other robot and press J to punch it.','Walk up to the other robot and tap PUNCH.',(p,T)=>T.hit==='punch','Light hit|Tap the right side of the screen to hit. Dash in first if you are far away.'],
- ['Kick','Press K to kick. Kicks are slower but hit harder.','Tap KICK. Kicks are slower but hit harder.',(p,T)=>T.hit==='kick'||T.hit==='lunge','Dash strike|Swipe toward the enemy so the dash ends in a strong hit.'],
- ['Combo','Land three hits in a row without stopping: J, J, K.','Land three hits in a row without stopping: PUNCH, PUNCH, KICK.',p=>p.chain>=3,'Combo|Tap the right side three times fast to land a combo.'],
- ['Block','Hold L to block. Blocking stops most damage. Tap it just before a hit to parry.','Hold BLOCK. Blocking stops most damage.',(p,T,dt)=>{T.hold=p.state==='block'?(T.hold||0)+dt:0;return T.hold>.5;},'Block|Hold your finger on the left side of the screen to block.'],
- ['Dodge','Press Shift to dodge. Nothing can hit you while you dodge.','Tap DODGE. Nothing can hit you while you dodge.',p=>p.state==='dodge'&&!p.side,'Dash back|Swipe away from the enemy to dash back out of reach.'],
- ['Heavy hit','Press Y for a slow heavy hit. It breaks through a block.','Heavy hits need the Swipe and tap controls, so this step is skipped.',(p,T)=>T.hit==='heavy'||(coarse&&G.touchMode!=='gesture'),'Heavy hit|Hold your finger on the right side for a heavy hit. It breaks through a block.'],
- ['Blaster','Press H to fire your blaster. It is weak but reaches across the arena.','The blaster needs the Swipe and tap controls, so this step is skipped.',(p,T)=>(p.state==='attack'&&p.atkName==='blast')||(coarse&&G.touchMode!=='gesture'),'Blaster|Tap the left side of the screen to fire your blaster.'],
- ['Special 1','Special moves use the blue energy bar under your health. Press U.','Special moves use the blue energy bar under your health. Tap the first blue button.',p=>p.state==='special'&&p.sp===SPECIALS[p.def.specials[0]],'Special 1|Special moves use the blue energy bar under your health. Tap the first blue button.'],
- ['Special 2','Press I for your second special move.','Tap the second blue button for your other special.',p=>p.state==='special'&&p.sp===SPECIALS[p.def.specials[1]],'Special 2|Tap the second blue button for your other special.'],
- ['Transform Rush','When the blue bar is full, press O to transform and ram the enemy.','When the blue bar is full, tap RUSH to transform and ram the enemy.',p=>p.state==='special'&&p.sp===SPECIALS[p.def.rush||'rush'],'Transform Rush|When the blue bar is full, tap RUSH to transform and ram the enemy.']
+ ['Move','Hold {left} or {right} to walk. Try walking around.','Hold the ◀ or ▶ button to walk. Try walking around.',(p,T)=>Math.abs(p.x-T.x0)>1.5,'Dash in|Swipe toward the other robot to dash at it.'],
+ ['Jump','Press {jump} to jump.','Tap JUMP.',p=>!p.onGround||(p.state==='dodge'&&p.side),'Sidestep|Swipe up or down to sidestep. Nothing can hit you while you sidestep.'],
+ ['Punch','Walk up to the other robot and press {punch} to punch it.','Walk up to the other robot and tap PUNCH.',(p,T)=>T.hit==='punch','Light hit|Tap the right side of the screen to hit. Dash in first if you are far away.'],
+ ['Kick','Press {kick} to kick. Kicks are slower but hit harder.','Tap KICK. Kicks are slower but hit harder.',(p,T)=>T.hit==='kick'||T.hit==='lunge','Dash strike|Swipe toward the enemy so the dash ends in a strong hit.'],
+ ['Combo','Land three hits in a row without stopping: {punch}, {punch}, {kick}.','Land three hits in a row without stopping: PUNCH, PUNCH, KICK.',p=>p.chain>=3,'Combo|Tap the right side three times fast to land a combo.'],
+ ['Block','Hold {block} to block. Blocking stops most damage. Tap it just before a hit to parry.','Hold BLOCK. Blocking stops most damage.',(p,T,dt)=>{T.hold=p.state==='block'?(T.hold||0)+dt:0;return T.hold>.5;},'Block|Hold your finger on the left side of the screen to block.'],
+ ['Dodge','Press {dodge} to dodge. Nothing can hit you while you dodge.','Tap DODGE. Nothing can hit you while you dodge.',p=>p.state==='dodge'&&!p.side,'Dash back|Swipe away from the enemy to dash back out of reach.'],
+ ['Heavy hit','Press {heavy} for a slow heavy hit. It breaks through a block.','Heavy hits need the Swipe and tap controls, so this step is skipped.',(p,T)=>T.hit==='heavy'||(coarse&&G.touchMode!=='gesture'),'Heavy hit|Hold your finger on the right side for a heavy hit. It breaks through a block.'],
+ ['Blaster','Press {shoot} to fire your blaster. It is weak but reaches across the arena.','The blaster needs the Swipe and tap controls, so this step is skipped.',(p,T)=>(p.state==='attack'&&p.atkName==='blast')||(coarse&&G.touchMode!=='gesture'),'Blaster|Tap the left side of the screen to fire your blaster.'],
+ ['Special 1','Special moves use the blue energy bar under your health. Press {s1}.','Special moves use the blue energy bar under your health. Tap the first blue button.',p=>p.state==='special'&&p.sp===SPECIALS[p.def.specials[0]],'Special 1|Special moves use the blue energy bar under your health. Tap the first blue button.'],
+ ['Special 2','Press {s2} for your second special move.','Tap the second blue button for your other special.',p=>p.state==='special'&&p.sp===SPECIALS[p.def.specials[1]],'Special 2|Tap the second blue button for your other special.'],
+ ['Transform Rush','When the blue bar is full, press {rush} to transform and ram the enemy.','When the blue bar is full, tap RUSH to transform and ram the enemy.',p=>p.state==='special'&&p.sp===SPECIALS[p.def.rush||'rush'],'Transform Rush|When the blue bar is full, tap RUSH to transform and ram the enemy.']
 ];
 function renderTut(){const T=G.tut,box=$('tut');if(!T){box.hidden=true;$('pauseBtn').style.transform='';return;}box.hidden=false;const done=T.step>=TUT.length;box.classList.toggle('done',done);$('pauseBtn').style.transform=T?'translateX(-110%)':'';
  $('tutN').textContent=done?'Tutorial':`Step ${T.step+1} of ${TUT.length}`;
  const gm=coarse&&G.touchMode==='gesture',gs=done?null:TUT[T.step][4].split('|');
  $('tutT').textContent=done?'Tutorial complete':gm?gs[0]:TUT[T.step][0];
- $('tutD').textContent=done?(T.reward?'You earned 20 bolts. Your first five fights use the three starter robots.':'You are ready to fight.'):gm?gs[1]:TUT[T.step][coarse?2:1];
+ $('tutD').textContent=done?(T.reward?'You earned 20 bolts. Your first five fights use the three starter robots.':'You are ready to fight.'):gm?gs[1]:TUT[T.step][coarse?2:1].replace(/\{(\w+)\}/g,(m,a)=>kl(a));
  $('tutSkip').textContent=done?'Continue':'Skip';}
 function tutTick(dt){const T=G.tut,p=G.p1;if(T.x0===null)T.x0=p.x;
  if(T.step>=TUT.length){T.end-=dt;if(T.end<=0&&!T.closing){T.closing=true;setTimeout(()=>{if(G.tut===T)finishTutorial(false);},0);}return;}
@@ -3938,6 +3957,10 @@ seg($('campDiff'),[['story','Story'],['normal','Normal'],['hard','Hard']],G.camp
 seg($('diff'),Object.entries(DIFF).map(([k,v])=>[k,v.label]),G.diff,v=>{G.diff=v;G.userDiff=v;});
 G.voice=['speech','beeps','off'].includes(SAVE.voice)?SAVE.voice:'speech';seg($('voiceOpt'),[['speech','Lines and beeps'],['beeps','Beeps only'],['off','Off']],G.voice,v=>{G.voice=v;SAVE.voice=v;persist();if(v!=='off')voice(DEFS[G.sel],'start',null,true);});
 G.musicOff=!!SAVE.musicOff;seg($('musicOpt'),[['on','On'],['off','Off']],G.musicOff?'off':'on',v=>{G.musicOff=v==='off';SAVE.musicOff=G.musicOff;persist();});
+function renderBinds(){const g=$('bindGrid');if(!g)return;g.innerHTML=BIND_ACTS.map(([a,n])=>`<button data-bind="${a}" class="${G.rebind===a?'wait':''}${(SAVE.binds||{})[a]&&SAVE.binds[a]!==BIND_DEF[a][0]?' chg':''}"><span>${n}</span><kbd>${G.rebind===a?'press a key':kl(a)}</kbd></button>`).join('');
+ g.querySelectorAll('[data-bind]').forEach(b=>b.addEventListener('click',e=>{e.stopPropagation();G.rebind=G.rebind===b.dataset.bind?null:b.dataset.bind;sfx('ui');renderBinds();}));}
+$('bindReset').addEventListener('click',()=>{SAVE.binds={};G.rebind=null;rebuildKeys();persist();renderBinds();sfx('ui');toast('Controls reset to the default keys.');});
+rebuildKeys();renderBinds();
 seg($('hzOpt'),[['on','On'],['off','Off']],'on',v=>{G.hzOn=v==='on';});
 seg($('puOpt'),[['on','On'],['off','Off']],SAVE.puOff?'off':'on',v=>{SAVE.puOff=v==='off';persist();});
 seg($('p2ctl'),[['cpu','Computer'],['human','Friend']],'cpu',v=>{G.p2human=v==='human';renderMode();});
@@ -4127,7 +4150,7 @@ function mastFx(dt){const f=G.p1;if(!f||!G.mlv)return;
 const ULTS={beam:{n:'Overdrive Cannon',pose:PZ.cast},barrage:{n:'Thousand Fists',pose:PZ.dash},meteor:{n:'Titan Drop',pose:PZ.up}};
 function ultType(d){if(d.ult)return d.ult;const st=d.stats||{};if((st.Armor||0)>=4)return 'meteor';if((st.Speed||0)>=4)return 'barrage';return d.specials.some(k=>SPECIALS[k]&&SPECIALS[k].range==='far')?'beam':'barrage';}
 function ultReady(f,o){return !!(f&&o&&!f.ultUsed&&f.energy>=100&&G.phase==='fight'&&!G.mini&&!G.ult&&!G.tut&&o.state!=='ko'&&f.state!=='ko'&&(G.mode==='training'||f.hp<=f.maxHp*.5||o.hp<=o.maxHp*.5));}
-function ultKey(){return G.padOn?'L3':coarse?'tap ULT':'E';}
+function ultKey(){return G.padOn?'L3':coarse?'tap ULT':kl('ult');}
 function ultStart(f,o){const type=ultType(f.def),side=Math.sign(o.x-f.x)||f.facing;
  G.ult={f,o,type,t:0,hits:0,side,beam:null,next:.8,chunk:o.maxHp*.2};f.ultUsed=true;f.energy=0;f.facing=side;f.vx=f.vy=0;f.chain=0;
  f.state='special';f.t=0;f.sp={name:ULTS[type].n,pose:ULTS[type].pose,dur:9,range:'ult',update(){}};
@@ -4327,9 +4350,9 @@ function miniStart(){miniClear();const M=MINI[G.mode];$('hud').classList.toggle(
 function miniKeys(t){const touch=coarse&&G.touchMode==='gesture',btn=coarse&&!touch;
  if(t==='soccer')return touch?'Tap to punch the ball · hold for a heavy blast · swipe up to jump':'Punch, kick or heavy-hit the ball into the green goal · shots push it · head it by jumping';
  if(t==='koth')return 'Stand in the glowing zone to score · knock the enemy out for +300 · the zone moves every 14 seconds';
- if(t==='dodge')return touch?'Swipe up to jump the shockwaves · move off the red circles · swipe sideways to dodge through orbs':'Jump the shockwaves · move off the red circles · dodge (Shift) through the pink orbs';
- if(t==='race')return touch?'Tap to jump, tap again in the air to flip · hold to fire nitro':btn?'JUMP or PUNCH to jump, twice to flip · KICK fires nitro':'W / Space to jump, twice to flip · K fires nitro · smash through anything while boosting';
- if(t==='target')return touch?'Tap to shoot · swipe up to jump for high targets':btn?'PUNCH shoots · JUMP for high targets':'J or H shoots · W jumps for high targets · step with A / D';return '';}
+ if(t==='dodge')return touch?'Swipe up to jump the shockwaves · move off the red circles · swipe sideways to dodge through orbs':`Jump the shockwaves · move off the red circles · dodge (${kl('dodge')}) through the pink orbs`;
+ if(t==='race')return touch?'Tap to jump, tap again in the air to flip · hold to fire nitro':btn?'JUMP or PUNCH to jump, twice to flip · KICK fires nitro':`${kl('jump')} to jump, twice to flip · ${kl('kick')} fires nitro · smash through anything while boosting`;
+ if(t==='target')return touch?'Tap to shoot · swipe up to jump for high targets':btn?'PUNCH shoots · JUMP for high targets':`${kl('punch')} or ${kl('shoot')} shoots · ${kl('jump')} jumps for high targets · step with ${kl('left')} / ${kl('right')}`;return '';}
 function miniClear(){const m=G.mini;if(m){m2Clear(m);for(const o of m.objs)miniDrop(o);m.objs=[];if(m.laser){scene.remove(m.laser);m.laser.material.dispose();}}G.fovAdd=0;if(G.p1&&G.p1.veh)G.p1.veh.rotation.z=0;G.mini=null;$('hud').classList.remove('mini','race','tgt','koth');$('miniHud').hidden=true;}
 function miniDrop(o){scene.remove(o.g);if(o.mats)o.mats.forEach(x=>x.dispose());}
 function miniHud(){const m=G.mini;if(!m)return;$('mhScore').textContent=m.score.toLocaleString('en-US');
@@ -4475,7 +4498,7 @@ function hintLog(att,dmg){const H=G.hint;let c=G.hitSrc;
  if(!c){if(att.state==='special'&&att.sp){const k=Object.keys(SPECIALS).find(x=>SPECIALS[x]===att.sp);c=SPK[k]||KCAT[att.sp.kind]||'melee';}else if(att.state==='attack')c=att.atkName==='heavy'?'heavy':att.atkName==='blast'?'shot':'melee';else c='melee';}
  H.dmg[c]=(H.dmg[c]||0)+dmg;H.hits++;}
 function hintTick(dt){const H=G.hint,p=G.p1;if(!H||!p||G.phase!=='fight')return;H.t+=dt;if(p.state==='block')H.block+=dt;if(p.energy>=100&&p.state!=='special')H.full+=dt;if(p.state==='special')H.sp=1;}
-const k_=(key,btn)=>coarse&&G.touchMode!=='gesture'?btn:coarse?btn:`${btn} (${key})`;
+const K_ACT={L:'block',O:'rush',Shift:'dodge',W:'jump'};const k_=(key,btn)=>coarse?btn:`${btn} (${key==='U / I'?kl('s1')+' / '+kl('s2'):K_ACT[key]?kl(K_ACT[key]):key})`;
 function hintsFor(){const H=G.hint;if(!H)return [];const out=[],D=H.dmg,top=Object.keys(D).sort((a,b)=>D[b]-D[a])[0],foe=G.p2.def.name;
  const T={low:`Shockwaves and spikes along the ground hurt you most. ${k_('W','Jump')} over them. They cannot hit you in the air.`,
   beam:`${foe}'s beam did the most damage. When it glows and stands still, ${k_('W','jump')} over the beam or hold ${k_('L','Block')}.`,
@@ -4655,7 +4678,7 @@ function phaseTick(dt){
 let mlCache='';
 function buildMovelist(){
  const d=G.p1.def,s=d.specials.map(k=>SPECIALS[k]);
- const K=G.padOn?PADLBL:{punch:'J',kick:'K',heavy:'Y',shoot:'H',block:'L',dodge:'Shift',s1:'U',s2:'I',rush:'O',ult:'E'};
+ const K=G.padOn?PADLBL:{punch:kl('punch'),kick:kl('kick'),heavy:kl('heavy'),shoot:kl('shoot'),block:kl('block'),dodge:kl('dodge'),s1:kl('s1'),s2:kl('s2'),rush:kl('rush'),ult:kl('ult')};
  const rows=[[K.punch,'Punch',''],[K.kick,'Kick',''],[K.heavy,'Heavy hit',''],[K.shoot,'Blaster',''],[K.block,'Block · tap to parry',''],[K.dodge,'Dodge',''],[K.s1,s[0].name,sc(d,d.specials[0])],[K.s2,s[1].name,sc(d,d.specials[1])],[K.rush,SPECIALS[d.rush||'rush'].name,100],[K.ult,ULTS[ultType(d)].n,'ULT']];
  $('movelist').innerHTML=rows.map((r,i)=>`<kbd data-r="${i}">${r[0]}</kbd><span data-r="${i}">${r[1]}</span><em data-r="${i}">${r[2]}</em>`).join('');
  $('ts1').textContent=s[0].short;$('ts2').textContent=s[1].short;mlCache='';
