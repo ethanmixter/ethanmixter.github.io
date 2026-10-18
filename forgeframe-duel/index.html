@@ -1104,6 +1104,16 @@ DEFS.push(Object.assign(mixDef('omega','OMEGA',['h6','gc_ship_4','a6','gl_dragon
  {enemy:false,boss:true,unlock:'ch6',scale:1.35,hp:215,power:1.28,speed:3.9,
   pals:[[0x1a0a14,0xd9a441,0x0e0a0c,0xff2a4a],[0xe8ecf2,0x6a1a8a,0x14161c,0xc77bff],[0xd4a83a,0x2b2b30,0x1a1a1c,0xfff2a0]],palNames:['Omega','Phantom','Gold'],
   blurb:'The last design. It has the Tyrant’s crown, the Architect’s mind and a dragon’s legs, and it was built to beat you.',stats:{Armor:5,Speed:3,Power:5}}));
+/* chapter 7 boss: a king built out of the junk Omega left behind */
+DEFS.push(Object.assign(mixDef('scrapking','SCRAP KING',['gh_brute_4','gc_train_4','ga_brute_4','gl_train_4'],[0x8a5a2a,0x2a2624,0x161412,0xffb21e],'Junk throne frame'),
+ {enemy:false,boss:true,unlock:'ch7',scale:1.3,hp:210,power:1.25,speed:3.7,rush:'barrage',
+  pals:[[0x8a5a2a,0x2a2624,0x161412,0xffb21e],[0x3a4a3a,0xc9a23a,0x161a16,0xb6ff3a],[0xd4a83a,0x2b2b30,0x1a1a1c,0xfff2a0]],palNames:['Rust','Toxic','Gold'],
+  blurb:'Welded together from a hundred wrecked frames, with a crown cut from a car door. It rules the scrapyard and wants the Forge next.',stats:{Armor:5,Speed:2,Power:5}}));
+/* chapter 8 final boss: the frame that eats light */
+DEFS.push(Object.assign(mixDef('eclipse','ECLIPSE',['gh_ship_4','gc_guard_4','ga_jet_4','gl_ship_4'],[0x0c0a14,0xd9a441,0x06050a,0xff8a2a],'Eclipse frame'),
+ {enemy:false,boss:true,unlock:'ch8',scale:1.4,hp:225,power:1.3,speed:4.1,
+  pals:[[0x0c0a14,0xd9a441,0x06050a,0xff8a2a],[0xe8ecf2,0x2a2440,0x14161c,0x8affff],[0xd4a83a,0x2b2b30,0x1a1a1c,0xfff2a0]],palNames:['Eclipse','Corona','Gold'],
+  blurb:'It waited on the dark side of the moon while the Forge fought itself. When it rises, it blots out the sun.',stats:{Armor:5,Speed:4,Power:5}}));
 /* enemy frames: themed mixes of Workshop parts [id, name, head, torso, arms, legs, main, trim, glow, role] */
 const ENEMY=[
  ['rivet','RIVET','h0','c12','a7','l7',0x8a4a2a,0x3a3d42,0xff8a2a,'Scrap brawler'],
@@ -1132,9 +1142,24 @@ const ENEMY=[
  ['frostbite','FROSTBITE','gh_hover_3','gc_guard_3','ga_hover_3','gl_hover_3',0xdfe9f2,0x5a8ab0,0x8fe4ff,'Ice warden'],
  ['hailstorm','HAILSTORM','gh_heli_3','gc_heli_3','ga_heli_4','gl_heli_3',0x4a5866,0xd9e2ea,0xbfe8ff,'Storm gunship'],
  ['galeforce','GALEFORCE','gh_jetbike_3','gc_jetbike_4','ga_jetbike_3','gl_jetbike_3',0xd02a5a,0x1b1d21,0xff6ad8,'Sky racer'],
- ['kraken','KRAKEN','gh_boat_4','gc_boat_4','ga_boat_4','gl_boat_4',0x123a4a,0x2ad0c0,0x46ffd8,'Sea monster']
+ ['kraken','KRAKEN','gh_boat_4','gc_boat_4','ga_boat_4','gl_boat_4',0x123a4a,0x2ad0c0,0x46ffd8,'Sea monster'],
+ /* chapter 7: scrap rebels */
+ ['scrapper','SCRAPPER','gh_heavy_3','gc_brute_3','ga_heavy_3','gl_train_2',0x7a5a32,0x3a3530,0xffa040,'Junk hauler'],
+ ['railgun','RAILGUN','gh_train_3','gc_ship_3','ga_ship_3','gl_train_3',0x2a3540,0xd9e2ea,0x46d7ff,'Mag-rail sniper'],
+ ['dagger','DAGGER','gh_stealth_3','gc_stealth_3','ga_stealth_3','gl_swift_3',0x1a1a22,0xa3222e,0xff3a55,'Night blade'],
+ ['mirage','MIRAGE','gh_swift_3','gc_jetbike_3','ga_stealth_2','gl_jetbike_3',0xe6d0f2,0x6a3a9a,0xd08aff,'Hologram trickster'],
+ ['crusher','CRUSHER','gh_brute_3','gc_brute_4','ga_brute_4','gl_heavy_3',0x5a5a2a,0x2a2a24,0xd8ff3a,'Car crusher'],
+ /* chapter 8: eclipse station */
+ ['moonwalker','MOONWALKER','gh_hover_3','gc_guard_3','ga_jet_3','gl_hover_4',0xd8dce2,0x3a4a5a,0x9ad8ff,'Lunar ranger'],
+ ['castor','CASTOR','gh_jet_3','gc_ship_3','ga_jet_4','gl_ship_3',0xe8e4d6,0x2a5fd6,0x6fb0ff,'Twin star'],
+ ['pollux','POLLUX','gh_ship_3','gc_jet_3','ga_ship_4','gl_jet_3',0x1b1d24,0xd9a441,0xffd23a,'Twin star'],
+ ['singularity','SINGULARITY','gh_guard_4','gc_heavy_4','ga_guard_4','gl_guard_4',0x14101c,0x6a3aff,0xb08aff,'Gravity tank'],
+ ['sentinel','SENTINEL','gh_guard_3','gc_ship_4','ga_heli_4','gl_heavy_4',0xc8ccd4,0x2a2e36,0xff6ad8,'Eclipse guard']
 ];
-function mixDef(id,name,ids,pal,role){const ps=ids.map(k=>PART[k]);let hp=70,sp=3.9,pw=.95,en=1,jp=10;
+/* a part id like gh_brute_3 may not exist when that family already has a hand-made part at that tier; use the nearest one of the same family */
+function partNear(k){const m=/^g([hcal])_([a-z]+)_(\d)$/.exec(k);if(!m)return null;const sl={h:'head',c:'chest',a:'arms',l:'legs'}[m[1]],q=+m[3];
+ let best=null,bd=9;for(const p of CATALOG[sl])if(p.base===m[2]){const d=Math.abs((p.rar||0)-q);if(d<bd){bd=d;best=p;}}return best;}
+function mixDef(id,name,ids,pal,role){const ps=ids.map(k=>PART[k]||partNear(k));let hp=70,sp=3.9,pw=.95,en=1,jp=10;
  for(const p of ps){const t=p.st;hp+=t.h||0;sp+=t.s||0;pw+=t.p||0;en+=t.e||0;jp+=t.j||0;}
  sp=Math.max(2.6,Math.min(6.5,sp));jp=Math.min(14,jp);pw=Math.round(pw*100)/100;
  const bs={},ad={};for(const p of ps){bs[p.slot]=p.base;ad[p.slot]=p.addon;}
@@ -1165,7 +1190,7 @@ const bossLocked=i=>!!DEFS[i].boss&&!SAVE[DEFS[i].unlock||'tyrant'];
 const rookie=()=>SAVE.fights<ROOKIE_FIGHTS;
 const slotOff=i=>!!DEFS[i].custom&&DEFS[i].slot>=SAVE.slots;
 const locked=i=>!!DEFS[i].enemy||bossLocked(i)||slotOff(i)||(rookie()&&i>2);
-const lockWhy=i=>rookie()&&i>2?`${ROOKIE_FIGHTS-SAVE.fights} more fight${ROOKIE_FIGHTS-SAVE.fights===1?'':'s'}`:DEFS[i].unlock==='ch5'?'Beat chapter 5':DEFS[i].unlock==='ch6'?'Beat chapter 6':'Beat the Tyrant';
+const lockWhy=i=>rookie()&&i>2?`${ROOKIE_FIGHTS-SAVE.fights} more fight${ROOKIE_FIGHTS-SAVE.fights===1?'':'s'}`:DEFS[i].unlock==='ch5'?'Beat chapter 5':DEFS[i].unlock==='ch6'?'Beat chapter 6':DEFS[i].unlock==='ch7'?'Beat chapter 7':DEFS[i].unlock==='ch8'?'Beat chapter 8':'Beat the Tyrant';
 const CAMP=[
  {ch:'Chapter 1 · The Canyon Road',cs:'intro',name:'Canyon Gate',foes:['voltaic'],arena:2,diff:'rookie',rounds:1,text:'The Tyrant has seized the Forge, the foundry where every frame is built. A scout guards the canyon road in. Knock it down.',rule:'One round'},
  {name:'Scrap Patrol',foes:['rivet'],arena:3,diff:'rookie',rounds:3,text:'A scrap brawler patrols the wrecks along the road. It is bolted together from spare parts and it hits with all of them.',rule:'Best of 3'},
@@ -1196,7 +1221,17 @@ const CAMP=[
  {name:'Storm Escort',foes:['hailstorm','galeforce'],arena:'spire',diff:'veteran',mod:{foeDmg:1.2},text:'A gunship and a sky racer fly escort for the signal’s cargo. Knock them out of the clouds.',rule:'Two enemies in a row · you heal 25% between them'},
  {name:'The Deep',foes:['kraken'],arena:'abyss',diff:'veteran',rounds:1,mod:{foeHp:1.4,foeDmg:1.2,enrage:1},text:'The signal ends at a foundry at the bottom of the sea. Something enormous lives there.',rule:'One long round · at half armor it bursts up to the harbor'},
  {name:'The Gauntlet',foes:['overseer','wyrmforge','kraken'],arena:'core',diff:'veteran',mod:{},text:'The foundry rebuilt three old bosses to stop you. All three, one after another.',rule:'Three bosses in a row · you heal 25% between them'},
- {name:'Omega',foes:['omega'],arena:'citadel',diff:'veteran',rounds:1,mod:{foeHp:1.35,foeDmg:1.2,enrage:1},text:'The last design is finished. Omega waits in its citadel at the top of the storm.',rule:'One long round · at half armor it drags you back to the Tyrant’s throne'}
+ {name:'Omega',foes:['omega'],arena:'citadel',diff:'veteran',rounds:1,mod:{foeHp:1.35,foeDmg:1.2,enrage:1},text:'The last design is finished. Omega waits in its citadel at the top of the storm.',rule:'One long round · at half armor it drags you back to the Tyrant’s throne'},
+ {ch:'Chapter 7 · Scrap Rebellion',cs:'ch7',name:'Junk Run',foes:['scrapper'],arena:'scrap',diff:'veteran',rounds:3,mod:{foeHp:1.4,foeDmg:1.15},text:'Omega’s wreckage was hauled to the scrapyard, and something there is building with it. A junk hauler guards the gate.',rule:'Best of 3 · enemy has 40% more armor'},
+ {name:'Mag Rail',foes:['railgun'],arena:'line',diff:'prime',rounds:3,mod:{foeHp:1.3,foeDmg:1.2},text:'A sniper frame rides the old assembly line and fires down its length. Get close and stay close.',rule:'Best of 3 · Hard enemy'},
+ {name:'Night Market',foes:['dagger','mirage'],arena:'market',diff:'prime',mod:{foeDmg:1.2},text:'Two scrap rebels hunt in the market after dark. One cuts, one lies. Watch which one is real.',rule:'Two enemies in a row · you heal 25% between them'},
+ {name:'The Crusher',foes:['crusher'],arena:'quarry',diff:'prime',rounds:1,mod:{foeHp:1.3,foeDmg:1.2},text:'The rebels feed broken frames to a car crusher that learned to walk. It is coming for you next.',rule:'One long round · enemy has 30% more armor'},
+ {name:'Scrap King',foes:['scrapking'],arena:'junk',diff:'prime',rounds:1,mod:{foeHp:1.25,foeDmg:1.2,enrage:1},text:'On a throne of crushed cars sits the frame that leads the rebellion. It wears Omega’s old armor as a cape.',rule:'One long round · at half armor its magnet crane rips the arena apart'},
+ {ch:'Chapter 8 · Eclipse',cs:'ch8',name:'Lunar Landing',foes:['moonwalker'],arena:'moon',diff:'prime',rounds:3,mod:{foeHp:1.35,foeDmg:1.2,grav:16},text:'The Scrap King’s orders came from the moon. You land on a dead base under a black sky, and a ranger is already waiting.',rule:'Best of 3 · low gravity'},
+ {name:'Twin Stars',foes:['castor','pollux'],arena:'orbit',diff:'prime',mod:{foeDmg:1.25},text:'Two star frames guard the ring around the moon. They fight as one, but they fall one at a time.',rule:'Two enemies in a row · you heal 25% between them'},
+ {name:'Gravity Well',foes:['singularity'],arena:'lab',diff:'veteran',rounds:1,mod:{foeHp:1.15,foeDmg:1.2},text:'A tank that bends gravity holds the lab under the moon base. Everything near it is pulled in.',rule:'One long round · enemy has 15% more armor'},
+ {name:'Eclipse Guard',foes:['sentinel','scrapking','omega'],arena:'moon',diff:'prime',mod:{foeDmg:1.1},text:'The last door is held by the Eclipse’s guard, with the Scrap King and a rebuilt Omega beside it.',rule:'Three enemies in a row · you heal 25% between them'},
+ {name:'Eclipse',foes:['eclipse'],arena:'eclipse',diff:'prime',rounds:1,mod:{foeHp:1.45,foeDmg:1.25,enrage:1},text:'At the center of the moon, the Eclipse rises and the light goes out. This is the last fight.',rule:'One long round · at half armor it swallows the sun and the fight goes to the lunar surface'}
 ];
 /* robot files: everyone you can meet. Missions you already cleared count as met and beaten */
 function codexMigrate(){for(const i in SAVE.camp)if(CAMP[i]&&SAVE.camp[i])CAMP[i].foes.forEach(f=>{SAVE.met[f]=1;SAVE.kos[f]=SAVE.kos[f]||1;});}
@@ -1240,7 +1275,13 @@ const LORE={bulwark:'Built to haul ore out of the Forge’s deepest pits. It has
  hailstorm:'A storm gunship that flew escort for the Architect’s last signal.',
  galeforce:'A sky racer that surfs the storm winds.',
  kraken:'Something enormous that lives in the sunken foundry. It is mostly arms.'};
-const TYR_M=CAMP.findIndex(m=>m.foes.includes('tyrant')),ARCH_M=CAMP.findIndex(m=>m.foes.includes('architect'));
+const TYR_M=CAMP.findIndex(m=>m.foes.includes('tyrant')),ARCH_M=CAMP.findIndex(m=>m.foes.includes('architect')),OMEGA_M=CAMP.findIndex(m=>m.foes[0]==='omega'),SCRAP_M=CAMP.findIndex(m=>m.foes[0]==='scrapking'),ECL_M=CAMP.findIndex(m=>m.foes[0]==='eclipse');
+/* what happens after each chapter's last boss */
+const CHEND={[TYR_M]:{flag:'tyrant',cs:'ending',t:'Forge reclaimed',sub:'Tyrant is now a playable frame · Chapter 5 is open',next:'Start chapter 5'},
+ [ARCH_M]:{flag:'ch5',cs:'finale',t:'Architect defeated',sub:'Architect is now a playable frame · Chapter 6 is open',next:'Start chapter 6'},
+ [OMEGA_M]:{flag:'ch6',cs:'omegaEnd',t:'Omega defeated',sub:'Omega is now a playable frame · Chapter 7 is open',next:'Start chapter 7'},
+ [SCRAP_M]:{flag:'ch7',cs:'scrapEnd',t:'Scrap King dethroned',sub:'Scrap King is now a playable frame · Chapter 8 is open',next:'Start chapter 8'},
+ [ECL_M]:{flag:'ch8',cs:'eclipseEnd',t:'Eclipse defeated',sub:'Eclipse is now a playable frame · the campaign is complete'}};
 /* cutscenes: each shot = who speaks, the line, arena, seconds of motion, camera [from pos, from look, to pos, to look], actors */
 const CUTS={
  intro:[
@@ -1292,7 +1333,31 @@ const CUTS={
   {who:'NARRATOR',text:'The storm over the citadel breaks. The last signal stops.',arena:'citadel',dur:6,cam:[[0,3.4,12],[.5,1.4,0],[.5,2.4,8.5],[.5,1.6,0]],a:{hero:{x:-2.2,face:1},omega:{x:2.8,face:-1,st:'ko'}}},
   {who:'OMEGA',text:'No more designs. No more drafts. Who builds the next one?',dur:5,cam:[[5.4,2.4,6.2],[3.2,.9,0],[4.6,2.6,5.6],[3.2,1,0]],a:{hero:{x:-2.2,face:1},omega:{x:2.8,face:-1,st:'ko'}}},
   {who:'hero',text:'We do. From now on, we build our own.',dur:4.5,cam:[[-.4,1.6,5],[-2.2,2.1,0],[-1,1.8,4.4],[-2.2,2.3,0]],a:{hero:{x:-2.2,rot:.5},omega:{x:2.8,face:-1,st:'ko'}}},
-  {who:'NARRATOR',text:'Omega has been rebuilt and is waiting in your garage. The Forge is finally free.',arena:'core',dur:7,cam:[[0,2.6,10],[0,2,0],[0,3.4,14],[0,2.2,0]],a:{hero:{x:0,rot:0,st:'win'},architect:{x:-3.6,rot:.2,st:'win'},tyrant:{x:3.6,rot:-.2,st:'win'},aegis:{x:-7,rot:.3,st:'win'},voltaic:{x:7,rot:-.3,st:'win'}}}
+  {who:'NARRATOR',text:'Omega has been rebuilt and is waiting in your garage. But out in the scrapyard, someone is collecting what was left of it.',arena:'core',dur:7,cam:[[0,2.6,10],[0,2,0],[0,3.4,14],[0,2.2,0]],a:{hero:{x:0,rot:0,st:'win'},architect:{x:-3.6,rot:.2,st:'win'},tyrant:{x:3.6,rot:-.2,st:'win'},aegis:{x:-7,rot:.3,st:'win'},voltaic:{x:7,rot:-.3,st:'win'}}}
+ ],
+ ch7:[
+  {who:'NARRATOR',text:'With Omega gone, the scrapyard should have gone quiet. Instead it got louder.',arena:'junk',dur:6,cam:[[0,3.4,14],[0,2.4,-6],[0,2.6,9],[0,2.6,-2]],a:{hero:{x:-2,face:1,st:'walk',to:-.6}}},
+  {who:'SCRAP KING',text:'Omega fell, so I picked up the pieces. Every frame you break, I weld into my army.',dur:5.5,cam:[[6,2.4,7.4],[3.2,3,0],[5,2.5,6.4],[3.2,3.2,0]],a:{hero:{x:-2.5,face:1},scrapking:{x:3.2,rot:-.5,st:'win'},scrapper:{x:6.4,rot:-.4}}},
+  {who:'hero',text:'Then I will stop breaking them and start breaking you.',dur:4,cam:[[-.6,1.6,5],[-2.5,2.1,0],[-1.2,1.8,4.4],[-2.5,2.3,0]],a:{hero:{x:-2.5,rot:.5},scrapking:{x:3.2,rot:-.5}}},
+  {who:'NARRATOR',text:'Chapter 7. Scrap Rebellion.',arena:'scrap',dur:3.4,cam:[[2,2.6,11],[3,1,0],[5,2.6,11],[6,1,0]],a:{hero:{x:-2,to:16,veh:1}}}
+ ],
+ scrapEnd:[
+  {who:'NARRATOR',text:'The throne of crushed cars comes down, and the Scrap King with it.',arena:'junk',dur:6,cam:[[0,3.4,12],[.5,1.4,0],[.5,2.4,8.5],[.5,1.6,0]],a:{hero:{x:-2.2,face:1},scrapking:{x:2.6,face:-1,st:'ko'}}},
+  {who:'SCRAP KING',text:'I was only collecting. The one who gave the orders is not on this planet.',dur:5.5,cam:[[5,2.4,5.8],[3,.9,0],[4.2,2.6,5.2],[3,1,0]],a:{hero:{x:-2.2,face:1},scrapking:{x:2.6,face:-1,st:'ko'}}},
+  {who:'hero',text:'Then I am going off the planet.',dur:4,cam:[[-.4,1.6,5],[-2.2,2.1,0],[-1,1.8,4.4],[-2.2,2.3,0]],a:{hero:{x:-2.2,rot:.5},scrapking:{x:2.6,face:-1,st:'ko'}}},
+  {who:'NARRATOR',text:'The Scrap King has been rebuilt and is waiting in your garage. Chapter 8 is open.',dur:6,cam:[[0,2.6,10],[0,2,0],[0,3.4,14],[0,2.2,0]],a:{hero:{x:0,rot:0,st:'win'},omega:{x:-3.6,rot:.2,st:'win'},tyrant:{x:3.6,rot:-.2,st:'win'}}}
+ ],
+ ch8:[
+  {who:'NARRATOR',text:'A rocket from the launch pad carries one frame to the moon. The base there has been dark for years. Until tonight.',arena:'moon',dur:6.5,cam:[[0,3.2,14],[0,4,-8],[0,2.6,9],[0,2.6,-4]],a:{hero:{x:-1.5,face:1,st:'walk',to:-.4}}},
+  {who:'ECLIPSE',text:'The Tyrant, the Architect, Omega, the Scrap King. All of them were mine to watch. You were the only one worth it.',dur:6,cam:[[6.4,2.6,8.4],[3.2,3.6,0],[5.4,2.8,7.2],[3.2,3.8,0]],a:{hero:{x:-2.5,face:1},eclipse:{x:3.2,rot:-.5,st:'win'}}},
+  {who:'hero',text:'Then come down and watch up close.',dur:4,cam:[[-.6,1.6,5],[-2.5,2.1,0],[-1.2,1.8,4.4],[-2.5,2.3,0]],a:{hero:{x:-2.5,rot:.5},eclipse:{x:3.2,rot:-.5}}},
+  {who:'NARRATOR',text:'Chapter 8. Eclipse.',dur:3.4,cam:[[2,2.6,11],[3,1,0],[5,2.6,11],[6,1,0]],a:{hero:{x:-2,to:16,veh:1}}}
+ ],
+ eclipseEnd:[
+  {who:'NARRATOR',text:'The black disc cracks, and sunlight pours back across the moon.',arena:'eclipse',dur:6,cam:[[0,3.4,12],[.5,1.4,0],[.5,2.4,8.5],[.5,1.6,0]],a:{hero:{x:-2.2,face:1},eclipse:{x:2.8,face:-1,st:'ko'}}},
+  {who:'ECLIPSE',text:'Every eclipse ends. I just hoped mine would last a little longer.',dur:5,cam:[[5.4,2.4,6.2],[3.2,.9,0],[4.6,2.6,5.6],[3.2,1,0]],a:{hero:{x:-2.2,face:1},eclipse:{x:2.8,face:-1,st:'ko'}}},
+  {who:'hero',text:'It lasted long enough. Now the sun is back.',dur:4.5,cam:[[-.4,1.6,5],[-2.2,2.1,0],[-1,1.8,4.4],[-2.2,2.3,0]],a:{hero:{x:-2.2,rot:.5},eclipse:{x:2.8,face:-1,st:'ko'}}},
+  {who:'NARRATOR',text:'The Eclipse has been rebuilt and is waiting in your garage. Every chapter is done, and every frame is free.',arena:'core',dur:7,cam:[[0,2.6,10],[0,2,0],[0,3.4,14],[0,2.2,0]],a:{hero:{x:0,rot:0,st:'win'},scrapking:{x:-3.6,rot:.2,st:'win'},omega:{x:3.6,rot:-.2,st:'win'},architect:{x:-7,rot:.3,st:'win'},tyrant:{x:7,rot:-.3,st:'win'}}}
  ],
  finale:[
   {who:'NARRATOR',text:'High above the world, the lights of the orbital forge go dark one by one.',arena:'orbit',dur:6,cam:[[0,3.4,12],[.5,1.4,0],[.5,2.4,8.5],[.5,1.6,0]],a:{hero:{x:-2.2,face:1},architect:{x:2.6,face:-1,st:'ko'}}},
@@ -1316,6 +1381,8 @@ const CHALS=[
  ['camp','Liberator','Beat the Tyrant',300,s=>!!s.tyrant],
  ['ch5','Master builder','Finish chapter 5 and beat the Architect',400,s=>!!s.ch5],
  ['ch6','Final design','Finish chapter 6 and beat Omega',500,s=>!!s.ch6],
+ ['ch7','Scrap royalty','Finish chapter 7 and beat the Scrap King',500,s=>!!s.ch7],
+ ['ch8','Total eclipse','Finish chapter 8 and beat the Eclipse',600,s=>!!s.ch8],
  ['stars','Perfectionist','Earn 3 stars on every mission',500,s=>CAMP.every((_,i)=>s.camp[i]>=3)],
  ['max','Maxed out','Fully upgrade one frame',300,s=>Object.values(s.up).some(u=>u.armor>=5&&u.power>=5&&u.energy>=5)],
  ['parts','Parts collector','Collect 10 parts from mystery boxes',250,s=>Object.keys(s.parts||{}).length>=10],
@@ -2462,15 +2529,20 @@ Object.assign(SPECIALS,{
 Object.assign(SPECIALS,{
  b_tide:BSP('shot',{geo:'wave',dmg:10,kb:11,lift:3,speed:13,y:1.5,scale:1.5,snd:'whiff'},'Tidal Wave','ice'),
  b_whirl:BSP('nova',{wind:.4,radius:4,dmg:12,kb:12,lift:7,pose:'up'},'Whirlpool','wind'),
- b_omega:BSP('beam',{dmg:19,wind:.45},'Omega Cannon','plasma')});
-for(const k of ['b_meteor','b_burst','b_blink','b_storm','b_fire','b_tail','b_lance','b_rain','b_tide','b_whirl','b_omega'])SPECIALS[k].cost=45;
+ b_omega:BSP('beam',{dmg:19,wind:.45},'Omega Cannon','plasma'),
+ b_magnet:BSP('nova',{wind:.4,radius:4.4,dmg:12,kb:13,lift:6,pose:'up'},'Magnet Pulse','volt'),
+ b_junk:BSP('strike',{n:5,gap:.17,dmg:8,kb:5,lift:6},'Junk Rain','fire'),
+ b_corona:BSP('beam',{dmg:20,wind:.45},'Corona Beam','light')});
+for(const k of ['b_meteor','b_burst','b_blink','b_storm','b_fire','b_tail','b_lance','b_rain','b_tide','b_whirl','b_omega','b_magnet','b_junk','b_corona'])SPECIALS[k].cost=45;
 const BOSS2={
  tyrant:{arena:13,specials:['b_meteor','b_burst'],line:'The throne gives way. Into the furnace!',hz:'fire'},
  overseer:{arena:16,specials:['b_blink','b_storm'],line:'Lockdown. Sealing you in the vault.',hz:'volt'},
  wyrmforge:{arena:'spire',specials:['b_fire','b_tail'],line:'It spreads its wings and drags you into the sky.',hz:'fire'},
  architect:{arena:'orbit',specials:['b_lance','b_rain'],line:'Gravity off. Welcome to my orbit.',hz:'grav',grav:14},
  kraken:{arena:'harbor',specials:['b_tide','b_whirl'],line:'It bursts out of the water and onto the docks!',hz:'crate'},
- omega:{arena:'throne',specials:['b_omega','b_meteor'],line:'Omega protocol. Back to where it all began.',hz:'fire'}};
+ omega:{arena:'throne',specials:['b_omega','b_meteor'],line:'Omega protocol. Back to where it all began.',hz:'fire'},
+ scrapking:{arena:'scrap',specials:['b_magnet','b_junk'],line:'The magnet crane tears the throne apart. Into the scrap heap!',hz:'crate'},
+ eclipse:{arena:'moon',specials:['b_corona','b_rain'],line:'The sun goes dark. Out onto the lunar surface!',hz:'rock',grav:15}};
 function bossPhase2(){const B=BOSS2[G.p2.def.id];G.phase2=B?{B,t:2.5}:null;if(!B)return;if(B.grav)G.mod=Object.assign({},G.mod,{grav:B.grav});
  G.p2.baseDef=G.p2.def;G.p2.def=Object.assign({},G.p2.def,{specials:B.specials.slice()});G.p2.energy=Math.max(G.p2.energy,45);
  G.slowT=.6;G.focus=G.p2;G.focusT=1;cine(true);setTimeout(()=>{if(G.phase==='fight')cine(false);},1600);
@@ -2478,7 +2550,7 @@ function bossPhase2(){const B=BOSS2[G.p2.def.id];G.phase2=B?{B,t:2.5}:null;if(!B
  announce('Phase 2','ko',1300);setTimeout(()=>callout(B.line),900);}
 /* arena hazards: some maps fight back. A glowing ring warns where it will hit. */
 const ARHZ={foundry:'fire',firewall:'fire',burn:'fire',tower:'fire',throne:'fire',trench:'volt',crane:'volt',vault:'volt',quarry:'rock',scrap:'rock',canyon:'rock',lab:'grav',
- harbor:'crate',rail:'volt',nest:'fire',launch:'fire',core:'volt',orbit:'grav',abyss:'volt',citadel:'volt'};
+ harbor:'crate',rail:'volt',nest:'fire',launch:'fire',core:'volt',orbit:'grav',abyss:'volt',citadel:'volt',junk:'crate',moon:'rock',eclipse:'grav'};
 const HZC={fire:0xff6a1e,volt:0x8affff,rock:0xffc890,grav:0x7affff,crate:0xffd27a};
 const HZCM=[0xa3222e,0x1c6f9a,0xd9a12a,0x2f6b4f].map(c=>metal(c,.4,.6));
 /* tag team: swap to your partner; the robot on the bench does not repair, so damage sticks */
@@ -3041,6 +3113,48 @@ AID.citadel=addArena({id:'citadel',name:'Omega Citadel',bg:0x08060c,fog:[18,120]
  const fl=[];for(let i=0;i<5;i++){const r=new THREE.Mesh(new THREE.TorusGeometry(2+i*.6,.12,6,32),glowMat(i%2?0xc77bff:0xff2a4a,2));r.position.set((i-2)*9,14+Math.sin(i)*3,-14);S.add(r);fl.push(r);}
  edgePosts(S,bM,0xff2a4a,5);emblem(S,'OMEGA','rgba(255,40,80,.5)',4);
  const st=stormFx(A,.01);A.update=dt=>{st(dt);ring.rotation.z+=dt*.4;ring2.rotation.z-=dt*.7;ring.material.emissiveIntensity=2.2+Math.sin(G.clock*3)*.8;fl.forEach((r,i)=>{r.rotation.x+=dt*(.4+i*.1);r.rotation.y+=dt*.3;r.position.y+=Math.sin(G.clock+i)*dt*.4;});};});
+// 28 Junk Throne
+AID.junk=addArena({id:'junk',name:'Junk Throne',bg:0x2a1608,fog:[16,100],hemi:[0xffb070,0x1a0c04,.55],sun:[0xff9a4a,1.1,[-10,12,6]],accent:[0xffb21e,2.2,[0,4,-6]],rim:[0xff6a2a,1.2],dust:0x4a3020,particles:'embers',bloom:.8,env:[[.08,.04,.02],[[1.8,1,.5],[1,.6,.3],[1.2,.8,.5]]]},(A,S)=>{
+ S.add(skyDome('#2a1408','#7a3a14','#d9762a'));sunDisc(S,'rgba(255,150,60,.9)',-30,14,-80,40);
+ floorM(S,gTex('#3a2a1e',[60,44,30],22,crackDraw('rgba(20,12,6,.55)',40,3),[14,7]),{r:.9});
+ const cols=[0x8a2a1e,0x2a5a8a,0xd9a441,0x3a6a3a,0x6a6a72,0x5a2a6a],cars=[];
+ for(let i=0;i<46;i++){const side=i%2?1:-1,x=side*(13+Math.random()*28),z=-4-Math.random()*36,c=metal(cols[i%cols.length],.4,.6),car=grp(S,x,0,z);
+  for(let j=0,n=1+(Math.random()*4|0);j<n;j++){const b=bx(3.6,1.2,1.9,c,(Math.random()-.5)*.4,.6+j*1.15,(Math.random()-.5)*.4,car);b.rotation.set((Math.random()-.5)*.2,Math.random()*.8,(Math.random()-.5)*.25);}car.rotation.y=Math.random()*3;cars.push(car);}
+ /* the throne: a tower of crushed cars with a crown */
+ const th=grp(S,0,0,-20),tm=metal(0x5a3a22,.5,.6);for(let j=0;j<7;j++){const b=bx(9-j*.9,1.6,4,metal(cols[j%cols.length],.4,.6),0,.8+j*1.6,0,th);b.rotation.y=(Math.random()-.5)*.4;}
+ for(let k=-2;k<=2;k++)cone(.6,2.6,metal(0xd9a441,.9,.3),th,k*1.3,13.4,0,0,0,4);bx(7,.5,1,metal(0xd9a441,.9,.3),0,12.2,0,th);
+ /* magnet crane */
+ const cr=grp(S,14,0,-14);bx(1.2,22,1.2,tm,0,11,0,cr);const arm=grp(cr,0,22,0);bx(20,1,1,tm,-8,0,0,arm);const cab=grp(arm,-16,0,0);cyl(.08,6,metal(0x222222,.6,.4),cab,0,-3,0,null,4);const mag=cyl(1.8,.6,metal(0x2a2a2a,.8,.4),cab,0,-6.3,0,null,16);cyl(1.4,.2,glowMat(0xffb21e,2),cab,0,-6.65,0,null,16);
+ const fires=[];for(let i=0;i<6;i++){const x=(i%2?1:-1)*(15+i*4),z=-8-i*4;cyl(.9,1.4,metal(0x3a3a3a,.6,.5),S,x,.7,z,null,10);fires.push([x,z]);}
+ edgePosts(S,tm,0xffb21e,4);emblem(S,'KING','rgba(255,178,30,.5)',3.6);
+ A.update=dt=>{arm.rotation.y=Math.sin(G.clock*.25)*.6;cab.position.y=Math.sin(G.clock*.6)*.6;fires.forEach(([x,z])=>{if(Math.random()<.5)addPart(x+(Math.random()-.5)*.8,1.5,z,(Math.random()-.5)*.5,2.6+Math.random(),0,.7,Math.random()<.6?0xff8a2a:0xffd23a,-1,1.2,3);});};});
+// 29 Lunar Base
+AID.moon=addArena({id:'moon',name:'Lunar Base',bg:0x020308,fog:[30,160],hemi:[0xaab4c8,0x05060a,.45],sun:[0xf2f4ff,1.4,[12,16,8]],accent:[0x6fb0ff,1.8,[0,4,-6]],rim:[0x9ad8ff,1.2],dust:0x8a8e96,particles:'motes',pcol:0xdfe6ff,bloom:.75,env:[[.01,.01,.02],[[1.4,1.4,1.6],[.5,.5,.7],[1,1,1.2]]]},(A,S)=>{
+ S.add(skyDome('#000004','#02030a','#0a0c18'));
+ const stars=canvasTex(1024,512,(g,w,h)=>{g.fillStyle='#000';g.fillRect(0,0,w,h);for(let i=0;i<900;i++){const b=Math.random();g.fillStyle=`rgba(255,255,255,${.3+b*.7})`;g.fillRect(Math.random()*w,Math.random()*h,b>.95?2:1,b>.95?2:1);}});
+ const sky=new THREE.Mesh(new THREE.PlaneGeometry(400,160),new THREE.MeshBasicMaterial({map:stars,fog:false}));sky.position.set(0,60,-140);S.add(sky);
+ const earth=canvasTex(256,256,(g)=>{const r=g.createRadialGradient(110,110,10,128,128,120);r.addColorStop(0,'#7ac0ff');r.addColorStop(.6,'#2a6ad0');r.addColorStop(.95,'#0a2050');r.addColorStop(1,'rgba(0,0,0,0)');g.fillStyle=r;g.fillRect(0,0,256,256);g.fillStyle='rgba(80,180,90,.8)';for(let i=0;i<9;i++){g.beginPath();g.ellipse(70+Math.random()*120,70+Math.random()*120,10+Math.random()*24,6+Math.random()*14,Math.random()*3,0,7);g.fill();}g.fillStyle='rgba(255,255,255,.6)';for(let i=0;i<10;i++){g.beginPath();g.ellipse(60+Math.random()*140,60+Math.random()*140,14+Math.random()*20,3,Math.random()*3,0,7);g.fill();}});
+ const em=new THREE.Mesh(new THREE.PlaneGeometry(26,26),new THREE.MeshBasicMaterial({map:earth,transparent:true,fog:false}));em.position.set(-34,38,-120);S.add(em);
+ floorM(S,gTex('#8a8c92',[140,142,148],26,g=>{for(let i=0;i<40;i++){const x=Math.random()*512,y=Math.random()*512,r=6+Math.random()*26;g.strokeStyle='rgba(60,62,70,.6)';g.lineWidth=3;g.beginPath();g.arc(x,y,r,0,7);g.stroke();g.fillStyle='rgba(70,72,80,.35)';g.fill();}},[12,6]),{r:.95});
+ const dM=metal(0xc8ccd4,.6,.4),gM=glowMat(0x6fb0ff,1.8);
+ for(const [x,z,r] of [[-16,-18,5],[18,-22,6],[-30,-36,8],[34,-40,7]]){const d=new THREE.Mesh(new THREE.SphereGeometry(r,24,12,0,Math.PI*2,0,Math.PI/2),new THREE.MeshStandardMaterial({color:lin(0xdfe6ff),roughness:.1,metalness:.2,transparent:true,opacity:.55}));d.position.set(x,0,z);S.add(d);cyl(r+.2,.4,dM,S,x,.2,z,null,24);bx(.4,r*.5,.4,gM,x,r*.25,z+r*.2,S);}
+ for(let i=0;i<14;i++){const side=i%2?1:-1,x=side*(14+Math.random()*30),z=-6-Math.random()*30;const r=new THREE.Mesh(new THREE.DodecahedronGeometry(.8+Math.random()*1.6,0),metal(0x6a6c72,.1,.95));r.position.set(x,.4,z);r.castShadow=true;S.add(r);}
+ const tw=grp(S,0,0,-30);cyl(1.2,18,dM,tw,0,9,0,null,10);const dish=new THREE.Mesh(new THREE.SphereGeometry(5,24,10,0,Math.PI*2,0,1.1),dM);dish.rotation.x=-1.2;dish.position.y=18;tw.add(dish);const bl=cyl(.3,.6,glowMat(0xff3a3a,3),tw,0,19.6,0,null,8);
+ edgePosts(S,dM,0x6fb0ff,4);emblem(S,'LUNA','rgba(140,200,255,.45)',3.6);
+ A.update=dt=>{dish.rotation.z=Math.sin(G.clock*.2)*.5;bl.material.emissiveIntensity=Math.sin(G.clock*4)>0?3:.2;em.rotation.z+=dt*.01;if(Math.random()<.15)addPart((Math.random()-.5)*26,.1,-1-Math.random()*6,(Math.random()-.5)*.6,.6+Math.random()*.6,0,2.4,0xbfc4cc,-.2,.8,1);};});
+// 30 Eclipse Core
+AID.eclipse=addArena({id:'eclipse',name:'Eclipse Core',bg:0x05030a,fog:[20,130],hemi:[0x8a6aff,0x050208,.4],sun:[0xffc070,.9,[0,14,-10]],accent:[0xff8a2a,2.6,[0,5,-6]],rim:[0xc77bff,1.6],dust:0x2a2030,particles:'motes',pcol:0xffb060,bloom:1,env:[[.02,.01,.03],[[1.8,1,.5],[.8,.5,1.4],[1,.8,1]]]},(A,S)=>{
+ S.add(skyDome('#020104','#0e0618','#24102e'));
+ const cor=canvasTex(512,512,(g)=>{const r=g.createRadialGradient(256,256,90,256,256,256);r.addColorStop(0,'rgba(0,0,0,1)');r.addColorStop(.36,'rgba(0,0,0,1)');r.addColorStop(.38,'rgba(255,240,200,1)');r.addColorStop(.48,'rgba(255,150,50,.75)');r.addColorStop(.75,'rgba(200,60,160,.25)');r.addColorStop(1,'rgba(0,0,0,0)');g.fillStyle=r;g.fillRect(0,0,512,512);});
+ const sun=new THREE.Mesh(new THREE.PlaneGeometry(70,70),new THREE.MeshBasicMaterial({map:cor,transparent:true,depthWrite:false,fog:false}));sun.position.set(0,32,-110);S.add(sun);
+ const disc=new THREE.Mesh(new THREE.CircleGeometry(12.6,48),new THREE.MeshBasicMaterial({color:0x000000,fog:false}));disc.position.set(0,32,-109.8);S.add(disc);
+ floorM(S,gTex('#120c18',[30,22,36],14,gridDraw('rgba(255,138,42,.45)',64,2),[12,6]),{r:.4,m:.5,em:.35});
+ const bM=metal(0x14101c,.85,.35),gl=[0xff8a2a,0xc77bff];
+ const plates=[];for(let i=0;i<18;i++){const p=bx(3+Math.random()*4,.4,2+Math.random()*3,bM,(Math.random()-.5)*70,6+Math.random()*18,-18-Math.random()*40,S);p.rotation.set(Math.random(),Math.random(),Math.random()*.4);const e=bx(.2,.42,1.6,glowMat(gl[i%2],2),0,0,0,p);plates.push(p);}
+ const ring=new THREE.Mesh(new THREE.TorusGeometry(10,.35,10,64),glowMat(0xff8a2a,2.4));ring.position.set(0,12,-24);S.add(ring);const ring2=new THREE.Mesh(new THREE.TorusGeometry(7,.2,8,48),glowMat(0xc77bff,2));ring2.position.set(0,12,-23.8);S.add(ring2);
+ for(const s of [-1,1]){const pil=grp(S,s*12,0,-10);bx(2,14,2,bM,0,7,0,pil);bx(.2,10,.2,glowMat(0xff8a2a,2),s*-1.05,7,0,pil);cone(1.5,3,bM,pil,0,15.5,0,0,0,4);}
+ edgePosts(S,bM,0xff8a2a,5);emblem(S,'ECLIPSE','rgba(255,138,42,.5)',4);
+ A.update=dt=>{ring.rotation.z+=dt*.3;ring2.rotation.z-=dt*.5;ring.rotation.x=Math.sin(G.clock*.3)*.3;sun.rotation.z+=dt*.02;plates.forEach((p,i)=>{p.rotation.x+=dt*(.1+i*.01);p.position.y+=Math.sin(G.clock*.6+i)*dt*.3;});};});
 /* missions, boss phases and cutscenes name their maps by id; turn those into map numbers now that every map exists */
 CAMP.forEach(m=>{if(typeof m.arena==='string')m.arena=AID[m.arena];});
 for(const k in BOSS2)if(typeof BOSS2[k].arena==='string')BOSS2[k].arena=AID[BOSS2[k].arena];
@@ -3544,13 +3658,18 @@ const SONGS={
  abyss:{bpm:100,root:36.71,prog:[0,-2,-4,-5],bass:'x..ox...x..ox.5.',drum:'k..hs.h.k.h.s..h',lp:520,arp:[0,3,10,7,15,12],pad:1},
  omega:{bpm:146,root:34.65,prog:[0,1,-2,-1],bass:'xxoxx5oxxxox5xox',drum:'k.hsk.hsk.hskkss',lp:820,bassWave:'square',
   lead:[12,_,13,_,15,_,13,12,_,_,8,_,10,_,12,_,12,_,13,_,17,_,15,13,_,_,15,_,13,_,12,_]},
+ scrap:{bpm:120,root:41.2,prog:[0,0,-2,3],bass:'x.x.xox.x.x.xo5.',drum:'k.hsk.h.k.hsk.hs',lp:560,bassWave:'square',
+  lead:[12,_,_,12,10,_,12,_,15,_,_,_,12,_,10,_,8,_,_,8,10,_,12,_,10,_,_,_,7,_,_,_]},
+ lunar:{bpm:96,root:46.25,prog:[0,-5,-3,-7],bass:'x...x...x..ox...',drum:'k...s..hk...s.h.',lp:640,arp:[0,7,12,14,19,14,12,7],pad:1,soft:1},
+ eclipse:{bpm:150,root:36.71,prog:[0,-1,-4,-3],bass:'xxoxxxox5xoxxxo5',drum:'k.hsk.hsk.hskkss',lp:900,bassWave:'square',arp:[0,3,7,12,15,12,7,3],
+  lead:[15,_,_,_,14,_,12,_,15,_,17,_,19,_,_,_,20,_,19,_,17,_,15,_,14,_,_,_,12,_,_,_]},
  final:{bpm:140,root:43.65,prog:[0,-4,-2,1],bass:'xox5xox5xox5xoxo',drum:'kkhsk.hsk.hskkss',lp:760,arp:[0,3,7,10,12,10,7,3],
   lead:[15,_,_,_,17,_,15,_,12,_,_,_,10,_,12,_,15,_,_,_,19,_,17,_,15,_,_,_,14,_,12,_]}};
 function songFor(){if(G.phase==='title'||G.phase==='select'||G.phase==='photo'||G.phase==='cutscene')return 'garage';
  if(!G.p1||!(G.phase==='fight'||G.phase==='intro'||G.phase==='roundEnd'))return null;
  const id=G.p2&&G.p2.def.id;
- if(id==='tyrant'||id==='overseer')return 'tyrant';if(id==='omega')return 'omega';if(id==='wyrmforge'||id==='architect'||id==='dailyboss'||id==='kraken')return 'final';
- if(G.mode==='campaign')return ['canyon','city','outer','forge','architect','abyss'][Math.min(5,Math.floor(G.stageSel/5))];
+ if(id==='tyrant'||id==='overseer')return 'tyrant';if(id==='omega')return 'omega';if(id==='scrapking')return 'tyrant';if(id==='eclipse')return 'eclipse';if(id==='wyrmforge'||id==='architect'||id==='dailyboss'||id==='kraken')return 'final';
+ if(G.mode==='campaign')return ['canyon','city','outer','forge','architect','abyss','scrap','lunar'][Math.min(7,chapOf(G.stageSel))];
  if(G.mode==='training')return 'garage';
  return {smash:'canyon',target:'city',race:'city',tourney:'city',survival:'outer',arcade:'city',ranked:'canyon',versus:'city',bossrush:'tyrant',daily:'final'}[G.mode]||'canyon';}
 function musicTick(){
@@ -3916,7 +4035,7 @@ function renderPilot(){const k=rankInfo(SAVE.xp);$('secBolts').textContent=SAVE.
 function pickFrame(i){if(i===G.sel||locked(i))return;if(showcase[G.sel].pal!==0)rebuildShowcase(G.sel,0);G.sel=i;G.pal=0;renderRoster();renderDetail();sfx('ui');}
 function renderMode(){
  {const co=G.mode==='campaign'&&!!G.coopOn;$('modes').querySelectorAll('button').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.m==='coop'?co:b.dataset.m===G.mode&&!(b.dataset.m==='campaign'&&co))));}
- {const k=rkState(),D=dbState(),rk=rookie(),sub={campaign:[SAVE.ch6?'All 6 chapters cleared':`Mission ${campOpen()+1} of ${CAMP.length} · chapter ${chapOf(campOpen())+1}`,0],versus:['One match vs anyone',0],arcade:['8 fights in a row',0],survival:[`Best: ${SAVE.st.surv||0} defeated`,0],training:['Practice, no timer',0],
+ {const k=rkState(),D=dbState(),rk=rookie(),sub={campaign:[SAVE.ch8?'All 8 chapters cleared':`Mission ${campOpen()+1} of ${CAMP.length} · chapter ${chapOf(campOpen())+1}`,0],versus:['One match vs anyone',0],arcade:['8 fights in a row',0],survival:[`Best: ${SAVE.st.surv||0} defeated`,0],training:['Practice, no timer',0],
   ranked:[rk?'After 5 fights':`${RKT[k.tier]} · ${k.tier>=6?k.stars+' pts':k.stars+'/'+RKS+' stars'}`,rk],daily:[rk?'After 5 fights':D.won?'Beaten today':'New boss today',rk],bossrush:[SAVE.tyrant?`${rushList().length} bosses`:'Beat the Tyrant',!SAVE.tyrant],coop:['2 players, one keyboard',0],smash:[`Best: ${(SAVE.mini||{}).smash||0}`,0],target:[`Best: ${(SAVE.mini||{}).target||0}`,0],race:[`Best: ${(SAVE.mini||{}).race||0}`,0],soccer:[`Best: ${(SAVE.mini||{}).soccer||0}`,0],koth:[`Best: ${(SAVE.mini||{}).koth||0}`,0],dodge:[`Best: ${(SAVE.mini||{}).dodge||0}`,0],tourney:[G.tn&&!G.tn.champ?`Round ${G.tn.rn} in progress`:'2 to 8 players',0]};
   for(const m in sub){const el=document.querySelector(`[data-sub="${m}"]`);if(el){el.textContent=sub[m][0];el.parentElement.classList.toggle('lk',!!sub[m][1]);}}
   $('modeTitle').textContent=G.mode==='campaign'&&G.coopOn?'Co-op Campaign':{smash:'Car Smash',target:'Target Range',race:'Highway Run',soccer:'Robot Soccer',koth:'King of the Hill',dodge:'Dodge the Boss',tourney:'Tournament',campaign:'Campaign',versus:'Versus',arcade:'Arcade',survival:'Survival',training:'Training',ranked:'Ranked',daily:'Daily Boss',bossrush:'Boss Rush'}[G.mode];}
@@ -4084,7 +4203,7 @@ function rebuildShowcase(i,pal){showcase[i].dispose();showcase[i]=makeShow(i,pal
 function cleanupMatch(){miniClear();extrasClear();ultClear();G.btyN=0;G.btyBolts=0;G.fin=null;document.body.classList.remove('fin');if(G.p1b){G.p1b.dispose();G.p1b=null;}G.phase2=null;if(G.hz&&G.hz.warn&&G.hz.warn.rock)scene.remove(G.hz.warn.rock);G.hz=null;if(G.p1)G.p1.dispose();if(G.p2)G.p2.dispose();G.p1=G.p2=null;clearProj();G.timeScale=1;G.hitstop=0;G.koFx=null;G.slowT=0;G.focusT=0;cine(false);$('danger').classList.remove('on');$('announce').className='';}
 function shuffle(a){for(let i=a.length-1;i>0;i--){const j=Math.random()*(i+1)|0;[a[i],a[j]]=[a[j],a[i]];}return a;}
 /* boss rush: the bosses you have beaten, each on its home map */
-function rushList(){const L=[['overseer',SAVE.camp[TYR_M-1]],['tyrant',SAVE.tyrant],['wyrmforge',SAVE.camp[CAMP.findIndex(m=>m.foes.includes('wyrmforge'))]],['architect',SAVE.ch5],['kraken',SAVE.camp[CAMP.findIndex(m=>m.foes[0]==='kraken')]],['omega',SAVE.ch6]];
+function rushList(){const L=[['overseer',SAVE.camp[TYR_M-1]],['tyrant',SAVE.tyrant],['wyrmforge',SAVE.camp[CAMP.findIndex(m=>m.foes.includes('wyrmforge'))]],['architect',SAVE.ch5],['kraken',SAVE.camp[CAMP.findIndex(m=>m.foes[0]==='kraken')]],['omega',SAVE.ch6],['scrapking',SAVE.ch7],['eclipse',SAVE.ch8]];
  return L.filter(x=>x[1]).map(([id])=>({i:idOf(id),arena:CAMP.find(m=>m.foes[0]===id||m.foes.includes(id)&&m.foes.length===1).arena}));}
 function others(){return DEFS.map((_,i)=>i).filter(i=>i!==G.sel&&!DEFS[i].boss&&!DEFS[i].custom);}
 /* tournament: a knockout bracket for players taking turns on one computer */
@@ -4568,7 +4687,7 @@ function finisher(w){const L=w===G.p1?G.p2:G.p1;G.fin={t:0,f:L,side:Math.sign(L.
  setTimeout(()=>{if(!G.fin||G.phase!=='roundEnd')return;callout(w===G.p1||G.twoP?'Finish':'Defeated');},350);
  setTimeout(()=>document.body.classList.remove('fin'),1700);}
 function endMatch(){
- if(G.mode==='campaign'&&G.wins[0]>G.wins[1]&&(G.stageSel===TYR_M||G.stageSel===ARCH_M||G.stageSel===CAMP.length-1)&&!G.endSeen){G.endSeen=true;playCutscene(G.stageSel===TYR_M?'ending':G.stageSel===ARCH_M?'finale':'omegaEnd',endMatch);return;}
+ if(G.mode==='campaign'&&G.wins[0]>G.wins[1]&&CHEND[G.stageSel]&&!G.endSeen){G.endSeen=true;playCutscene(CHEND[G.stageSel].cs,endMatch);return;}
  G.phase='matchEnd';cine(false);extrasClear();
  const won=G.mode==='bossrush'?G.wins[0]>=G.rush.length:G.wins[0]>G.wins[1],draw=G.mode!=='bossrush'&&G.wins[0]===G.wins[1];
  const t=$('resTitle'),btns=$('resBtns'),lad=$('resLadder');
@@ -4583,7 +4702,7 @@ function endMatch(){
  let gain=Math.round(((won?100:draw?50:30)+G.wins[0]*20+G.bestCombo*5)*({rookie:1,veteran:1.5,prime:2})[G.diff]);
  if(champion){gain+=300;SAVE.champs[G.p1.def.id]=true;}
  let stars=0;const extra=[];
- if(G.mode==='campaign'&&won){const fr=G.p1.hp/G.p1.maxHp;stars=fr>=.6?3:fr>=.3?2:1;if(G.campDiff==='story'&&stars>2){stars=2;extra.push('Story difficulty: up to 2 stars. Play on Normal or Hard for 3.');}if(G.campDiff==='hard'){gain=Math.round(gain*1.5);if(!SAVE.campHard[G.stageSel])extra.push('First Hard clear of this mission');SAVE.campHard[G.stageSel]=1;}const prev=SAVE.camp[G.stageSel]||0;if(!prev){gain+=150;extra.push('Includes 150 XP first clear bonus');}if(stars>prev)SAVE.camp[G.stageSel]=stars;if(G.stageSel===TYR_M)SAVE.tyrant=true;if(G.stageSel===ARCH_M)SAVE.ch5=true;if(G.stageSel===CAMP.length-1)SAVE.ch6=true;}
+ if(G.mode==='campaign'&&won){const fr=G.p1.hp/G.p1.maxHp;stars=fr>=.6?3:fr>=.3?2:1;if(G.campDiff==='story'&&stars>2){stars=2;extra.push('Story difficulty: up to 2 stars. Play on Normal or Hard for 3.');}if(G.campDiff==='hard'){gain=Math.round(gain*1.5);if(!SAVE.campHard[G.stageSel])extra.push('First Hard clear of this mission');SAVE.campHard[G.stageSel]=1;}const prev=SAVE.camp[G.stageSel]||0;if(!prev){gain+=150;extra.push('Includes 150 XP first clear bonus');}if(stars>prev)SAVE.camp[G.stageSel]=stars;if(CHEND[G.stageSel])SAVE[CHEND[G.stageSel].flag]=true;}
  if(G.mode==='ranked'){const k=rkState();k.played++;G.rkMsg=[];G.rkFrom=k.tier;
   if(won){k.wins++;k.streak++;const d=k.streak>=3?2:1;k.stars+=d;G.rkMsg.push(`+${d} star${d>1?'s':''}`+(d>1?` (${k.streak} win streak)`:''));while(k.tier<6&&k.stars>=RKS){k.stars-=RKS;k.tier++;G.rkMsg.push('Promoted to '+RKT[k.tier]);}}
   else if(!draw){k.streak=0;if(k.stars>0){k.stars--;G.rkMsg.push('-1 star');}}
@@ -4610,11 +4729,11 @@ function endMatch(){
  const after=rankInfo(SAVE.xp);
  $('resReward').innerHTML=`<b>+${gain} XP · +${bolts} bolts</b><div class="xpbar"><i style="transform:scaleX(${after.frac})"></i></div><small>Rank ${after.L} · ${after.name}${after.L>before.L?' · rank up':''}${before.L<3&&after.L>=3?' · gold paint unlocked':''}</small>`+extra.map(x=>`<small>${x}</small>`).join('');
  if(G.mode==='campaign'){
-  const lastM=G.stageSel>=CAMP.length-1,tyrM=G.stageSel===TYR_M,archM=G.stageSel===ARCH_M;
-  t.textContent=won?(lastM?'Omega defeated':archM?'Architect defeated':tyrM?'Forge reclaimed':'Mission complete'):'Mission failed';if(won)sfx('win');
-  sub=won&&lastM?'Omega is now a playable frame':won&&archM?'Architect is now a playable frame · Chapter 6 is open':won&&tyrM?'Tyrant is now a playable frame · Chapter 5 is open':`Mission ${G.stageSel+1} · ${CAMP[G.stageSel].name}`;
+  const lastM=G.stageSel>=CAMP.length-1,CE=CHEND[G.stageSel];
+  t.textContent=won?(CE?CE.t:'Mission complete'):'Mission failed';if(won)sfx('win');
+  sub=won&&CE?CE.sub:`Mission ${G.stageSel+1} · ${CAMP[G.stageSel].name}`;
   if(won)lad.innerHTML=`<span class="done">${stars} of 3 stars</span>`+(stars<3?'<span>Finish with 60% armor left for 3 stars</span>':'');
-  if(won&&!lastM)B(tyrM?'Start chapter 5':archM?'Start chapter 6':'Next mission',()=>{G.stageSel++;launchMission();},true);
+  if(won&&!lastM)B(CE&&CE.next?CE.next:'Next mission',()=>{G.stageSel++;launchMission();},true);
   B(won?'Replay':'Retry',()=>beginMatch(),!won||lastM);B('Missions',goSelect);
  }else if(G.mode==='ranked'){
   const k=rkState();t.textContent=k.tier>G.rkFrom?'Promoted':won?'Victory':draw?'Draw':'Defeat';if(won)sfx('win');
