@@ -1710,6 +1710,7 @@ function buildRobot(d,pal){
   P['hip'+kk]=hip;P['kn'+kk]=kn;
   if(s<0){const em=new THREE.Mesh(new THREE.PlaneGeometry(.34*B,.34*B),sigil(d,pal));em.position.set(-.06-(ctx.padW||.3*B)-.015,.06,0);em.rotation.y=-Math.PI/2;P.padL.add(em);}
  }
+ bayKit(ctx,P,d);
  plating(ctx,P,d);
  const V=d.parts?buildVeh(d.parts,M):VEH[k](M);
  vehDetail(V.v,M,V.S||VSHAPE[k],hashStr('veh'+(d.id||'')+(d.parts?JSON.stringify(d.parts):'')));
@@ -1719,6 +1720,52 @@ function buildRobot(d,pal){
  return {root,body,P,M,mats:[M.a,M.b,M.c],veh:V.v,wheels:V.wheels,vehY:V.y||0};
 }
 /* a face for every robot: a chrome mouth guard with vents and cheek plates under the eyes, sized to the head it sits on */
+/* ================= movie-style mechanical detail =================
+   Layered on top of every robot (stock, custom, enemy and boss): an exposed inner frame with a spine and cable bundles,
+   dense small plates and greebles on every limb, vehicle parts worn on the body (windshield or canopy on the chest, headlights,
+   wheels on the shoulders and calves, doors or wing flaps on the back), a segmented faceplate, and tendons and pistons at the joints.
+   Everything is seeded from the robot's id so a robot always looks the same. */
+const GROUNDK=['heavy','swift','brute','stealth','guard','train','boss'],AIRK=['jet','heli','ship','jetbike','dragon'];
+function bayWheel(parent,r,w,M,x,y,z,axis){const g=grp(parent,x,y,z);const t=cyl(r,w,TIRE,g,0,0,0,axis||'x',16);cyl(r*.62,w+.02,M.chrome,g,0,0,0,axis||'x',10);cyl(r*.22,w+.05,M.dk,g,0,0,0,axis||'x',8);
+ for(let i=0;i<5;i++){const a=i/5*Math.PI*2;const sp=bx(axis==='z'?r*.1:w+.03,r*.5,axis==='z'?w+.03:r*.1,M.dk,0,0,0,g);sp.rotation[axis==='z'?'z':'x']=a;sp.position.set(axis==='z'?Math.cos(a)*r*.36:0,Math.sin(a)*r*.36,axis==='z'?0:Math.cos(a)*r*.36);}return g;}
+function bayCable(parent,a,b,r,m,sag){const A=new V3(...a),B=new V3(...b),mid=A.clone().lerp(B,.5);mid.z+=sag||0;mid.x+=(sag||0)*.3;
+ for(const [p,q] of [[A,mid],[mid,B]]){const d=q.clone().sub(p),len=d.length(),g=new THREE.Group();g.position.copy(p).lerp(q,.5);g.quaternion.setFromUnitVectors(UP,d.normalize());parent.add(g);cyl(r,len,m,g,0,0,0,null,6);}}
+function bayGreeble(parent,R,M,n,bx0,by0,bz0,sx,sy,sz,face){const mats=[M.dk,M.dk,M.chrome,M.b,M.c];
+ for(let i=0;i<n;i++){const w=.04+R()*.1,h=.04+R()*.12,d=.025+R()*.05,m=mats[R()*mats.length|0];
+  const x=bx0+(R()-.5)*sx,y=by0+(R()-.5)*sy,z=bz0+(R()-.5)*sz;
+  const o=face==='x'?bx(d,h,w,m,x,y,z,parent):bx(w,h,d,m,x,y,z,parent);if(R()<.25)o.rotation.z=(R()-.5)*.6;}}
+function bayKit(c,P,d){const{M,B,L,TW,TH,torso,chest,back,head}=c,R=rng(hashStr('bay'+(d.id||d.name||'x')+JSON.stringify(d.parts||{}))),k=d.kind,ground=!AIRK.includes(k)&&!(d.parts&&AIRK.includes(d.parts.chest));
+ const front=.4*B,gl=M.glass||M.dk;
+ /* exposed spine and frame between pelvis and chest, with cable bundles running up the sides */
+ const sp=grp(torso,0,0,-.16*B);cyl(.05,TH*.62,M.chrome,sp,0,TH*.3,0,null,8);for(let i=0;i<5;i++)cyl(.1,.05,M.dk,sp,0,TH*(.04+i*.12),0,null,10);
+ for(const s of [1,-1]){bayCable(torso,[s*TW*.16,TH*.02,.06*B],[s*TW*.36,TH*.62,.1*B],.022,M.dk,.08);bayCable(torso,[s*TW*.2,TH*.02,-.05*B],[s*TW*.4,TH*.6,-.08*B],.018,M.chrome,-.06);
+  piston(torso,[s*TW*.22,TH*.04,.02],[s*TW*.34,TH*.5,.02],.025,M);}
+ /* chest: vehicle front worn on the body */
+ if(ground){const ws=grp(chest,0,TH*.08,front+.02);for(const s of [1,-1]){const g=bx(TW*.36,TH*.3,.035,gl,s*TW*.2,0,0,ws);g.rotation.set(-.35,s*.32,0);const fr=bx(TW*.38,.035,.05,M.chrome,s*TW*.2,TH*.16,-.04,ws);fr.rotation.y=s*.32;}
+   bx(.04,TH*.32,.06,M.dk,0,0,.01,ws);
+   for(const s of [1,-1]){const hl=grp(chest,s*TW*.36,-TH*.22,front+.04);bx(.16,.08,.05,M.chrome,0,0,0,hl);bx(.12,.05,.03,M.white,0,0,.03,hl);bx(.05,.04,.03,M.eye,s*.09,0,.03,hl);}
+   const gr=grp(chest,0,-TH*.24,front+.03);for(let i=0;i<5;i++)bx(TW*.3,.016,.03,M.chrome,0,-.07+i*.035,0,gr);}
+ else{const cp=grp(chest,0,TH*.06,front+.02);const g=new THREE.Mesh(new THREE.SphereGeometry(TW*.16,14,8,0,Math.PI*2,0,Math.PI/2),gl);g.rotation.x=Math.PI/2;g.scale.set(1,1.5,.35);cp.add(g);
+   bx(TW*.5,.04,.06,M.chrome,0,-TH*.12,0,cp);for(const s of [1,-1]){const fin=bx(.03,TH*.3,.22*B,M.b,s*TW*.42,TH*.1,-.05,chest);fin.rotation.z=s*.25;}
+   for(const s of [1,-1])bx(.12,.05,.04,M.eye,s*TW*.34,-TH*.22,front+.04,chest);}
+ /* back: car doors or wing flaps that hang off the shoulder blades */
+ for(const s of [1,-1]){const hg=grp(back,s*TW*.3,TH*.18,-.16*B);hg.rotation.set(-.35,s*-.55,s*.18);
+  if(ground){const dr=grp(hg,s*.38,-.1,0);bx(.72,TH*.5,.05,M.a,0,0,0,dr);bx(.6,TH*.2,.03,gl,0,TH*.11,.03,dr);bx(.6,.025,.04,M.chrome,0,-TH*.02,.035,dr);bx(.08,.04,.05,M.chrome,s*.26,-TH*.06,.05,dr);}
+  else{const w=grp(hg,s*.5,0,0);const wb=bx(1.1,.05,TH*.45,M.a,0,0,0,w);w.rotation.z=s*-.2;bx(.9,.06,.06,M.gl,0,.02,TH*.2,w);bx(1,.02,TH*.3,M.dk,0,-.03,0,w);}}
+ /* faceplate: brow ridge, layered cheek blades, mouthplate slats and small antennae */
+ {const hb=head.children.find(o=>o.isMesh&&o.geometry&&o.geometry.type==='BoxGeometry');if(hb){const p=hb.geometry.parameters,w=p.width,h=p.height,fz=hb.position.z+p.depth/2,y0=hb.position.y;
+  bx(w*.9,h*.08,.07,M.dk,0,y0+h*.18,fz+.03,head);for(const s of [1,-1]){const br=bx(w*.34,h*.06,.05,M.b,s*w*.22,y0+h*.26,fz+.04,head);br.rotation.z=s*-.25;}
+  for(const s of [1,-1])for(let i=0;i<2;i++){const cb=bx(w*.12,h*.32-i*.06,.04,i?M.dk:M.c,s*(w*.42+i*.05),y0-h*.06,fz-.02-i*.03,head);cb.rotation.set(0,s*.5,s*.12);}
+  for(let i=0;i<4;i++)bx(w*.06,h*.16,.03,M.chrome,(i-1.5)*w*.09,y0-h*.38,fz+.07,head);
+  for(const s of [1,-1]){const an=grp(head,s*w*.38,y0+h*.48,fz-p.depth*.4);an.rotation.z=s*-.3;cyl(.015,.22+R()*.18,M.chrome,an,0,.13,0,null,5);}}}
+ /* limbs: greebles, hoses and pistons on every segment, wheels on shoulders and calves for ground vehicles */
+ for(const [kk,s] of [['R',1],['L',-1]]){const sh=P['sh'+kk],el=P['el'+kk],hip=P['hip'+kk],kn=P['kn'+kk];
+  bayGreeble(sh,R,M,6,s*.15*B,-.3,0,.04,.4,.26*B,'x');bayGreeble(el,R,M,6,s*.17*B,-.3,0,.04,.4,.28*B,'x');bayGreeble(el,R,M,3,0,-.3,.17*B,.24*B,.36,.02);
+  bayCable(sh,[0,-.05,-.13*B],[0,-.62,-.15*B],.02,M.dk,-.05);piston(el,[s*.14*B,-.05,.06],[s*.14*B,-.5,.06],.022,M);
+  bayGreeble(hip,R,M,7,s*.18*B,-L*.25,0,.04,L*.4,.3*B,'x');bayGreeble(kn,R,M,7,s*.18*B,-L*.25,0,.04,L*.38,.3*B,'x');bayGreeble(kn,R,M,3,0,-L*.3,-.2*B,.26*B,L*.3,.02);
+  bayCable(hip,[s*.1*B,-.05,-.18*B],[s*.1*B,-L*.55,-.2*B],.022,M.dk,-.06);piston(kn,[s*.12*B,-.05,.2*B],[s*.12*B,-L*.42,.2*B],.024,M);
+  if(ground){bayWheel(sh,.17*B,.12,M,s*.22*B,-.08,-.04,'x');if(R()<.6||k==='swift')bayWheel(kn,.19*B,.13,M,s*.21*B,-L*.36,-.12*B,'x');}
+  else{const fl=bx(.03,L*.3,.22*B,M.b,s*.2*B,-L*.3,-.08*B,kn);fl.rotation.z=s*.15;bx(.03,.3,.18*B,M.b,s*.17*B,-.2,-.05,sh);}}}
 function faceKit(c){const{M,head}=c,hb=head.children.find(o=>o.isMesh&&o.geometry&&o.geometry.type==='BoxGeometry');if(!hb)return;
  const p=hb.geometry.parameters,w=p.width,h=p.height,fz=hb.position.z+p.depth/2,y0=hb.position.y;
  const mw=Math.min(.34,w*.6),my=y0-h*.3;
