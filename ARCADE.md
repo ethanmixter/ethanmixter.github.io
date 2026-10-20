@@ -1,6 +1,6 @@
 # Ethan Mixter Arcade
 
-The homepage is a walkable 3D arcade. Drop `index.html` and the `arcade/` folder into the root of
+The homepage is a 3D arcade. Drop `index.html` and the `arcade/` folder into the root of
 `ethanmixter.github.io` (this replaces the old list homepage; the arcade has its own "All games" list view).
 
 ## Adding a game
