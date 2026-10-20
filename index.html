@@ -1,179 +1,829 @@
 <!doctype html>
 <html lang="en">
-  <head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <meta
-      name="description"
-      content="Ethan Mixter's project landing page, with links to web projects, games, and GitHub work."
-    >
-    <meta property="og:title" content="Ethan Mixter">
-    <meta
-      property="og:description"
-      content="A home base for Ethan Mixter's web projects and game experiments."
-    >
-    <meta property="og:image" content="https://ethanmixter.github.io/assets/ethan-player-1-avatar.jpg">
-    <link rel="icon" href="assets/ethan-player-1-avatar.jpg">
-    <title>Ethan Mixter</title>
-    <link rel="stylesheet" href="styles.css">
-  </head>
-  <body>
-    <header class="site-header" aria-label="Site header">
-      <a class="brand" href="/" aria-label="Ethan Mixter home">
-        <img src="assets/ethan-player-1-avatar.jpg" alt="" width="40" height="40">
-        <span>Ethan Mixter</span>
-      </a>
-      <nav aria-label="Primary navigation">
-        <a href="#projects">Projects</a>
-        <a href="https://github.com/ethanmixter">GitHub</a>
-      </nav>
-    </header>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Ethan Mixter Arcade</title>
+<meta name="description" content="Ethan Mixter's browser games, set up as a walkable 3D arcade. Kepler Drift, FPS Chess, Coffee Shop Tycoon, Red Shirt Kid, Repulsor Forge, Foam Forge, Pontoon Battle and Forgeframe Duel.">
+<meta property="og:title" content="Ethan Mixter Arcade">
+<meta property="og:description" content="Walk the floor, watch the screens, and step up to whatever looks fun.">
+<meta property="og:image" content="https://ethanmixter.com/arcade/og.jpg">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="icon" href="assets/ethan-player-1-avatar.jpg">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bungee&family=Chakra+Petch:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+  /* Layout: full-bleed 3D hall; HUD hugs the edges like an arcade bezel, one game card docks bottom-centre when you face a cabinet. */
+  :root {
+    color-scheme: dark;
+    --void: #07050f;        /* the room's darkness */
+    --panel: #120d22;       /* HUD glass */
+    --panel-edge: #2c2350;
+    --ink: #f1ecff;
+    --ink-dim: #a69cc8;
+    --pink: #ff2ea0;        /* back-wall neon */
+    --cyan: #1ed9ff;
+    --coin: #ffd23f;        /* insert-coin yellow */
+    --acc: var(--cyan);     /* swapped per cabinet */
+    --f-display: "Bungee", "Impact", "Arial Black", system-ui, sans-serif;
+    --f-body: "Chakra Petch", "Segoe UI", system-ui, sans-serif;
+    --f-mono: "IBM Plex Mono", ui-monospace, "SFMono-Regular", Menlo, monospace;
+  }
+  html, body { height: 100%; }
+  body {
+    margin: 0; overflow: hidden; background: var(--void); color: var(--ink);
+    font-family: var(--f-body); font-size: 15px; line-height: 1.45;
+    -webkit-tap-highlight-color: transparent; user-select: none; -webkit-user-select: none;
+  }
+  #stage { position: fixed; inset: 0; }
+  #stage canvas { display: block; width: 100%; height: 100%; touch-action: none; outline: none; }
+  a { color: inherit; }
+  button { font: inherit; color: inherit; }
+  :focus-visible { outline: 2px solid var(--coin); outline-offset: 3px; }
 
-    <main>
-      <section class="hero" aria-labelledby="intro-title">
-        <div class="hero-copy">
-          <p class="eyebrow">Web projects and game experiments</p>
-          <h1 id="intro-title">Ethan Mixter</h1>
-          <p class="lede">
-            A home base for small, focused software projects, browser games, and experiments.
-          </p>
-          <div class="actions" aria-label="Featured links">
-            <a class="button primary" href="kepler-drift/">
-              Play Kepler Drift
-            </a>
-            <a class="button secondary" href="https://ethanmixter.github.io/coffee_shop_tycoon/">
-              Play Coffee Shop Tycoon
-            </a>
-            <a class="button secondary" href="https://ethanmixter.github.io/redshirtkid/">
-              Play Red Shirt Kid
-            </a>
-            <a class="button secondary" href="repulsor-forge/">
-              Play Repulsor Forge
-            </a>
-            <a class="button secondary" href="foam-forge/">
-              Play Foam Forge
-            </a>
-            <a class="button secondary" href="vermilion-tubing/">
-              Play Pontoon Battle
-            </a>
-            <a class="button secondary" href="fps-chess/">
-              Play FPS Chess
-            </a>
-            <a class="button secondary" href="forgeframe-duel/">
-              Play Forgeframe Duel
-            </a>
-            <a class="button secondary" href="https://github.com/ethanmixter">
-              GitHub Profile
-            </a>
-          </div>
-        </div>
-        <div class="portrait" aria-hidden="true">
-          <img src="assets/ethan-player-1-avatar.jpg" alt="" width="384" height="384">
-        </div>
-      </section>
+  /* ---------- HUD chrome ---------- */
+  .hud-top {
+    position: fixed; top: 0; left: 0; right: 0; z-index: 5; pointer-events: none;
+    display: flex; justify-content: space-between; align-items: flex-start; gap: 12px;
+    padding-top: calc(env(safe-area-inset-top, 0px) + 14px);
+    padding-left: max(16px, env(safe-area-inset-left, 0px));
+    padding-right: max(16px, env(safe-area-inset-right, 0px));
+  }
+  .brand { display: flex; align-items: center; gap: 10px; pointer-events: auto; text-decoration: none; }
+  .brand img { width: 34px; height: 34px; border-radius: 50%; border: 2px solid var(--pink); box-shadow: 0 0 12px rgb(255 46 160 / .6); }
+  .brand b { font-family: var(--f-display); font-weight: 400; font-size: 15px; letter-spacing: .04em; line-height: 1; text-shadow: 0 0 10px rgb(255 46 160 / .7); }
+  .brand small { display: block; font-family: var(--f-mono); font-size: 10.5px; letter-spacing: .18em; color: var(--cyan); margin-top: 3px; }
+  .tools { display: flex; gap: 8px; pointer-events: auto; flex-wrap: wrap; justify-content: flex-end; }
+  .chip {
+    display: inline-flex; align-items: center; gap: 6px; height: 34px; padding: 0 12px; border-radius: 6px;
+    background: rgb(18 13 34 / .78); border: 1px solid var(--panel-edge); backdrop-filter: blur(6px);
+    font-family: var(--f-mono); font-size: 12px; letter-spacing: .06em; text-decoration: none; cursor: pointer;
+  }
+  .chip:hover { border-color: var(--cyan); color: #fff; }
 
-      <section class="projects" id="projects" aria-labelledby="projects-title">
-        <div class="section-heading">
-          <p class="eyebrow">Featured projects</p>
-          <h2 id="projects-title">Games</h2>
-        </div>
-        <div class="project-list">
-          <article class="project-card">
-            <div>
-              <h3>Kepler Drift</h3>
-              <p>
-                Earth fell to space pirates. Build Brian Wilson a new colony, then defend it in 3D turret battles.
-              </p>
-            </div>
-            <a class="text-link" href="kepler-drift/">Play Kepler Drift</a>
-          </article>
+  #crosshair {
+    position: fixed; left: 50%; top: 50%; width: 6px; height: 6px; margin: -3px 0 0 -3px; border-radius: 50%;
+    background: #fff; box-shadow: 0 0 6px #fff; opacity: .55; pointer-events: none; z-index: 4;
+  }
+  #crosshair.on { background: var(--coin); box-shadow: 0 0 10px var(--coin); opacity: 1; transform: scale(1.4); }
 
-          <article class="project-card">
-            <div>
-              <h3>FPS Chess</h3>
-              <p>Play chess against the computer, then fight first-person duels to decide captures.</p>
-            </div>
-            <a class="text-link" href="fps-chess/">Play FPS Chess</a>
-          </article>
+  #minimap {
+    position: fixed; z-index: 4; pointer-events: none;
+    left: max(16px, env(safe-area-inset-left, 0px)); bottom: calc(env(safe-area-inset-bottom, 0px) + 16px);
+    width: 74px; height: 190px; border-radius: 6px; background: rgb(18 13 34 / .7); border: 1px solid var(--panel-edge);
+  }
+  .hint {
+    position: fixed; z-index: 4; right: max(16px, env(safe-area-inset-right, 0px)); bottom: calc(env(safe-area-inset-bottom, 0px) + 16px);
+    font-family: var(--f-mono); font-size: 11.5px; color: var(--ink-dim); text-align: right; line-height: 1.7; pointer-events: none;
+  }
+  .hint kbd {
+    display: inline-block; min-width: 20px; padding: 0 5px; border: 1px solid var(--panel-edge); border-bottom-width: 2px;
+    border-radius: 4px; background: rgb(18 13 34 / .8); color: var(--ink); font-family: inherit; text-align: center;
+  }
 
-          <article class="project-card">
-            <div>
-              <h3>Coffee Shop Tycoon</h3>
-              <p>
-                Manage growth, upgrades, and daily choices in an approachable tycoon experience.
-              </p>
-            </div>
-            <a class="text-link" href="https://ethanmixter.github.io/coffee_shop_tycoon/">
-              Play on GitHub Pages
-            </a>
-          </article>
+  /* ---------- game card ---------- */
+  #card {
+    position: fixed; z-index: 6; left: 50%; bottom: calc(env(safe-area-inset-bottom, 0px) + 22px);
+    width: min(460px, calc(100% - 32px)); transform: translate(-50%, 16px); opacity: 0; pointer-events: none;
+    transition: opacity .18s ease, transform .18s ease;
+    background: linear-gradient(180deg, rgb(20 14 40 / .92), rgb(10 7 22 / .94));
+    border: 1px solid color-mix(in srgb, var(--acc) 55%, transparent); border-radius: 10px;
+    box-shadow: 0 0 0 1px rgb(0 0 0 / .4), 0 0 28px color-mix(in srgb, var(--acc) 35%, transparent), 0 18px 50px rgb(0 0 0 / .6);
+    padding: 16px 18px 16px; display: grid; gap: 10px; backdrop-filter: blur(8px);
+  }
+  #card.show { opacity: 1; transform: translate(-50%, 0); pointer-events: auto; }
+  #card .tag { font-family: var(--f-mono); font-size: 11px; letter-spacing: .16em; text-transform: uppercase; color: var(--acc); }
+  #card h2 { margin: 0; font-family: var(--f-display); font-weight: 400; font-size: 26px; line-height: 1.05; text-wrap: balance; color: #fff; text-shadow: 0 0 14px color-mix(in srgb, var(--acc) 70%, transparent); }
+  #card p { margin: 0; color: var(--ink-dim); font-size: 14.5px; max-width: 60ch; }
+  #card .row { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; margin-top: 2px; }
+  #card .how { font-family: var(--f-mono); font-size: 11.5px; color: var(--ink-dim); }
+  .play {
+    display: inline-flex; align-items: center; gap: 10px; height: 44px; padding: 0 18px; border-radius: 6px; text-decoration: none;
+    background: var(--coin); color: #1a1200; font-family: var(--f-display); font-size: 16px; letter-spacing: .04em;
+    box-shadow: 0 0 18px rgb(255 210 63 / .55), inset 0 -3px 0 rgb(0 0 0 / .25); cursor: pointer; border: 0;
+  }
+  .play:hover { filter: brightness(1.08); }
+  .play kbd { font-family: var(--f-mono); font-size: 11px; padding: 1px 6px; border-radius: 3px; background: rgb(0 0 0 / .18); }
 
-          <article class="project-card">
-            <div>
-              <h3>Red Shirt Kid</h3>
-              <p>
-                A retro platform game with arcade controls, coins, enemies, and mobile support.
-              </p>
-            </div>
-            <a class="text-link" href="https://ethanmixter.github.io/redshirtkid/">
-              Play on GitHub Pages
-            </a>
-          </article>
+  /* ---------- entry overlay ---------- */
+  #gate {
+    position: fixed; inset: 0; z-index: 10; display: grid; place-items: center; overflow-y: auto;
+    background: radial-gradient(ellipse at 50% 40%, rgb(7 5 15 / .35), rgb(7 5 15 / .88) 70%);
+    padding-block: calc(env(safe-area-inset-top, 0px) + 24px) calc(env(safe-area-inset-bottom, 0px) + 24px);
+    padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px));
+    transition: opacity .35s ease;
+  }
+  #gate.gone { opacity: 0; pointer-events: none; }
+  .gate-inner { width: min(560px, 100%); display: grid; gap: 18px; justify-items: center; text-align: center; }
+  .gate-kicker { font-family: var(--f-mono); font-size: 12px; letter-spacing: .32em; color: var(--cyan); text-shadow: 0 0 10px rgb(30 217 255 / .6); }
+  .gate-title { margin: 0; font-family: var(--f-display); font-weight: 400; line-height: .92; font-size: clamp(42px, 10vw, 82px); color: #fff;
+    text-shadow: 0 0 6px #fff, 0 0 22px var(--pink), 0 0 48px var(--pink); }
+  .gate-title span { display: block; font-size: .5em; letter-spacing: .28em; margin-top: .25em; color: var(--cyan);
+    text-shadow: 0 0 6px #b8f4ff, 0 0 20px var(--cyan), 0 0 44px var(--cyan); padding-left: .28em; }
+  .gate-lede { margin: 0; color: var(--ink-dim); font-size: 16px; max-width: 46ch; text-wrap: pretty; }
+  .controls { display: flex; flex-wrap: wrap; gap: 8px 18px; justify-content: center; font-family: var(--f-mono); font-size: 12px; color: var(--ink-dim); }
+  .controls kbd { display: inline-block; min-width: 22px; padding: 1px 6px; border: 1px solid var(--panel-edge); border-bottom-width: 3px; border-radius: 4px; background: var(--panel); color: var(--ink); font-family: inherit; }
+  #enter { height: 54px; padding: 0 30px; font-size: 19px; }
+  #enter[disabled] { filter: grayscale(.8) brightness(.7); cursor: progress; }
+  .blink { animation: blink 1.1s steps(2, start) infinite; }
+  @keyframes blink { to { visibility: hidden; } }
+  .gate-alt { font-size: 13.5px; color: var(--ink-dim); }
+  .gate-alt button { background: none; border: 0; padding: 0; text-decoration: underline; text-underline-offset: 3px; cursor: pointer; color: var(--ink); }
 
-          <article class="project-card">
-            <div>
-              <h3>Repulsor Forge</h3>
-              <p>
-                Battle war machines, collect their bounty, and upgrade a powerful repulsor gauntlet.
-              </p>
-            </div>
-            <a class="text-link" href="repulsor-forge/">
-              Play on GitHub Pages
-            </a>
-          </article>
+  /* ---------- list view (also the no-WebGL fallback) ---------- */
+  #list {
+    position: fixed; inset: 0; z-index: 20; overflow-y: auto; background: rgb(7 5 15 / .97);
+    padding-block: calc(env(safe-area-inset-top, 0px) + 22px) calc(env(safe-area-inset-bottom, 0px) + 30px);
+    padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px));
+  }
+  .list-wrap { max-width: 980px; margin: 0 auto; display: grid; gap: 20px; }
+  .list-head { display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap; }
+  .list-head h2 { margin: 0; font-family: var(--f-display); font-weight: 400; font-size: 26px; }
+  .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 280px), 1fr)); gap: 16px; }
+  .game { display: grid; grid-template-rows: auto 1fr; border-radius: 8px; overflow: hidden; background: var(--panel); border: 1px solid var(--panel-edge); text-decoration: none; min-width: 0; }
+  .game:hover { border-color: var(--g); box-shadow: 0 0 18px color-mix(in srgb, var(--g) 35%, transparent); }
+  .game img { width: 100%; aspect-ratio: 4 / 3; object-fit: cover; display: block; background: #000; }
+  .game div { padding: 12px 14px 14px; display: grid; gap: 4px; align-content: start; }
+  .game .tag { font-family: var(--f-mono); font-size: 10.5px; letter-spacing: .14em; text-transform: uppercase; color: var(--g); }
+  .game h3 { margin: 0; font-family: var(--f-display); font-weight: 400; font-size: 18px; }
+  .game p { margin: 0; color: var(--ink-dim); font-size: 14px; }
 
-          <article class="project-card">
-            <div>
-              <h3>Foam Forge</h3>
-              <p>
-                Build foam blasters, unlock special abilities, practice at the range, and clear Bot Quests.
-              </p>
-            </div>
-            <a class="text-link" href="foam-forge/">
-              Play Foam Forge
-            </a>
-          </article>
+  /* ---------- touch controls ---------- */
+  #stick { position: fixed; z-index: 5; width: 112px; height: 112px; margin: -56px 0 0 -56px; border-radius: 50%;
+    border: 2px solid rgb(255 255 255 / .25); background: rgb(18 13 34 / .35); pointer-events: none; }
+  #stick i { position: absolute; left: 50%; top: 50%; width: 46px; height: 46px; margin: -23px 0 0 -23px; border-radius: 50%; background: rgb(255 255 255 / .35); }
+  .touch .hint, .touch #crosshair { display: none; }
 
-          <article class="project-card">
-            <div>
-              <h3>Pontoon Battle</h3>
-              <p>
-                Vermilion Tubing is a 2D tubing battle behind a pontoon boat.
-              </p>
-            </div>
-            <a class="text-link" href="vermilion-tubing/">
-              Play Pontoon Battle
-            </a>
-          </article>
+  #flash { position: fixed; inset: 0; z-index: 30; background: #000; opacity: 0; pointer-events: none; display: grid; place-items: center; transition: opacity .35s ease; }
+  #flash.on { opacity: 1; }
+  #flash b { font-family: var(--f-display); font-weight: 400; font-size: clamp(28px, 6vw, 54px); color: var(--coin); text-shadow: 0 0 18px var(--coin); }
 
-          <article class="project-card">
-            <div>
-              <h3>Forgeframe Duel</h3>
-              <p>
-                Choose a transforming war machine, customize its loadout, and battle through 3D arena duels.
-              </p>
-            </div>
-            <a class="text-link" href="forgeframe-duel/">
-              Play Forgeframe Duel
-            </a>
-          </article>
-        </div>
-      </section>
-    </main>
+  @media (max-width: 560px) {
+    .brand b { font-size: 13px; }
+    .chip span.long { display: none; }
+    #minimap { width: 46px; height: 118px; bottom: auto; top: calc(env(safe-area-inset-top, 0px) + 64px); }
+    #card { bottom: calc(env(safe-area-inset-bottom, 0px) + 12px); }
+    #card h2 { font-size: 22px; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .blink { animation: none; }
+    #card, #gate, #flash { transition: none; }
+  }
+</style>
+</head>
+<body>
 
-    <footer>
-      <span>Built for GitHub Pages.</span>
-      <a href="https://github.com/ethanmixter/ethanmixter.github.io">View source</a>
-    </footer>
-  </body>
+<div id="stage" aria-hidden="true"></div>
+
+<header class="hud-top">
+  <a class="brand" href="https://ethanmixter.com/" aria-label="Ethan Mixter home">
+    <img src="arcade/avatar.jpg" alt="" width="34" height="34">
+    <span><b>Ethan Mixter</b><small>ARCADE</small></span>
+  </a>
+  <nav class="tools" aria-label="Arcade tools">
+    <button class="chip" id="listBtn" type="button">☰ <span class="long">All games</span></button>
+    <button class="chip" id="soundBtn" type="button" aria-pressed="true">♪ <span class="long">Sound</span> on</button>
+    <a class="chip" href="classic.html">Classic</a>
+    <a class="chip" href="https://github.com/ethanmixter" target="_blank" rel="noopener">GitHub</a>
+  </nav>
+</header>
+
+<div id="crosshair" hidden></div>
+<canvas id="minimap" width="148" height="380" hidden></canvas>
+<div class="hint" id="hint" hidden><kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd> walk · <kbd>Shift</kbd> run<br>mouse look · <kbd>E</kbd> play · <kbd>Esc</kbd> free cursor</div>
+<div id="stick" hidden><i></i></div>
+
+<section id="card" aria-live="polite">
+  <div class="tag" id="cTag">Arcade</div>
+  <h2 id="cTitle">Game</h2>
+  <p id="cBlurb"></p>
+  <div class="row">
+    <span class="how" id="cHow"></span>
+    <a class="play" id="cPlay" href="#">PLAY <kbd>E</kbd></a>
+  </div>
+</section>
+
+<div id="gate">
+  <div class="gate-inner">
+    <div class="gate-kicker" id="gateKicker">8 CABINETS · FREE PLAY</div>
+    <h1 class="gate-title">Ethan Mixter<span>Arcade</span></h1>
+    <p class="gate-lede" id="gateLede">Every game I've made is plugged in and running. Walk the floor, watch the screens, and step up to whatever looks fun.</p>
+    <div class="controls" id="gateControls">
+      <span><kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd> walk</span>
+      <span><kbd>Mouse</kbd> look</span>
+      <span><kbd>E</kbd> or click a cabinet to play</span>
+    </div>
+    <button class="play" id="enter" type="button" disabled>LOADING <span id="pct">0%</span></button>
+    <div class="gate-alt">Just want the list? <button type="button" id="gateList">See all games</button></div>
+  </div>
+</div>
+
+<section id="list" hidden aria-labelledby="listTitle">
+  <div class="list-wrap">
+    <div class="list-head">
+      <h2 id="listTitle">All games</h2>
+      <button class="chip" id="listClose" type="button">← Back to the arcade</button>
+    </div>
+    <div class="grid" id="grid"></div>
+  </div>
+</section>
+
+<div id="flash"><b id="flashText">INSERT COIN</b></div>
+
+<script type="importmap">
+{ "imports": {
+  "three": "https://cdn.jsdelivr.net/npm/three@0.170.0/build/three.module.js",
+  "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.170.0/examples/jsm/"
+} }
+</script>
+<script type="module">
+import * as THREE from 'three';
+import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+import { EffectComposer } from 'three/addons/postprocessing/EffectComposer.js';
+import { RenderPass } from 'three/addons/postprocessing/RenderPass.js';
+import { UnrealBloomPass } from 'three/addons/postprocessing/UnrealBloomPass.js';
+import { OutputPass } from 'three/addons/postprocessing/OutputPass.js';
+
+const BASE = 'arcade/';
+const SITE = 'https://ethanmixter.com/';
+const GAMES = [
+  { id: 'kepler-drift', title: 'Kepler Drift', tag: 'Colony builder · 3D turret defense', color: '#6b7aff',
+    url: SITE + 'kepler-drift/', how: 'Mouse · keyboard',
+    blurb: 'Earth fell to space pirates. Build Brian Wilson a new colony, then defend it in 3D turret battles.' },
+  { id: 'fps-chess', title: 'FPS Chess', tag: 'Chess · first-person duels', color: '#ffc233',
+    url: SITE + 'fps-chess/', how: 'WASD · mouse aim · click to shoot',
+    blurb: 'Play chess against the computer, then fight first-person duels to decide captures.' },
+  { id: 'coffee-shop-tycoon', title: 'Coffee Shop Tycoon', tag: 'Tycoon · management', color: '#1ccc80',
+    url: 'https://ethanmixter.github.io/coffee_shop_tycoon/', how: 'WASD · Space to brew',
+    blurb: 'Manage growth, upgrades, and daily choices in an approachable tycoon experience.' },
+  { id: 'red-shirt-kid', title: 'Red Shirt Kid', tag: 'Retro platformer', color: '#ff2a2a',
+    url: 'https://ethanmixter.github.io/redshirtkid/', how: 'Arrows / WASD · Space jump · touch',
+    blurb: 'A retro platform game with arcade controls, coins, enemies, and mobile support.' },
+  { id: 'repulsor-forge', title: 'Repulsor Forge', tag: 'Arena shooter · upgrades', color: '#22c7f2',
+    url: SITE + 'repulsor-forge/', how: 'WASD · mouse aim · Shift dash',
+    blurb: 'Battle war machines, collect their bounty, and upgrade a powerful repulsor gauntlet.' },
+  { id: 'foam-forge', title: 'Foam Forge', tag: 'Blaster builder · Bot Quests', color: '#b3eb1a',
+    url: SITE + 'foam-forge/', how: 'Mouse · keyboard',
+    blurb: 'Build foam blasters, unlock special abilities, practice at the range, and clear Bot Quests.' },
+  { id: 'pontoon-battle', title: 'Pontoon Battle', tag: 'Tubing battle · 2D', color: '#ff6633',
+    url: SITE + 'vermilion-tubing/', how: 'A/D or arrows · touch buttons',
+    blurb: 'Ride behind a pontoon boat, sling your tube across the wake, and smash the AI robot rider.' },
+  { id: 'forgeframe-duel', title: 'Forgeframe Duel', tag: 'Giant robot 1v1', color: '#ff38a8',
+    url: SITE + 'forgeframe-duel/', how: 'A/D move · J/K/L attacks',
+    blurb: 'Choose a transforming war machine, customize its loadout, and battle through 3D arena duels.' },
+];
+const GITHUB = { id: 'github', title: 'More on GitHub', tag: 'Source code · experiments', color: '#9b7bff',
+  url: 'https://github.com/ethanmixter', how: 'Opens in a new tab',
+  blurb: 'Every game here is open source. Browse the code, the build notes, and what is in progress.' };
+const ALL = [...GAMES, GITHUB];
+
+const $ = (s) => document.querySelector(s);
+const inFrame = (() => { try { return window.self !== window.top; } catch { return true; } })();
+const isTouch = matchMedia('(pointer: coarse)').matches && !matchMedia('(pointer: fine)').matches;
+if (isTouch) {
+  document.body.classList.add('touch');
+  $('#gateControls').innerHTML = '<span>Left thumb: walk</span><span>Right thumb: look</span><span>Tap a cabinet to walk up to it</span>';
+}
+
+/* ---------------- list view (also the fallback) ---------------- */
+const grid = $('#grid');
+for (const g of ALL) {
+  const a = document.createElement('a');
+  a.className = 'game'; a.href = g.url; a.style.setProperty('--g', g.color);
+  if (g.id === 'github' || inFrame) { a.target = '_blank'; a.rel = 'noopener'; }
+  a.innerHTML = (g.id === 'github' ? '' : `<img src="${BASE}screens/${g.id}-1.jpg" alt="" loading="lazy" width="640" height="480">`) +
+    `<div><span class="tag">${g.tag}</span><h3>${g.title}</h3><p>${g.blurb}</p></div>`;
+  grid.appendChild(a);
+}
+const list = $('#list');
+const openList = () => { document.exitPointerLock?.(); list.hidden = false; $('#listClose').focus(); };
+$('#listBtn').onclick = openList;
+$('#gateList').onclick = openList;
+$('#listClose').onclick = () => { list.hidden = true; };
+
+/* ---------------- sound (tiny synth, starts on first click) ---------------- */
+let actx = null, soundOn = true;
+try { soundOn = localStorage.getItem('arcade-sound') !== 'off'; } catch {}
+const soundBtn = $('#soundBtn');
+const paintSound = () => { soundBtn.setAttribute('aria-pressed', soundOn); soundBtn.lastChild.textContent = soundOn ? ' on' : ' off'; };
+paintSound();
+soundBtn.onclick = () => { soundOn = !soundOn; paintSound(); try { localStorage.setItem('arcade-sound', soundOn ? 'on' : 'off'); } catch {} };
+function blip(notes, type = 'square', dur = 0.07, vol = 0.05) {
+  if (!soundOn) return;
+  try {
+    actx ||= new (window.AudioContext || window.webkitAudioContext)();
+    let t = actx.currentTime;
+    for (const f of notes) {
+      const o = actx.createOscillator(), g = actx.createGain();
+      o.type = type; o.frequency.value = f;
+      g.gain.setValueAtTime(vol, t); g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+      o.connect(g).connect(actx.destination); o.start(t); o.stop(t + dur);
+      t += dur * 0.9;
+    }
+  } catch {}
+}
+
+/* ---------------- renderer ---------------- */
+const stage = $('#stage');
+let renderer;
+try {
+  renderer = new THREE.WebGLRenderer({ antialias: true, powerPreference: 'high-performance' });
+} catch (e) {
+  $('#gateLede').textContent = "Your browser couldn't start 3D graphics, so here's the full game list instead.";
+  openList();
+  throw e;
+}
+renderer.setPixelRatio(Math.min(devicePixelRatio, isTouch ? 1.5 : 1.75));
+renderer.setSize(innerWidth, innerHeight);
+renderer.outputColorSpace = THREE.SRGBColorSpace;
+renderer.toneMapping = THREE.NoToneMapping;
+stage.appendChild(renderer.domElement);
+renderer.domElement.tabIndex = 0;
+
+const scene = new THREE.Scene();
+scene.background = new THREE.Color('#07050f');
+scene.fog = new THREE.FogExp2('#07050f', 0.034);
+const fovFor = (a) => (a < 1 ? 62 + 24 * (1 - a) : 70);
+const camera = new THREE.PerspectiveCamera(fovFor(innerWidth / innerHeight), innerWidth / innerHeight, 0.05, 80);
+camera.rotation.order = 'YXZ';
+
+const composer = new EffectComposer(renderer);
+composer.addPass(new RenderPass(scene, camera));
+const bloom = new UnrealBloomPass(new THREE.Vector2(innerWidth / 2, innerHeight / 2), 0.42, 0.45, 0.9);
+composer.addPass(bloom);
+composer.addPass(new OutputPass());
+
+scene.add(new THREE.HemisphereLight('#9d8cff', '#1a0f2e', 1.1));
+const top = new THREE.DirectionalLight('#ffe9d6', 0.9);
+top.position.set(0.3, 1, 0.2);
+scene.add(top);
+
+/* ---------------- loading ---------------- */
+const manager = new THREE.LoadingManager();
+manager.onProgress = (_u, done, total) => { const p = $('#pct'); if (p) p.textContent = Math.round((done / total) * 100) + '%'; };
+const texLoader = new THREE.TextureLoader(manager);
+const loadTex = (path, srgb = true, flip = false) => {
+  const t = texLoader.load(BASE + path);
+  t.flipY = flip;
+  if (srgb) t.colorSpace = THREE.SRGBColorSpace;
+  t.anisotropy = renderer.capabilities.getMaxAnisotropy();
+  return t;
+};
+
+const LM_SCALE = 8.324; // written by the Blender bake (lm.json); updated below if fetch works
+const lmScale = { v: LM_SCALE };
+fetch(BASE + 'lm/lm.json').then((r) => r.json()).then((j) => { lmScale.v = j.scale; applyLM(); }).catch(() => {});
+
+const roomMats = {};
+const ROOM = {
+  Floor:      { color: '#ffffff', map: true },
+  Ceiling:    { color: '#2a2440' },
+  Wall_L:     { color: '#3a2c66' },
+  Wall_R:     { color: '#3a2c66' },
+  Wall_Back:  { color: '#2e2552' },
+  Wall_Front: { color: '#2e2552' },
+};
+const LM_GAIN = { Floor: 0.85, Ceiling: 0.45, Wall_L: 0.5, Wall_R: 0.5, Wall_Back: 0.55, Wall_Front: 0.55 };
+for (const [name, o] of Object.entries(ROOM)) {
+  const lm = loadTex(`lm/lm_${name}.png`);
+  const m = new THREE.MeshBasicMaterial({ color: o.color, lightMap: lm });
+  if (o.map) {
+    const carpet = loadTex('tex/carpet.jpg', true, true);
+    carpet.wrapS = carpet.wrapT = THREE.RepeatWrapping;
+    carpet.repeat.set(8 / 2.2, 24 / 2.2);
+    m.map = carpet;
+  }
+  roomMats[name] = m;
+}
+function applyLM() { for (const [n, m] of Object.entries(roomMats)) m.lightMapIntensity = lmScale.v * Math.PI * LM_GAIN[n]; }
+applyLM();
+
+/* CRT screen shader: crossfades two screenshots, adds scanlines + curvature */
+const crtVert = `varying vec2 vUv; void main(){ vUv = uv; gl_Position = projectionMatrix * modelViewMatrix * vec4(position,1.0); }`;
+const crtFrag = `
+  uniform sampler2D a; uniform sampler2D b; uniform float mixT; uniform float t; uniform float gain; uniform float noise;
+  varying vec2 vUv;
+  float h(vec2 p){ return fract(sin(dot(p, vec2(12.9898,78.233))) * 43758.5453); }
+  void main(){
+    vec2 c = vUv - 0.5; float r2 = dot(c,c);
+    vec2 uv = 0.5 + c * (1.0 + 0.10 * r2);
+    if (uv.x < 0.0 || uv.x > 1.0 || uv.y < 0.0 || uv.y > 1.0) { gl_FragColor = vec4(0.0,0.0,0.0,1.0); return; }
+    vec3 col = mix(texture2D(a, uv).rgb, texture2D(b, uv).rgb, smoothstep(0.0, 1.0, mixT));
+    col *= 0.82 + 0.18 * sin(uv.y * 900.0);
+    col *= 1.0 - 0.55 * smoothstep(0.12, 0.34, r2);
+    col += noise * (h(uv * 400.0 + t) - 0.5) * 0.35;
+    col *= gain * (0.985 + 0.015 * sin(t * 50.0));
+    gl_FragColor = vec4(col, 1.0);
+    #include <colorspace_fragment>
+  }`;
+
+function marqueeTexture(g) {
+  const c = document.createElement('canvas'); c.width = 1024; c.height = 480;
+  const x = c.getContext('2d');
+  const grad = x.createLinearGradient(0, 0, 0, 480);
+  grad.addColorStop(0, '#0b0818'); grad.addColorStop(0.5, '#170f2c'); grad.addColorStop(1, '#0b0818');
+  x.fillStyle = grad; x.fillRect(0, 0, 1024, 480);
+  // sunburst in the cabinet colour
+  x.save(); x.translate(512, 520); x.globalAlpha = 0.18; x.fillStyle = g.color;
+  for (let i = 0; i < 18; i++) { x.rotate(Math.PI / 18); x.beginPath(); x.moveTo(0, 0); x.lineTo(-60, -700); x.lineTo(60, -700); x.fill(); }
+  x.restore();
+  x.strokeStyle = g.color; x.lineWidth = 10; x.strokeRect(14, 14, 996, 452);
+  x.textAlign = 'center'; x.textBaseline = 'middle';
+  let size = 150;
+  x.font = `${size}px Bungee, Impact, sans-serif`;
+  const words = g.title.toUpperCase();
+  while (x.measureText(words).width > 900 && size > 60) { size -= 6; x.font = `${size}px Bungee, Impact, sans-serif`; }
+  x.shadowColor = g.color; x.shadowBlur = 40; x.fillStyle = '#ffffff';
+  x.fillText(words, 512, 220);
+  x.shadowBlur = 0; x.lineWidth = 4; x.strokeStyle = g.color; x.strokeText(words, 512, 220);
+  x.font = '600 40px "IBM Plex Mono", monospace'; x.fillStyle = g.color;
+  x.fillText(g.id === 'github' ? 'SOURCE · OPEN' : 'FREE PLAY · 1 PLAYER', 512, 390);
+  const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; t.flipY = false;
+  t.anisotropy = renderer.capabilities.getMaxAnisotropy();
+  return t;
+}
+function githubScreen() {
+  const c = document.createElement('canvas'); c.width = 640; c.height = 480;
+  const x = c.getContext('2d');
+  x.fillStyle = '#0d0820'; x.fillRect(0, 0, 640, 480);
+  x.strokeStyle = 'rgba(155,123,255,.25)'; x.lineWidth = 1;
+  for (let i = 0; i < 640; i += 32) { x.beginPath(); x.moveTo(i, 0); x.lineTo(i, 480); x.stroke(); }
+  for (let i = 0; i < 480; i += 32) { x.beginPath(); x.moveTo(0, i); x.lineTo(640, i); x.stroke(); }
+  x.textAlign = 'center'; x.fillStyle = '#fff'; x.shadowColor = '#9b7bff'; x.shadowBlur = 24;
+  x.font = '64px Bungee, Impact, sans-serif'; x.fillText('MORE ON', 320, 170); x.fillText('GITHUB', 320, 245);
+  x.shadowBlur = 0; x.fillStyle = '#c7b8ff'; x.font = '500 26px "IBM Plex Mono", monospace';
+  x.fillText('github.com/ethanmixter', 320, 320);
+  x.fillStyle = '#ffd23f'; x.fillText(isTouch ? '▶ TAP TO OPEN' : '▶ PRESS E', 320, 395);
+  const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; t.flipY = false; return t;
+}
+
+const cabinets = []; // {g, root, screen, anchor, uniforms, box, light}
+const colliders = [];
+const pickables = [];
+const ROOM_BOUNDS = { minX: -3.97, maxX: 3.97, minZ: -18.97, maxZ: 4.97 };
+
+const fontsReady = Promise.race([
+  Promise.all([document.fonts.load('80px Bungee'), document.fonts.load('600 40px "IBM Plex Mono"')]),
+  new Promise((r) => setTimeout(r, 2500)),
+]).catch(() => {});
+
+new GLTFLoader(manager).load(BASE + 'arcade.gltf.json', async (gltf) => {
+  await fontsReady;
+  const root = gltf.scene;
+  scene.add(root);
+  root.updateMatrixWorld(true);
+  root.traverse((o) => {
+    if (!o.isMesh) return;
+    const nodeName = o.name.replace(/_\d+$/, '');
+    if (ROOM[o.name] || ROOM[nodeName]) { o.material = roomMats[ROOM[o.name] ? o.name : nodeName]; return; }
+    const m = o.material;
+    if (m && m.emissive && m.emissiveIntensity > 1) {
+      // Blender strengths are tuned for the bake; on screen keep neon bright but not blown out
+      const cap = m.name === 'Neon_White' ? 1.4 : m.name.startsWith('Btn_') ? 1.3 : /^Neon_(Pink|Cyan|Purple)$/.test(m.name) ? 1.7 : 2.4;
+      m.emissiveIntensity = Math.min(m.emissiveIntensity, cap);
+      m.toneMapped = false;
+    }
+  });
+  for (const g of ALL) {
+    const cab = root.getObjectByName('Cabinet_' + g.id);
+    const screen = root.getObjectByName('Screen_' + g.id);
+    const marquee = root.getObjectByName('Marquee_' + g.id);
+    const anchor = root.getObjectByName('Play_' + g.id);
+    if (!cab || !screen || !anchor) continue;
+    let uniforms = null;
+    if (g.id === 'github') {
+      screen.material = new THREE.MeshBasicMaterial({ map: githubScreen(), toneMapped: false });
+      screen.material.color.setScalar(1.15);
+    } else {
+      uniforms = {
+        a: { value: loadTex(`screens/${g.id}-1.jpg`) }, b: { value: loadTex(`screens/${g.id}-2.jpg`) },
+        mixT: { value: 0 }, t: { value: 0 }, gain: { value: 1.05 }, noise: { value: 0 },
+      };
+      screen.material = new THREE.ShaderMaterial({ uniforms, vertexShader: crtVert, fragmentShader: crtFrag, toneMapped: false });
+    }
+    if (marquee) {
+      marquee.material = new THREE.MeshBasicMaterial({ map: marqueeTexture(g), toneMapped: false });
+      marquee.material.color.setScalar(1.25);
+    }
+    const sp = new THREE.Vector3(); screen.getWorldPosition(sp);
+    const ap = new THREE.Vector3(); anchor.getWorldPosition(ap);
+    // where the player stands to play: 1.35 m out from the screen
+    const out = new THREE.Vector3(ap.x - sp.x, 0, ap.z - sp.z).normalize();
+    const stand = new THREE.Vector3(sp.x + out.x * 1.35, 0, sp.z + out.z * 1.35);
+    const light = new THREE.PointLight(g.color, 3, 4.2, 1.5);
+    light.position.copy(sp).lerp(ap, 0.35); light.position.y = 1.5;
+    scene.add(light);
+    const box = new THREE.Box3().setFromObject(cab);
+    colliders.push(box);
+    cab.traverse((o) => { if (o.isMesh) { o.userData.cab = g.id; pickables.push(o); } });
+    cabinets.push({ g, cab, screen, sp, ap: stand, uniforms, light, phase: Math.random() * 8 });
+  }
+  manager.onLoad = ready;
+  if (!texLoader.manager.isLoading) ready();
+}, undefined, (err) => {
+  console.error(err);
+  $('#gateLede').textContent = "The arcade couldn't load. Here's the full game list instead.";
+  openList();
+});
+
+let isReady = false;
+function ready() {
+  if (isReady) return; isReady = true;
+  const btn = $('#enter');
+  btn.disabled = false;
+  btn.innerHTML = isTouch ? 'TAP TO ENTER' : '<span class="blink">▶</span>&nbsp;CLICK TO ENTER';
+}
+
+/* ---------------- player ---------------- */
+const player = { x: 0, z: 3.9, yaw: 0, pitch: -0.06, vx: 0, vz: 0, bob: 0 };
+let returning = false;
+try {
+  const s = JSON.parse(sessionStorage.getItem('arcade-pos') || 'null');
+  if (s && Date.now() - s.t < 3 * 60 * 60 * 1000) {
+    Object.assign(player, { x: s.x, z: s.z, yaw: s.yaw }); returning = true;
+    $('#gateKicker').textContent = 'WELCOME BACK · CONTINUE?';
+  }
+} catch {}
+const EYE = 1.62, R = 0.32;
+const keys = new Set();
+let active = false, locked = false, autoWalk = null;
+
+addEventListener('keydown', (e) => {
+  if (!list.hidden) { if (e.key === 'Escape') list.hidden = true; return; }
+  if (e.target.closest && e.target.closest('input,textarea')) return;
+  const k = e.key.toLowerCase();
+  if (['w', 'a', 's', 'd', 'arrowup', 'arrowdown', 'arrowleft', 'arrowright', 'shift', ' '].includes(k)) { keys.add(k); autoWalk = null; if (active) e.preventDefault(); }
+  if ((k === 'e' || k === 'enter') && active && focused) { e.preventDefault(); play(focused.g); }
+  if (k === 'enter' && !active && isReady && $('#gate').contains(document.activeElement) === false) enter();
+});
+addEventListener('keyup', (e) => keys.delete(e.key.toLowerCase()));
+addEventListener('blur', () => keys.clear());
+
+const canvas = renderer.domElement;
+function enter() {
+  if (!isReady) return;
+  active = true;
+  $('#gate').classList.add('gone');
+  $('#crosshair').hidden = false; $('#minimap').hidden = false; $('#hint').hidden = isTouch;
+  blip([523, 784], 'square', 0.08, 0.04);
+  if (!isTouch) tryLock();
+  canvas.focus();
+}
+$('#enter').onclick = enter;
+function tryLock() {
+  try { const p = canvas.requestPointerLock?.(); p?.catch?.(() => {}); } catch {}
+}
+document.addEventListener('pointerlockchange', () => { locked = document.pointerLockElement === canvas; });
+
+// mouse look (pointer lock) or drag-to-look fallback
+let drag = null;
+canvas.addEventListener('mousemove', (e) => {
+  if (locked) { look(e.movementX, e.movementY, 0.0022); }
+  else if (drag && drag.type === 'mouse') { look(e.clientX - drag.x, e.clientY - drag.y, 0.004); drag.moved += Math.abs(e.clientX - drag.x) + Math.abs(e.clientY - drag.y); drag.x = e.clientX; drag.y = e.clientY; }
+});
+canvas.addEventListener('mousedown', (e) => {
+  if (!active || isTouch) return;
+  if (locked) { if (focused) play(focused.g); else if (hover) walkTo(hover); return; }
+  drag = { type: 'mouse', x: e.clientX, y: e.clientY, moved: 0, sx: e.clientX, sy: e.clientY };
+});
+addEventListener('mouseup', (e) => {
+  if (drag && drag.type === 'mouse') {
+    if (drag.moved < 6) {
+      const hit = pickAt(e.clientX, e.clientY);
+      if (hit) { if (focused && focused.g.id === hit.g.id) play(hit.g); else walkTo(hit); }
+      else tryLock();
+    }
+    drag = null;
+  }
+});
+function look(dx, dy, s) {
+  player.yaw -= dx * s;
+  player.pitch = Math.max(-1.1, Math.min(1.0, player.pitch - dy * s));
+  autoWalk && (autoWalk.turn = false);
+}
+
+// touch: left half = joystick, right half = look; tap a cabinet to walk to it
+const stick = $('#stick'), touches = new Map();
+const joy = { x: 0, y: 0 };
+canvas.addEventListener('touchstart', (e) => {
+  if (!active) return;
+  for (const t of e.changedTouches) {
+    const left = t.clientX < innerWidth * 0.42;
+    touches.set(t.identifier, { kind: left ? 'stick' : 'look', x: t.clientX, y: t.clientY, sx: t.clientX, sy: t.clientY, t0: performance.now(), moved: 0 });
+    if (left) { stick.hidden = false; stick.style.left = t.clientX + 'px'; stick.style.top = t.clientY + 'px'; }
+  }
+  e.preventDefault();
+}, { passive: false });
+canvas.addEventListener('touchmove', (e) => {
+  for (const t of e.changedTouches) {
+    const s = touches.get(t.identifier); if (!s) continue;
+    s.moved += Math.abs(t.clientX - s.x) + Math.abs(t.clientY - s.y);
+    if (s.kind === 'look') { look(t.clientX - s.x, t.clientY - s.y, 0.0055); s.x = t.clientX; s.y = t.clientY; }
+    else {
+      let dx = t.clientX - s.sx, dy = t.clientY - s.sy; const d = Math.hypot(dx, dy), m = 46;
+      if (d > m) { dx *= m / d; dy *= m / d; }
+      joy.x = dx / m; joy.y = dy / m; autoWalk = null;
+      stick.firstElementChild.style.transform = `translate(${dx}px, ${dy}px)`;
+    }
+  }
+  e.preventDefault();
+}, { passive: false });
+const endTouch = (e) => {
+  for (const t of e.changedTouches) {
+    const s = touches.get(t.identifier); if (!s) continue;
+    if (s.kind === 'stick') { joy.x = joy.y = 0; stick.hidden = true; stick.firstElementChild.style.transform = ''; }
+    if (s.moved < 10 && performance.now() - s.t0 < 350) {
+      const hit = pickAt(t.clientX, t.clientY);
+      if (hit) { if (focused && focused.g.id === hit.g.id) play(hit.g); else walkTo(hit); }
+    }
+    touches.delete(t.identifier);
+  }
+};
+canvas.addEventListener('touchend', endTouch);
+canvas.addEventListener('touchcancel', endTouch);
+
+const ray = new THREE.Raycaster(), ndc = new THREE.Vector2();
+function pickAt(cx, cy) {
+  ndc.set((cx / innerWidth) * 2 - 1, -(cy / innerHeight) * 2 + 1);
+  ray.setFromCamera(ndc, camera); ray.far = 14;
+  const hit = ray.intersectObjects(pickables, false)[0];
+  return hit ? cabinets.find((c) => c.g.id === hit.object.userData.cab) : null;
+}
+function walkTo(c) {
+  autoWalk = { x: c.ap.x, z: c.ap.z, c, turn: true };
+  blip([660], 'square', 0.05, 0.03);
+}
+
+/* ---------------- focus + play ---------------- */
+let focused = null, hover = null;
+const card = $('#card');
+const cPlay = $('#cPlay');
+function setFocus(c) {
+  if (focused === c) return;
+  focused = c;
+  if (!c) { card.classList.remove('show'); $('#crosshair').classList.remove('on'); return; }
+  const g = c.g;
+  card.style.setProperty('--acc', g.color);
+  $('#cTag').textContent = g.tag; $('#cTitle').textContent = g.title;
+  $('#cBlurb').textContent = g.blurb; $('#cHow').textContent = 'Controls: ' + g.how;
+  cPlay.href = g.url;
+  cPlay.innerHTML = isTouch ? (g.id === 'github' ? 'OPEN' : 'PLAY ▶') : (g.id === 'github' ? 'OPEN <kbd>E</kbd>' : 'PLAY <kbd>E</kbd>');
+  if (g.id === 'github' || inFrame) { cPlay.target = '_blank'; cPlay.rel = 'noopener'; } else { cPlay.removeAttribute('target'); }
+  card.classList.add('show');
+  $('#crosshair').classList.add('on');
+  blip([988, 1319], 'square', 0.045, 0.025);
+}
+cPlay.addEventListener('click', (e) => {
+  if (!focused) return;
+  if (focused.g.id === 'github' || inFrame) { savePos(); blip([523, 659, 784, 1047], 'square', 0.06, 0.04); return; }
+  e.preventDefault(); play(focused.g);
+});
+function savePos() {
+  try { sessionStorage.setItem('arcade-pos', JSON.stringify({ x: player.x, z: player.z, yaw: player.yaw, t: Date.now() })); } catch {}
+}
+let launching = false;
+function play(g) {
+  if (launching) return;
+  savePos();
+  blip([523, 659, 784, 1047], 'square', 0.07, 0.045);
+  if (g.id === 'github' || inFrame) {
+    // new tab: an anchor click keeps it a user-initiated navigation
+    document.exitPointerLock?.();
+    const a = document.createElement('a'); a.href = g.url; a.target = '_blank'; a.rel = 'noopener';
+    document.body.appendChild(a); a.click(); a.remove();
+    return;
+  }
+  launching = true;
+  $('#flashText').textContent = g.title.toUpperCase();
+  $('#flash').classList.add('on');
+  setTimeout(() => { location.href = g.url; }, 450);
+}
+addEventListener('pageshow', (e) => { if (e.persisted) { launching = false; $('#flash').classList.remove('on'); } });
+
+/* ---------------- minimap ---------------- */
+const mm = $('#minimap'), mx = mm.getContext('2d');
+function drawMinimap() {
+  const W = mm.width, H = mm.height, pad = 10;
+  const sx = (x) => pad + ((x - ROOM_BOUNDS.minX) / (ROOM_BOUNDS.maxX - ROOM_BOUNDS.minX)) * (W - pad * 2);
+  const sz = (z) => pad + ((z - ROOM_BOUNDS.minZ) / (ROOM_BOUNDS.maxZ - ROOM_BOUNDS.minZ)) * (H - pad * 2);
+  mx.clearRect(0, 0, W, H);
+  for (const c of cabinets) {
+    mx.fillStyle = c.g.color; mx.globalAlpha = focused === c ? 1 : 0.75;
+    mx.fillRect(sx(c.sp.x) - 7, sz(c.sp.z) - 9, 14, 18);
+  }
+  mx.globalAlpha = 1;
+  mx.save(); mx.translate(sx(player.x), sz(player.z)); mx.rotate(-player.yaw);
+  mx.fillStyle = '#ffd23f'; mx.beginPath(); mx.moveTo(0, -12); mx.lineTo(8, 8); mx.lineTo(0, 4); mx.lineTo(-8, 8); mx.closePath(); mx.fill();
+  mx.restore();
+}
+
+/* ---------------- loop ---------------- */
+function collide() {
+  player.x = Math.max(ROOM_BOUNDS.minX + R, Math.min(ROOM_BOUNDS.maxX - R, player.x));
+  player.z = Math.max(ROOM_BOUNDS.minZ + R, Math.min(ROOM_BOUNDS.maxZ - R, player.z));
+  for (const b of colliders) {
+    const cx = Math.max(b.min.x, Math.min(player.x, b.max.x));
+    const cz = Math.max(b.min.z, Math.min(player.z, b.max.z));
+    const dx = player.x - cx, dz = player.z - cz, d = Math.hypot(dx, dz);
+    if (d < R) {
+      if (d > 1e-5) { player.x = cx + (dx / d) * R; player.z = cz + (dz / d) * R; }
+      else { player.x += R; }
+    }
+  }
+}
+const fwd = new THREE.Vector3(), tmp = new THREE.Vector3();
+let last = performance.now(), mmT = 0;
+function frame(now) {
+  const dt = Math.min(0.05, (now - last) / 1000); last = now;
+  const t = now / 1000;
+
+  if (active) {
+    let mxv = 0, mzv = 0, turn = 0;
+    if (keys.has('w') || keys.has('arrowup')) mzv += 1;
+    if (keys.has('s') || keys.has('arrowdown')) mzv -= 1;
+    if (keys.has('d')) mxv += 1;
+    if (keys.has('a')) mxv -= 1;
+    if (keys.has('arrowleft')) turn += 1;
+    if (keys.has('arrowright')) turn -= 1;
+    player.yaw += turn * 2.2 * dt;
+    if (joy.x || joy.y) { mxv += joy.x; mzv -= joy.y; }
+    const run = keys.has('shift') ? 1.75 : 1;
+    let speed = 3.1 * run;
+    let wx = 0, wz = 0;
+    if (autoWalk) {
+      const dx = autoWalk.x - player.x, dz = autoWalk.z - player.z, d = Math.hypot(dx, dz);
+      const targetYaw = Math.atan2(-(autoWalk.c.sp.x - player.x), -(autoWalk.c.sp.z - player.z));
+      if (autoWalk.turn) {
+        let dy = targetYaw - player.yaw; dy = Math.atan2(Math.sin(dy), Math.cos(dy));
+        player.yaw += dy * Math.min(1, dt * 4);
+        player.pitch += (-0.2 - player.pitch) * Math.min(1, dt * 3);
+      }
+      if (d > 0.08) { wx = (dx / d) * Math.min(1, d * 1.5); wz = (dz / d) * Math.min(1, d * 1.5); speed = 4.2; }
+      else if (!autoWalk.turn || Math.abs(Math.atan2(Math.sin(targetYaw - player.yaw), Math.cos(targetYaw - player.yaw))) < 0.03) autoWalk = null;
+    } else {
+      const s = Math.sin(player.yaw), c = Math.cos(player.yaw);
+      // forward is -Z at yaw 0
+      wx = -s * mzv + c * mxv; wz = -c * mzv - s * mxv;
+      const l = Math.hypot(wx, wz); if (l > 1) { wx /= l; wz /= l; }
+    }
+    const k = 1 - Math.exp(-dt * 12);
+    player.vx += (wx * speed - player.vx) * k;
+    player.vz += (wz * speed - player.vz) * k;
+    player.x += player.vx * dt; player.z += player.vz * dt;
+    collide();
+    const sp = Math.hypot(player.vx, player.vz);
+    player.bob += sp * dt * 2.4;
+  } else {
+    // idle attract-mode drift behind the entry screen
+    player.yaw = Math.sin(t * 0.15) * 0.35;
+  }
+
+  const sp = Math.hypot(player.vx, player.vz);
+  camera.position.set(player.x, EYE + Math.sin(player.bob * Math.PI * 2) * 0.025 * Math.min(1, sp / 3), player.z);
+  camera.rotation.set(player.pitch, player.yaw, 0);
+
+  // which cabinet are we facing?
+  camera.getWorldDirection(fwd); fwd.y = 0; fwd.normalize();
+  let best = null, bestScore = 0;
+  for (const c of cabinets) {
+    tmp.set(c.sp.x - player.x, 0, c.sp.z - player.z);
+    const dist = tmp.length(); tmp.divideScalar(dist || 1);
+    const facing = fwd.dot(tmp);
+    const near = Math.hypot(c.ap.x - player.x, c.ap.z - player.z);
+    if (near < 1.6 && facing > 0.55) { const s = facing - near * 0.2; if (s > bestScore) { bestScore = s; best = c; } }
+  }
+  if (active) setFocus(best);
+  hover = null;
+  if (locked) { ndc.set(0, 0); ray.setFromCamera(ndc, camera); ray.far = 14; const h = ray.intersectObjects(pickables, false)[0]; if (h) hover = cabinets.find((c) => c.g.id === h.object.userData.cab); }
+
+  for (const c of cabinets) {
+    if (!c.uniforms) continue;
+    const u = c.uniforms;
+    const period = focused === c ? 3.2 : 5.5;
+    const ph = ((t + c.phase) % (period * 2)) / period; // 0..2
+    const target = ph < 1 ? 0 : 1;
+    u.mixT.value += (target - u.mixT.value) * Math.min(1, dt * 5);
+    u.t.value = t;
+    u.gain.value += ((focused === c ? 1.18 : 1.0) - u.gain.value) * Math.min(1, dt * 5);
+    u.noise.value = Math.max(0, 1 - Math.abs(u.mixT.value - 0.5) * 3.0) * 0.15;
+    c.light.intensity = 3.0 + (focused === c ? 1.5 : 0) + Math.sin(t * 7 + c.phase) * 0.15;
+  }
+
+  if (active && (mmT += dt) > 0.05) { mmT = 0; drawMinimap(); }
+  composer.render();
+  requestAnimationFrame(frame);
+}
+requestAnimationFrame(frame);
+
+addEventListener('resize', () => {
+  camera.aspect = innerWidth / innerHeight; camera.fov = fovFor(camera.aspect); camera.updateProjectionMatrix();
+  renderer.setSize(innerWidth, innerHeight); composer.setSize(innerWidth, innerHeight);
+});
+
+window.__arcade = { camera, player, cabinets, enter, get focused() { return focused; } };
+</script>
+
+<noscript><p style="padding:24px">The arcade needs JavaScript. Games: <a href="kepler-drift/">Kepler Drift</a>, <a href="fps-chess/">FPS Chess</a>, <a href="https://ethanmixter.github.io/coffee_shop_tycoon/">Coffee Shop Tycoon</a>, <a href="https://ethanmixter.github.io/redshirtkid/">Red Shirt Kid</a>, <a href="repulsor-forge/">Repulsor Forge</a>, <a href="foam-forge/">Foam Forge</a>, <a href="vermilion-tubing/">Pontoon Battle</a>, <a href="forgeframe-duel/">Forgeframe Duel</a>.</p></noscript>
+</body>
 </html>
