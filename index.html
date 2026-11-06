@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Ethan Mixter Arcade</title>
-<meta name="description" content="Ethan Mixter's browser games, set up as a 3D arcade. Kepler Drift, FPS Chess, Coffee Shop Tycoon, Red Shirt Kid, Repulsor Forge, Foam Forge, Pontoon Battle and Forgeframe Duel.">
+<meta name="description" content="Ethan Mixter's browser games, set up as a 3D arcade. Kepler Drift, FPS Chess, Coffee Shop Tycoon, Red Shirt Kid, Repulsor Forge, Foam Forge, Pontoon Battle, Forgeframe Duel and Dronefall.">
 <meta property="og:title" content="Ethan Mixter Arcade">
 <meta property="og:description" content="Click a cabinet to see it up close, then hit play.">
 <meta property="og:image" content="https://ethanmixter.com/arcade/og.jpg">
@@ -266,6 +266,9 @@ const GAMES = [
   { id: 'forgeframe-duel', title: 'Forgeframe Duel', tag: 'Giant robot 1v1', color: '#ff38a8',
     url: SITE + 'forgeframe-duel/', how: 'A/D move · J/K/L attacks',
     blurb: 'Choose a transforming war machine, customize its loadout, and battle through 3D arena duels.' },
+  { id: 'dronefall', title: 'Dronefall', tag: 'FPS · robot waves · online', color: '#f2a33b',
+    url: SITE + 'dronefall/', how: 'WASD · mouse · controller · touch', marquee: 'FREE PLAY · ONLINE',
+    blurb: 'Hold the line against robot waves with 58 guns, then take on friends online in free-for-all.' },
 ];
 const GITHUB = { id: 'github', title: 'More on GitHub', tag: 'Source code · experiments', color: '#9b7bff',
   url: 'https://github.com/ethanmixter', how: 'Opens in a new tab',
@@ -428,7 +431,7 @@ function marqueeTexture(g) {
   x.fillText(words, 512, 220);
   x.shadowBlur = 0; x.lineWidth = 4; x.strokeStyle = g.color; x.strokeText(words, 512, 220);
   x.font = '600 40px "IBM Plex Mono", monospace'; x.fillStyle = g.color;
-  x.fillText(g.id === 'github' ? 'SOURCE · OPEN' : 'FREE PLAY · 1 PLAYER', 512, 390);
+  x.fillText(g.id === 'github' ? 'SOURCE · OPEN' : g.marquee || 'FREE PLAY · 1 PLAYER', 512, 390);
   const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; t.flipY = false;
   t.anisotropy = renderer.capabilities.getMaxAnisotropy();
   return t;
@@ -517,7 +520,7 @@ new GLTFLoader(manager).load(BASE + 'arcade.gltf.json', async (gltf) => {
 /* ---------------- camera rig: overview <-> close-up on one cabinet ---------------- */
 // cabinets in walking order around the hall, so ‹ › feels like stepping to the neighbour
 const ORDER = ['kepler-drift', 'fps-chess', 'coffee-shop-tycoon', 'red-shirt-kid', 'github',
-  'forgeframe-duel', 'pontoon-battle', 'foam-forge', 'repulsor-forge'];
+  'forgeframe-duel', 'pontoon-battle', 'foam-forge', 'repulsor-forge', 'dronefall'];
 const ease = (t) => (t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2);
 const reduceMotion = matchMedia('(prefers-reduced-motion: reduce)').matches;
 
@@ -771,6 +774,6 @@ addEventListener('resize', () => {
 window.__arcade = { camera, cabinets, focusOn, backToOverview, step, get mode() { return mode; }, get current() { return current; } };
 </script>
 
-<noscript><p style="padding:24px">The arcade needs JavaScript. Games: <a href="kepler-drift/">Kepler Drift</a>, <a href="fps-chess/">FPS Chess</a>, <a href="https://ethanmixter.github.io/coffee_shop_tycoon/">Coffee Shop Tycoon</a>, <a href="https://ethanmixter.github.io/redshirtkid/">Red Shirt Kid</a>, <a href="repulsor-forge/">Repulsor Forge</a>, <a href="foam-forge/">Foam Forge</a>, <a href="vermilion-tubing/">Pontoon Battle</a>, <a href="forgeframe-duel/">Forgeframe Duel</a>. <a href="classic.html">Classic page</a>.</p></noscript>
+<noscript><p style="padding:24px">The arcade needs JavaScript. Games: <a href="kepler-drift/">Kepler Drift</a>, <a href="fps-chess/">FPS Chess</a>, <a href="https://ethanmixter.github.io/coffee_shop_tycoon/">Coffee Shop Tycoon</a>, <a href="https://ethanmixter.github.io/redshirtkid/">Red Shirt Kid</a>, <a href="repulsor-forge/">Repulsor Forge</a>, <a href="foam-forge/">Foam Forge</a>, <a href="dronefall/">Dronefall</a>, <a href="vermilion-tubing/">Pontoon Battle</a>, <a href="forgeframe-duel/">Forgeframe Duel</a>. <a href="classic.html">Classic page</a>.</p></noscript>
 </body>
 </html>

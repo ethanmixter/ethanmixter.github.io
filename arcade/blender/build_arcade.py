@@ -24,6 +24,7 @@ GAMES = [
     ('foam-forge',          1,  6.6, (0.70, 0.92, 0.10)),
     ('pontoon-battle',      1, 10.2, (1.00, 0.40, 0.20)),
     ('forgeframe-duel',     1, 13.8, (1.00, 0.22, 0.66)),
+    ('dronefall',           1, -0.6, (0.95, 0.56, 0.14)),
 ]
 screen_colors = json.load(open('/home/claude/arcade/screen_colors.json'))
 
