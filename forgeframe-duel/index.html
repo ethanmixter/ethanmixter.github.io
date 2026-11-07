@@ -667,6 +667,22 @@ body.fin #stage{filter:saturate(.35) contrast(1.15) brightness(1.05)}
  .slab{padding:14px 18px;gap:10px}.slab h2{font-size:38px}
 }
 
+/* ================= panels sized to their content on computer screens =================
+   Each section's panel is only as wide as its content needs and only as tall as its content, centered above the bottom bar,
+   instead of filling the whole screen. It still scrolls when the content is taller than the screen. */
+.metal,.sel-panel,.hub,.dock,.slab,.hubPilot,#tut,.cxDet,.mast,.secHead,.hb,.btn,.mcard,.rbtn,.cxCard,.bindGrid button,#movelist,#movelist2,#pauseBtn,#bounty,.title-block{background-repeat:repeat,no-repeat,no-repeat!important}
+@media (min-width:761px){
+ #select .sel-panel{flex:0 1 auto;align-self:center;width:100%;max-width:var(--pw,1240px);margin-top:auto!important;margin-bottom:auto;min-height:0}
+ .sel-panel[data-tab="play"]{--pw:1180px}
+ .sel-panel[data-tab="robots"]{--pw:1500px}
+ .sel-panel[data-tab="workshop"]{--pw:1240px}
+ .sel-panel[data-tab="crates"]{--pw:470px}
+ .sel-panel[data-tab="workshop0"]{--pw:760px}
+ .sel-panel[data-tab="progress"]{--pw:1180px}
+ .sel-panel[data-tab="codex"]{--pw:1200px}
+ .sel-panel[data-tab="settings"]{--pw:900px}
+}
+
 </style>
 
 <canvas id="stage" aria-label="Arena"></canvas>
@@ -3899,8 +3915,8 @@ function newCustom(){if(rookie()||SAVE.slots>=MAXC)return;if(SAVE.bolts<SLOT_COS
  SAVE.bolts-=SLOT_COST;const i=SAVE.slots;SAVE.slots++;persist();applyCustom(i,true);layoutShow();sfx('transform');
  const idx=DEFS.findIndex(d=>d.custom&&d.slot===i);renderPilot();renderBoxes();pickFrame(idx);if(!G.shop)setShop(true);setTab('workshop');toast(`Custom ${i+1} built. Give it parts and colors in the Workshop.`,1);}
 function setTab(t){G.shopTab=t;$('secTitle').textContent={play:'Play',robots:'Robots',codex:'Robot Files',workshop:'Build',crates:'Crates',progress:'Rewards',settings:'Settings'}[t]||'';document.querySelectorAll('#shopTabs button').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.tab===t)));
- document.querySelectorAll('.tabp').forEach(p=>p.classList.toggle('tabOff',p.dataset.tab!==t));const sp=$('selPanel');if(sp)sp.scrollTop=0;if(t==='crates')renderBoxes();if(t==='progress')renderWeekly();if(t==='workshop')renderWorkshop();if(t==='codex')renderCodex();}
-function renderWorkshop(){const W=$('workshop');if(!W)return;const d=DEFS[G.sel];
+ document.querySelectorAll('.tabp').forEach(p=>p.classList.toggle('tabOff',p.dataset.tab!==t));const sp=$('selPanel');if(sp){sp.scrollTop=0;sp.dataset.tab=t;}if(t==='crates')renderBoxes();if(t==='progress')renderWeekly();if(t==='workshop')renderWorkshop();if(t==='codex')renderCodex();}
+function renderWorkshop(){const W=$('workshop');if(!W)return;const d=DEFS[G.sel];{const sp=$('selPanel');if(sp&&G.shopTab==='workshop')sp.dataset.tab=d.custom?'workshop':'workshop0';}
  const built=DEFS.map((x,i)=>[x,i]).filter(([x,i])=>x.custom&&!slotOff(i));
  const pick=`<div class="cpick">${built.map(([x,i])=>`<button data-ci2="${i}" aria-pressed="${i===G.sel}" ${locked(i)?'disabled':''}><i style="background:${hex(x.pals[0][0])}"></i>${x.name}</button>`).join('')}${SAVE.slots<MAXC?`<button class="newc2" ${rookie()?'disabled':''}>+ New · ${SLOT_COST}</button>`:''}</div>`;
  if(d.custom&&!locked(G.sel)){W.innerHTML=pick+builderHTML(d);wireBuilder(d);}
