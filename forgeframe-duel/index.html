@@ -619,7 +619,7 @@ body.fin #stage{filter:saturate(.35) contrast(1.15) brightness(1.05)}
 .dock,.slab{position:relative}
 .slab{box-shadow:var(--bevel),0 0 0 1px #0a0d10,0 24px 60px rgba(0,0,0,.6);border-top:3px solid transparent!important;border-image:linear-gradient(90deg,var(--brass3),var(--brass1),var(--brass3)) 1!important}
 /* the main menu sits on a riveted steel console */
-.hub{padding:16px 14px;box-sizing:border-box;box-shadow:var(--bevel),0 0 0 1px #0a0d10,0 20px 50px rgba(0,0,0,.55);bottom:auto!important;top:calc(env(safe-area-inset-top,0px) + 120px)!important;clip-path:polygon(0 0,calc(100% - 16px) 0,100% 16px,100% 100%,16px 100%,0 calc(100% - 16px))}
+.hub{padding:16px 14px;box-sizing:border-box;box-shadow:var(--bevel),0 0 0 1px #0a0d10,0 20px 50px rgba(0,0,0,.55);clip-path:polygon(0 0,calc(100% - 16px) 0,100% 16px,100% 100%,16px 100%,0 calc(100% - 16px))}
 .hubPilot{box-shadow:inset 0 2px 4px rgba(0,0,0,.6),inset 0 -1px 0 rgba(255,255,255,.08)!important;background-image:linear-gradient(180deg,#0e1216,#161b21)!important}
 .hb{background-image:var(--brush),linear-gradient(180deg,#4a535e 0%,#343c46 45%,#262d35 55%,#1d232a 100%)!important;background-blend-mode:overlay,normal!important;background-size:256px 256px,100% 100%!important;border:1px solid #0b0e12!important;box-shadow:var(--bevel)!important;transition:transform .12s,box-shadow .12s,filter .12s}
 .hb b{text-shadow:0 1px 0 rgba(0,0,0,.6)}
@@ -644,6 +644,28 @@ body.fin #stage{filter:saturate(.35) contrast(1.15) brightness(1.05)}
 
 #movelist,#movelist2,#pauseBtn,#tut,#bounty{background-image:var(--brush),linear-gradient(180deg,rgba(44,51,60,.92),rgba(18,22,27,.92))!important;background-blend-mode:overlay,normal!important;background-size:256px 256px,100% 100%!important;box-shadow:var(--bevel),0 0 0 1px #0a0d10!important}
 #movelist kbd,#movelist2 kbd{background:linear-gradient(180deg,#3a424c,#161b21)!important;box-shadow:inset 0 1px 0 rgba(255,255,255,.2),0 1px 0 #000}
+
+/* ================= phone fixes =================
+   The main menu console always fits between the title and the bottom bar and scrolls if it has to.
+   Swipes that start on a button still scroll the panel. Short landscape phones get a compact layout. */
+.hub{top:calc(env(safe-area-inset-top,0px) + 108px);bottom:calc(env(safe-area-inset-bottom,0px) + 112px);gap:6px;padding:12px;overflow-y:auto;overscroll-behavior:contain;touch-action:pan-y;justify-content:safe center}
+.sel-panel .btn,.sel-panel button,.slab .btn,.slab button,.hub .hb,.hub button,.mcard,.rbtn,.part,.cxCard{touch-action:manipulation!important}
+.sel-panel,.slab{-webkit-overflow-scrolling:touch;overscroll-behavior:contain}
+#toast{z-index:40}
+@media (min-width:761px) and (max-height:820px){.hub .hb{padding:6px 14px}.hub .hb b{font-size:21px}}
+@media (hover:none){.hb:hover,.hb:focus-visible{transform:none;filter:none}.btn:hover{filter:none}}
+@media (max-width:760px){.hub{top:auto;max-height:calc(100% - env(safe-area-inset-top,0px) - env(safe-area-inset-bottom,0px) - 246px);bottom:calc(env(safe-area-inset-bottom,0px) + 150px);align-content:end}}
+@media (max-height:500px) and (orientation:landscape){
+ .sel-title h2{font-size:26px}.sel-title p{display:none}
+ .hub{top:calc(env(safe-area-inset-top,0px) + 44px);bottom:auto;max-height:calc(100% - env(safe-area-inset-top,0px) - 136px);left:16px;right:auto;width:min(360px,50%);display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px;padding:10px;align-content:start}
+ .hubPilot{grid-column:1 / -1;padding:5px 10px}.hubPilot small,.hubPilot .xpbar{display:none}
+ .hb{grid-template-columns:22px minmax(0,1fr);gap:0 6px;padding:6px 8px}.hb i{font-size:15px}.hb b{font-size:16px}.hb small{display:none}
+ .hb.main{grid-column:1 / -1}
+ .dock{padding:8px 10px 6px;gap:6px}.dock .btn{padding:8px 12px;font-size:13px}.carName b{font-size:16px}.carName small{display:none}.arw{height:34px;width:36px}
+ .sel-panel{margin-top:4px!important}.secHead{padding:6px 12px}.secHead h2,#secTitle{font-size:22px}
+ #select{gap:6px;padding-block:calc(env(safe-area-inset-top,0px) + 8px) calc(env(safe-area-inset-bottom,0px) + 8px)}
+ .slab{padding:14px 18px;gap:10px}.slab h2{font-size:38px}
+}
 
 </style>
 
