@@ -3439,7 +3439,7 @@ function applyHit(att,def,dmg,kb,lift,srcX,hx,hy){
   if(att.chain>=5&&def.hp>0&&G.mode!=='training'){def.inv=.8;def.stun=Math.min(def.stun,.12);ring(def.x,def.y+1.5,def.glow,4);sfx('block');callout('Combo break');
    if(Math.abs(att.x-def.x)<3.2){if(att.state==='special'||att.state==='dodge')setState(att,'hit');att.state='hit';att.t=0;att.stun=.45;att.vx=-dir*11;att.buf=null;}
    att.chain=0;}if(att===G.p1&&att.chain>G.bestCombo)G.bestCombo=att.chain;if(att.chain>=2)showCombo(att);
-  shake(Math.min(.6,dmg*.028));G.hitstop=Math.min(.12,.03+dmg*.004);sfx('hit',Math.min(1.4,dmg/10));
+  shake(Math.min(.6,dmg*.028));G.hitstop=Math.min(.12,.03+dmg*.004);(G.hitCls=def.cls||robotClass(def.def),sfx('hit',Math.min(1.4,dmg/10)));
   hitLight.color.copy(lin(att.glow));hitLight.position.set(hx,hy,1.2);hitLight.intensity=dmg>=13?10:5;
   if(dmg>=13){G.kick=1;G.slowT=.22;debris(hx,hy,7);if(def.hp>0)voice(def,'hurt');}
   if(!G.firstHit&&G.mode!=='training'){G.firstHit=true;callout('First hit');}
@@ -3792,7 +3792,9 @@ function impact(v,big,p){if(!AC||G.muted)return;const t=AC.currentTime;
  scrape(.05,.12*v,1100,.8);}
 function rumble(f0,f1,dur,vol,lp){if(!AC||G.muted)return;const o=AC.createOscillator(),fl=AC.createBiquadFilter(),g=AC.createGain(),t=AC.currentTime;o.type='sawtooth';o.frequency.setValueAtTime(f0,t);o.frequency.exponentialRampToValueAtTime(Math.max(20,f1),t+dur);fl.type='lowpass';fl.frequency.value=lp||500;g.gain.setValueAtTime(vol,t);g.gain.exponentialRampToValueAtTime(.001,t+dur);o.connect(fl);fl.connect(g);g.connect(master);o.start(t);o.stop(t+dur+.02);}
 const SFX={
- hit:(v=1)=>{const big=v>1.1,p=.9+Math.random()*.2;impact(v,big,p);},
+ /* hits sound different by the weight class of the robot getting hit: heavies boom low with a deep thud, lights crack high and bright */
+ hit:(v=1)=>{const big=v>1.1,c=G.hitCls||'Medium',p=(.9+Math.random()*.2)*(c==='Heavy'?.72:c==='Light'?1.35:1);impact(v*(c==='Heavy'?1.15:c==='Light'?.85:1),big||c==='Heavy'&&v>.8,p);
+  if(c==='Heavy'){thud(.45*v);if(big)rumble(40,24,.35,.25*v,300);}else if(c==='Light'){clang(520+Math.random()*120,.22,.12*v);scrape(.04,.14*v,3200,2);}else clang(300+Math.random()*60,.16,.06*v);G.hitCls=null;},
  block:()=>{impact(.55,false,1.5);scrape(.05,.18,2600,1.5);},
  whiff:()=>noise(.13,.14,700),
  special:()=>{rumble(45,150,.4,.3,600);noise(.3,.2,450);thud(.4);},
@@ -3852,11 +3854,14 @@ function musicTick(){
   if(!AC||G.muted||G.musicOff||AC.state!=='running'){musT=0;return;}
   const key=songFor();if(!key){musT=0;return;}
   if(key!==musSong){musSong=key;musStep=0;musT=0;}
-  const S=SONGS[key],fight=G.phase==='fight'&&G.p1&&G.p2,danger=fight&&(G.enraged||G.p1.hp<G.p1.maxHp*.25||G.p2.hp<G.p2.maxHp*.25),fast=fight&&(G.enraged||!!G.phase2);
-  const sp=60/(S.bpm*(fast?1.1:1))/4,Rt=n=>S.root*Math.pow(2,n/12);
+  const S=SONGS[key],fight=G.phase==='fight'&&G.p1&&G.p2,danger=fight&&(G.enraged||G.p1.hp<G.p1.maxHp*.25||G.p2.hp<G.p2.maxHp*.25),fast=fight&&(G.enraged||!!G.phase2||G.sd),low=fight&&G.p1.hp<G.p1.maxHp*.18&&G.p1.state!=='ko';
+  const sp=60/(S.bpm*(fast?1.1:danger?1.05:1))/4,Rt=n=>S.root*Math.pow(2,n/12);
   if(musT<AC.currentTime)musT=AC.currentTime+.05;
   while(musT<AC.currentTime+.15){const i=musStep++%64,j=i%16,cr=S.prog[i>>4],d=S.drum[j];
    if(d==='k')mKick(musT,S.soft?.22:.42);
+   if(danger&&!S.soft&&(j===4||j===12)&&d!=='k')mKick(musT,.3);
+   if(low&&(j===0||j===3))mKick(musT+(j===3?.02:0),j?.18:.26);
+   if((danger||G.sd)&&j%4===2)mNote(musT,Rt(cr+12),sp*.6,'square',.035,1200);
    if(d==='s')mNoise(musT,.12,S.soft?.05:.13,'bandpass',1800);
    if(d==='h'||(danger&&j%2===1))mNoise(musT,.04,S.soft?.025:.045,'highpass',7000);
    const bc=S.bass[j];if(bc!=='.')mNote(musT,Rt(cr+(bc==='o'?12:bc==='5'?7:0)),sp*(S.soft?6:.9),S.bassWave||'sawtooth',S.soft?.07:.12,(S.lp||480)*(danger?1.7:1));
