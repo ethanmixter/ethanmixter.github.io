@@ -1,5 +1,4 @@
-<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
-<title>Forgeframe Duel</title>
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><style>body{margin:0}img{max-width:100%}[hidden]{display:none!important}</style></head><body><title>Forgeframe Duel</title>
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -649,7 +648,7 @@ body.fin #stage{filter:saturate(.35) contrast(1.15) brightness(1.05)}
 /* ================= phone fixes =================
    The main menu console always fits between the title and the bottom bar and scrolls if it has to.
    Swipes that start on a button still scroll the panel. Short landscape phones get a compact layout. */
-.hub{top:calc(env(safe-area-inset-top,0px) + 108px);bottom:calc(env(safe-area-inset-bottom,0px) + 112px);gap:6px;padding:12px;overflow-y:auto;overscroll-behavior:contain;touch-action:pan-y;justify-content:safe center}
+.hub{top:calc(env(safe-area-inset-top,0px) + 108px);bottom:auto;max-height:calc(100% - env(safe-area-inset-top,0px) - env(safe-area-inset-bottom,0px) - 220px);gap:6px;padding:12px;justify-content:flex-start!important;overflow-y:auto;overscroll-behavior:contain;touch-action:pan-y;justify-content:safe center}
 .sel-panel .btn,.sel-panel button,.slab .btn,.slab button,.hub .hb,.hub button,.mcard,.rbtn,.part,.cxCard{touch-action:manipulation!important}
 .sel-panel,.slab{-webkit-overflow-scrolling:touch;overscroll-behavior:contain}
 #toast{z-index:40}
@@ -5084,5 +5083,4 @@ requestAnimationFrame(frame);
 })();
 </script>
 
-</body></html>
 </body></html>
