@@ -140,7 +140,19 @@ kbd{font-family:var(--f-label);font-weight:700;color:var(--text);border:1px soli
 .chals summary{cursor:pointer;font-family:var(--f-label);font-weight:700;font-size:13px;letter-spacing:.18em;text-transform:uppercase;color:var(--text)}
 #chalList{display:flex;flex-direction:column;gap:7px;margin-top:10px}
 .chp{grid-column:1 / 3;display:block;height:4px;margin-top:4px;background:rgba(255,255,255,.08);overflow:hidden}
-.weekly{display:flex;flex-direction:column;gap:8px}.weekly h4{margin:0}.weekly .hint{margin:0}
+.weekly{display:flex;flex-direction:column;gap:8px}
+.season{display:flex;flex-direction:column;gap:8px;margin-bottom:14px}
+.szTop{display:flex;justify-content:space-between;align-items:baseline;gap:10px;flex-wrap:wrap}
+.szTop b{font-family:var(--f-label);font-size:20px;letter-spacing:.04em;color:var(--amber)}
+.szBar{height:8px;background:rgba(255,255,255,.08);overflow:hidden;box-shadow:inset 0 0 0 1px var(--line)}.szBar i{display:block;height:100%;background:linear-gradient(90deg,var(--amber),#fff3c4);transform-origin:left}
+.szTrack{display:grid;grid-template-columns:repeat(auto-fill,minmax(74px,1fr));gap:6px}
+.szT{padding:6px;font-size:12px;line-height:1.25;box-shadow:inset 0 0 0 1px var(--line);opacity:.62;min-height:52px}
+.szT b{display:block;font-family:var(--f-label);font-size:13px}.szT.got{opacity:1;box-shadow:inset 0 0 0 1px var(--amber)}.szT.got b{color:var(--amber)}.szT.next{opacity:1;box-shadow:inset 0 0 0 2px #fff}.szT.big{background:rgba(255,190,80,.07)}
+.lbBox{margin-top:14px;display:flex;flex-direction:column;gap:8px}.lbBox[hidden]{display:none!important}
+.lbList{display:flex;flex-direction:column;gap:3px;counter-reset:lb}
+.lbRow{display:grid;grid-template-columns:28px 1fr auto;gap:8px;align-items:center;padding:6px 10px;box-shadow:inset 0 0 0 1px var(--line)}
+.lbRow.me{box-shadow:inset 0 0 0 2px var(--amber)}.lbRow .n{font-family:var(--f-label);font-weight:700;color:var(--amber)}.lbRow small{opacity:.7}.lbRow .sc{font-family:var(--f-label);font-weight:700}
+.resLb{margin-top:8px;text-align:left;max-width:360px;margin-left:auto;margin-right:auto}.resLb .lbRow{padding:4px 8px;font-size:13px}.weekly h4{margin:0}.weekly .hint{margin:0}
 .wk{display:grid;grid-template-columns:1fr auto;gap:2px 10px;align-items:center;padding:8px 10px;box-shadow:inset 0 0 0 1px var(--line)}
 .wk b{font-family:var(--f-label);font-weight:700;font-size:14px;letter-spacing:.03em}.wk em{font-style:normal;font-family:var(--f-label);font-weight:700;font-size:13px;color:var(--amber)}
 .wk span{font-size:12px;color:var(--muted)}.wk .buy{justify-self:end}.wk.done b,.wk.done em{color:var(--muted)}
@@ -780,6 +792,7 @@ body.fin #stage{filter:saturate(.35) contrast(1.15) brightness(1.05)}
     <section class="tabp" data-tab="workshop"><div class="detail" id="workshop"></div></section>
     <section class="tabp" data-tab="crates"><div class="boxes ups" id="boxes"></div></section>
     <section class="tabp" data-tab="progress">
+    <div class="season" id="season"></div>
     <div class="weekly" id="weekly"></div>
     <div class="savebox"><h4>Progress</h4><p id="saveState" class="saveState"></p>
       <div class="seg"><button id="saveNow">Save now</button><button id="dailyBtn">Daily reward</button></div>
@@ -787,6 +800,7 @@ body.fin #stage{filter:saturate(.35) contrast(1.15) brightness(1.05)}
         <textarea id="saveCode" rows="3" spellcheck="false" autocomplete="off" aria-label="Save code"></textarea>
         <div class="seg"><button id="codeCopy">Show and copy my code</button><button id="codeLoad">Load pasted code</button></div></details></div>
     <details class="chals" open><summary id="chalSum"></summary><div id="chalList"></div></details>
+    <div class="lbBox" id="lbBox" hidden><h4>Leaderboards</h4><p class="hint">Top scores from everyone who plays this game on Claude.</p><div class="seg" id="lbTabs"></div><div class="lbList" id="lbList"></div></div>
     </section>
     <section class="tabp" data-tab="codex"><div class="codexWrap"><div class="cxDet" id="cxDet"></div><p class="hint" id="cxSum"></p><div class="cxGrid" id="cxGrid"></div></div></section>
     <section class="tabp" data-tab="settings">
@@ -4204,7 +4218,7 @@ $('codeLoad').addEventListener('click',()=>{const b=$('codeLoad');let o;try{o=re
  if(!b.dataset.arm){b.dataset.arm=1;b.textContent='Press again to replace your progress';setTimeout(()=>{delete b.dataset.arm;b.textContent='Load pasted code';},3500);return;}
  delete b.dataset.arm;b.textContent='Load pasted code';adoptSave(o);persist();toast('Backup loaded',1);});
 setInterval(()=>{if(G.phase==='select'&&!$('selPanel').hidden)renderSave();},15000);
-cloudInit();
+cloudInit();lbInit();
 $('boxRev').addEventListener('click',()=>{const rv=$('boxRev');if(rv.classList.contains('open'))rv.hidden=true;});
 function upRows(d){const u=upOf(d.id);return UPS.map(([k,n,desc])=>{const l=u[k],cost=100*(l+1);return `<div class="up"><b>${n}</b><span class="meter">${[0,1,2,3,4].map(j=>`<i class="${j<l?'on':''}"></i>`).join('')}</span><button class="buy" data-up="${k}" ${l>=5?'disabled':''}>${l>=5?'Max':cost+' bolts'}</button><span>${desc}</span></div>`;}).join('');}
 /* the main menu buttons show a short status so you know what is waiting behind each one */
@@ -4327,7 +4341,40 @@ const wkText=c=>WKT.find(t=>t[0]===c.k)[1].replace('{n}',c.goal.toLocaleString('
 function weekBump(k,n,isMax){const W=weekly(),c=W.list.find(x=>x.k===k);if(!c)return;const before=W.prog[k]||0;W.prog[k]=isMax?Math.max(before,n):before+n;
  if(before<c.goal&&W.prog[k]>=c.goal)setTimeout(()=>toast(`Weekly challenge done: ${wkText(c)}. Claim it in Progress.`,1),G.phase==='matchEnd'?1200:0);}
 const weekAdd=(k,n)=>weekBump(k,n===undefined?1:n,false),weekMax=(k,v)=>weekBump(k,v,true);
-function renderWeekly(){const el=$('weekly');if(!el)return;const W=weekly(),left=7-(dayNum()%7);
+
+const SZ_LEN=21,SZ_T=30,SZ_XP=300,SZ_N=['Rust Rising','Neon Storm','Iron Tide','Solar Flare','Frostbite','Thunder Forge','Scrap Kings','Eclipse'];
+const SZ_STK={5:'gear',10:'wing',15:'comet',20:'skullbot',25:'target',30:'dragon'},SZ_TTL={8:'Contender',16:'Veteran',24:'Elite',30:'Season Legend'};
+function szCur(){const id=Math.floor(dayNum()/SZ_LEN);let S=SAVE.season;if(!S||typeof S!=='object'||S.id!==id){const old=S&&typeof S==='object'?S:null;S=SAVE.season={id,xp:0,got:0,best:Math.max(old?old.best||0:0,old?old.got||0:0)};}return S;}
+function szName(id){return SZ_N[((id%SZ_N.length)+SZ_N.length)%SZ_N.length];}
+function szReward(n){if(SZ_STK[n]){const k=SZ_STK[n];return (SAVE.stk||{})[k]?{t:'bolts',v:200,d:'200 bolts'}:{t:'stk',v:k,d:STK[k].n+' sticker'};}if(SZ_TTL[n])return {t:'ttl',v:SZ_TTL[n],d:'Title: '+SZ_TTL[n]};return {t:'bolts',v:40+n*5,d:(40+n*5)+' bolts'};}
+function seasonAdd(xp){const S=szCur(),out=[];if(!(xp>0))return out;S.xp+=Math.round(xp);const tier=Math.min(SZ_T,Math.floor(S.xp/SZ_XP));
+ while(S.got<tier){S.got++;const r=szReward(S.got);if(r.t==='bolts')SAVE.bolts+=r.v;else if(r.t==='stk'){SAVE.stk=SAVE.stk||{};SAVE.stk[r.v]=1;}else SAVE.title=r.v;out.push(`Season tier ${S.got}: ${r.d}`);}
+ if(!out.length&&S.got<SZ_T)out.push(`Season ${S.got}/${SZ_T} · ${S.xp%SZ_XP}/${SZ_XP} XP to next tier`);return out;}
+function renderSeason(){const el=$('season');if(!el)return;const S=szCur(),left=SZ_LEN-(dayNum()%SZ_LEN),fr=S.got>=SZ_T?1:(S.xp%SZ_XP)/SZ_XP;
+ let h=`<div class="szTop"><b>Season: ${szName(S.id)}</b><span class="hint">${left} day${left>1?'s':''} left · tier ${S.got} / ${SZ_T}${SAVE.title?' · title '+SAVE.title:''}</span></div><div class="szBar"><i style="transform:scaleX(${fr})"></i></div><p class="hint">Every fight and mini-game earns season XP (${SZ_XP} per tier). Rewards unlock on their own.</p><div class="szTrack">`;
+ for(let n=1;n<=SZ_T;n++){const r=szReward(n);h+=`<div class="szT${n<=S.got?' got':''}${n===S.got+1?' next':''}${r.t!=='bolts'?' big':''}"><b>${n}</b>${r.d}</div>`;}el.innerHTML=h+'</div>';}
+const lbEsc=t=>t.replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const LB={ok:false,game:'smash',mine:{}};
+const LBG={smash:'Car Smash',target:'Target Range',race:'Highway Run',soccer:'Soccer',koth:'King of the Hill',dodge:'Dodge',horde:'Horde',daily:'Daily Boss'};
+async function lbInit(){try{const c=window.claude;if(!c||!c.use)return;const [db,user]=await Promise.all([c.use('db'),c.use('user')]);if(!db||!user)return;const id=await user.id();if(!id)return;
+ LB.db=db;LB.id=id;LB.ref=db.doc('lb/'+id);try{const s=await LB.ref.get();LB.mine=s.exists?(s.data()||{}):{};}catch(e){LB.mine={};}LB.ok=true;
+ const bx=$('lbBox');if(bx){bx.hidden=false;$('lbTabs').innerHTML=Object.keys(LBG).map(k=>`<button data-lb="${k}" aria-pressed="${k===LB.game}">${LBG[k]}</button>`).join('');
+  $('lbTabs').addEventListener('click',e=>{const b=e.target.closest('[data-lb]');if(!b)return;LB.game=b.dataset.lb;$('lbTabs').querySelectorAll('[data-lb]').forEach(x=>x.setAttribute('aria-pressed',x===b));lbRender();});lbRender();}
+ const m=SAVE.mini||{};for(const k of Object.keys(MINI_N))if((m[k]||0)>(LB.mine[k]||0))lbSubmit(k,m[k],true);if((SAVE.st.horde||0)>(LB.mine.horde||0))lbSubmit('horde',SAVE.st.horde,true);
+}catch(e){LB.ok=false;}}
+function lbSubmit(game,score,quiet){if(!LB.ok||!(score>0))return false;const d=Object.assign({},LB.mine);const day=dayNum();
+ if(game==='daily'){if(d.dday===day&&(d.daily||0)>=score)return false;d.dday=day;d.daily=score;}else{if((d[game]||0)>=score)return false;d[game]=score;}
+ const df=DEFS[G.sel]||{};d.bot=String(df.name||'Robot').slice(0,24);d.ttl=String(SAVE.title||'').slice(0,24);d.ts=Date.now();LB.mine=d;
+ LB.pend=LB.ref.set(d).catch(()=>{});return true;}
+async function lbTop(game,n){let q=LB.db.collection('lb');if(game==='daily')q=q.where('dday','==',dayNum());const s=await q.orderBy(game,'desc').limit(n||10).get();
+ return s.docs.map(x=>({id:x.id,d:x.data()||{}})).filter(x=>Number(x.d[game])>0);}
+function lbRows(list,game){const fmt=v=>game==='horde'?`wave ${v}`:game==='daily'?`${v} pts`:Number(v).toLocaleString('en-US');
+ return list.map((x,i)=>{const me=x.id===LB.id;return `<div class="lbRow${me?' me':''}"><span class="n">${i+1}</span><span>${lbEsc(String(x.d.bot||'Robot'))}${me?' (you)':''}${x.d.ttl?` <small>${lbEsc(String(x.d.ttl))}</small>`:''}</span><span class="sc">${fmt(Math.round(Number(x.d[game])||0))}</span></div>`;}).join('');}
+async function lbRender(){const el=$('lbList');if(!el||!LB.ok)return;const g=LB.game;el.innerHTML='<p class="hint">Loading…</p>';
+ try{const L=await lbTop(g,10);if(LB.game!==g)return;el.innerHTML=L.length?lbRows(L,g):'<p class="hint">No scores yet. Be the first.</p>';}catch(e){el.innerHTML='<p class="hint">Leaderboard unavailable right now.</p>';}}
+async function lbResult(game){if(!LB.ok)return;try{if(LB.pend)await LB.pend;const L=await lbTop(game,5);const rr=$('resReward');if(!rr||!L.length||G.phase!=='matchEnd')return;
+ const box=document.createElement('div');box.className='resLb';box.innerHTML=`<small>Top ${LBG[game]} scores</small>`+lbRows(L,game);rr.appendChild(box);}catch(e){}}
+function renderWeekly(){renderSeason();const el=$('weekly');if(!el)return;const W=weekly(),left=7-(dayNum()%7);
  el.innerHTML=`<h4>This week</h4><p class="hint">New challenges in ${left} day${left>1?'s':''}. Finish all three for a ${WKBONUS} bolt bonus.</p>`+W.list.map((c,i)=>{const p=Math.min(W.prog[c.k]||0,c.goal),done=p>=c.goal,cl=W.claimed[c.k];
   return `<div class="wk${cl?' done':''}"><b>${wkText(c)}</b><em>${cl?'Claimed':'+'+c.pay+' bolts'}</em><span>${p.toLocaleString('en-US')} / ${c.goal.toLocaleString('en-US')}</span>${done&&!cl?`<button class="buy" data-wk="${c.k}">Claim ${c.pay}</button>`:''}<i class="chp"><i style="transform:scaleX(${p/c.goal})"></i></i></div>`;}).join('')+
   (W.bonus?'<p class="hint">Weekly bonus claimed. See you next week.</p>':'');
@@ -4561,10 +4608,10 @@ const SIDE=[
  {name:'Fists Only',foe:'ironjaw',arena:'quarry',goal:'nospecial',stk:'fist',bolts:150,text:'An old-school brawl. No special moves, no Rush and no ultimate: punches, kicks and your blaster only.'},
  {name:'Speed Run',foe:'flashpoint',arena:'track',goal:'fast',stk:'bolt',bolts:180,text:'The fastest frame on the track bets you cannot beat it in 30 seconds. Prove it wrong.'},
  {name:'Untouched',foe:'viper',arena:'trench',goal:'clean',stk:'shield',bolts:180,text:'Win with at least 70% of your armor left.'},
- {name:'Combo Master',foe:'jugger',arena:'fort',goal:'combo',stk:'star',bolts:200,text:'Land a 6-hit combo on the Jugger at some point in the fight, then win.'},
+ {name:'Combo Master',foe:'jugger',arena:'fort',goal:'combo',stk:'star',bolts:200,text:'Land a 5-hit combo on the Jugger at some point in the fight, then win.'},
  {name:'Counter Strike',foe:'specter',arena:'lab',goal:'parry',stk:'eye',bolts:220,text:'Tap block right before its hits land. Parry three attacks, then win.'},
  {name:'Last Convoy',foe:'locomotor',arena:'rail',goal:'convoy',stk:'crown',bolts:300,diff:'prime',text:'The final supply truck crosses the rail yard. A rail juggernaut is coming straight for it. Keep the truck alive and win.'}];
-const SGOAL={convoy:'Protect the truck',noblock:'Never block',nospecial:'No specials, Rush or ultimate',fast:'Win within 30 seconds',clean:'Finish with 70% armor or more',combo:'Land a 6-hit combo',parry:'Parry 3 attacks'};
+const SGOAL={convoy:'Protect the truck',noblock:'Never block',nospecial:'No specials, Rush or ultimate',fast:'Win within 30 seconds',clean:'Finish with 70% armor or more',combo:'Land a 5-hit combo',parry:'Parry 3 attacks'};
 function sideOpen(){return !rookie();}
 function renderSide(){const el=$('sideList');if(!el)return;SAVE.side=SAVE.side||{};const i=G.sideSel|0,m=SIDE[i];
  el.innerHTML=SIDE.map((x,k)=>`<button class="ms" data-si="${k}" aria-pressed="${k===i}"><span>${k+1}</span><b>${x.name}</b><em>${SAVE.side[k]?'✔ Cleared':SGOAL[x.goal]}</em></button>`).join('')+
@@ -4917,7 +4964,7 @@ function miniDraw(dt){const m=G.mini;if(!m)return;
    if(lf<=0||(o.hit&&o.age-o.hitAt>.2)){if(!o.hit&&G.mini.mult>1){G.mini.mult=1;miniHud();}miniDrop(o);m.objs.splice(i,1);}}
   else if(o.kind==='coin'){o.g.rotation.y+=dt*5;}}}
 function miniEnd(){const m=G.mini;if(!m)return;if(m.type==='soccer'&&m.goals[0]>m.goals[1])m.score+=1000;G.phase='matchEnd';cine(false);const type=m.type,score=m.score;SAVE.mini=SAVE.mini||{};const best=score>(SAVE.mini[type]||0);if(best)SAVE.mini[type]=score;
- const bolts=Math.min(70,Math.round(score/45)),xp=Math.min(250,Math.round(score/8));const mx=mastAdd(DEFS[G.sel],xp);G.miniMast=[...mx,mastLine(DEFS[G.sel])];SAVE.bolts+=bolts;SAVE.xp+=xp;SAVE.st.earned=(SAVE.st.earned||0)+bolts;SAVE.st.minis=(SAVE.st.minis||0)+1;weekAdd('earned',bolts);persist();
+ const bolts=Math.min(70,Math.round(score/45)),xp=Math.min(250,Math.round(score/8));const mx=mastAdd(DEFS[G.sel],xp);G.miniMast=[...mx,mastLine(DEFS[G.sel]),...seasonAdd(xp)];SAVE.bolts+=bolts;SAVE.xp+=xp;lbSubmit(type,score);SAVE.st.earned=(SAVE.st.earned||0)+bolts;SAVE.st.minis=(SAVE.st.minis||0)+1;weekAdd('earned',bolts);persist();
  const ach=checkChals(false);
  $('resTitle').textContent='Time!';$('resTitle').className='win';sfx('win');
  if(type==='soccer'){const g=m.goals,w=g[0]>g[1];$('resTitle').textContent=w?'You win!':g[0]===g[1]?'Draw':'CPU wins';$('resTitle').className=w?'win':'lose';}
@@ -4926,7 +4973,7 @@ function miniEnd(){const m=G.mini;if(!m)return;if(m.type==='soccer'&&m.goals[0]>
  $('resSub').textContent=`${MINI_N[type]} · ${det}`;
  $('resReward').innerHTML=`<b>Score ${score.toLocaleString('en-US')}</b><small>${best?'New best score!':'Best: '+(SAVE.mini[type]||0).toLocaleString('en-US')}</small><small>+${xp} XP · +${bolts} bolts</small>`+(G.miniMast||[]).map(x=>`<small>${x}</small>`).join('')+ach.map(c=>`<small>Achievement unlocked: ${c[1]} · +${c[3]} bolts</small>`).join('');
  const btns=$('resBtns');btns.innerHTML='';const B=(l,fn,pr)=>{const b=document.createElement('button');b.className='btn'+(pr?' primary':'');b.textContent=l;b.addEventListener('click',fn);btns.appendChild(b);};
- B('Play again',()=>startMatch(),true);B('Change setup',goSelect);B('Title',goTitle);$('resLadder').hidden=true;show(['hud','result']);}
+ B('Play again',()=>startMatch(),true);B('Change setup',goSelect);B('Title',goTitle);$('resLadder').hidden=true;show(['hud','result']);lbResult(type);}
 const MINI_N={smash:'Car Smash',target:'Target Range',race:'Highway Run',soccer:'Robot Soccer',koth:'King of the Hill',dodge:'Dodge the Boss'};
 function startMatch(){
  audioInit();
@@ -5074,7 +5121,7 @@ function endMatch(){
  if(G.mode==='daily'&&G.dbFirst)bolts+=250;
  if(G.mode==='ranked'){bolts=won?40+10*rkState().tier:20;bolts+=G.rkPromo||0;}
  if(champion)bolts+=40;
- SAVE.xp+=gain;SAVE.bolts+=bolts;if(G.mode!=='training'){extra.push(...mastAdd(DEFS[G.sel],gain));if(G.p1b&&G.partner>=0)mastAdd(DEFS[G.partner],gain/2);extra.push(mastLine(DEFS[G.sel]));}SAVE.st.earned=(SAVE.st.earned||0)+bolts;if(won)SAVE.wins++;
+ SAVE.xp+=gain;SAVE.bolts+=bolts;if(G.mode!=='training'){extra.push(...seasonAdd(gain));if(G.mode==='horde'){lbSubmit('horde',G.wins[0]);lbResult('horde');}if(G.mode==='daily'&&won){lbSubmit('daily',Math.round(1000*Math.max(0,G.p1.hp)/G.p1.maxHp+10*Math.max(0,G.timer||0)));lbResult('daily');}extra.push(...mastAdd(DEFS[G.sel],gain));if(G.p1b&&G.partner>=0)mastAdd(DEFS[G.partner],gain/2);extra.push(mastLine(DEFS[G.sel]));}SAVE.st.earned=(SAVE.st.earned||0)+bolts;if(won)SAVE.wins++;
  weekAdd('fights');weekAdd('earned',bolts);weekMax('combo',G.bestCombo);if(G.mode==='survival')weekMax('surv',G.wins[0]);
  if(won){weekAdd('wins');if(G.p1.def.custom)weekAdd('customWin');if(G.mode==='campaign')weekAdd('camp');if(G.mode==='arcade')weekAdd('arcade');}
  persist();
@@ -5100,7 +5147,7 @@ function endMatch(){
   t.textContent=won?'Boss Rush cleared':G.wins[0]+' of '+G.rush.length+' bosses';sub='Best: '+(SAVE.st.brBest||0)+' of '+G.rush.length+' bosses';if(won)sfx('win');
   lad.innerHTML=G.rush.map((b,i)=>`<span class="${i<G.wins[0]?'done':i===G.wins[0]?'next':''}">${DEFS[b.i].name}</span>`).join('');
   B('Try again',()=>startMatch(),true);B('Change setup',goSelect);B('Title',goTitle);
- }else if(G.mode==='side'){const S=G.side||{},m=SIDE[G.sideSel|0],ok=won&&!S.failed&&(m.goal!=='combo'||G.bestCombo>=6)&&(m.goal!=='parry'||S.parries>=3)&&(m.goal!=='clean'||G.p1.hp>=G.p1.maxHp*.7);SAVE.side=SAVE.side||{};
+ }else if(G.mode==='side'){const S=G.side||{},m=SIDE[G.sideSel|0],ok=won&&!S.failed&&(m.goal!=='combo'||G.bestCombo>=5)&&(m.goal!=='parry'||S.parries>=3)&&(m.goal!=='clean'||G.p1.hp>=G.p1.maxHp*.7);SAVE.side=SAVE.side||{};
   const first=ok&&!SAVE.side[G.sideSel|0];if(first){SAVE.side[G.sideSel|0]=1;SAVE.bolts+=m.bolts;SAVE.stk=SAVE.stk||{};SAVE.stk[m.stk]=1;persist();$('resReward').insertAdjacentHTML('beforeend',`<small>Side mission reward: +${m.bolts} bolts · ${STK[m.stk]?STK[m.stk].n:m.stk} sticker unlocked</small>`);}
   t.textContent=ok?'Goal complete':won?'Won, but the goal failed':'Mission failed';sub=`${m.name} · ${SGOAL[m.goal]}`;if(ok)sfx('win');
   B(ok?'Replay':'Try again',()=>beginMatch(),!ok);B('Side missions',goSelect);B('Title',goTitle);
