@@ -740,7 +740,7 @@ body.fin #stage{filter:saturate(.35) contrast(1.15) brightness(1.05)}
       <h4 class="grpH">Quick play</h4>
       <div class="mgrid"><button class="mcard" data-m="versus" aria-pressed="false"><b>Versus</b><small data-sub="versus"></small></button><button class="mcard" data-m="arcade" aria-pressed="false"><b>Arcade</b><small data-sub="arcade"></small></button><button class="mcard" data-m="survival" aria-pressed="false"><b>Survival</b><small data-sub="survival"></small></button><button class="mcard" data-m="training" aria-pressed="false"><b>Training</b><small data-sub="training"></small></button></div>
       <h4 class="grpH">With friends</h4>
-      <div class="mgrid"><button class="mcard" data-m="coop" aria-pressed="false"><b>Co-op</b><small data-sub="coop"></small></button><button class="mcard" data-m="tourney" aria-pressed="false"><b>Tournament</b><small data-sub="tourney"></small></button></div>
+      <div class="mgrid"><button class="mcard" data-m="coop" aria-pressed="false"><b>Co-op</b><small data-sub="coop"></small></button><button class="mcard" data-m="horde" aria-pressed="false"><b>Horde</b><small data-sub="horde"></small></button><button class="mcard" data-m="tourney" aria-pressed="false"><b>Tournament</b><small data-sub="tourney"></small></button></div>
       <h4 class="grpH">Mini-games</h4>
       <div class="mgrid"><button class="mcard" data-m="smash" aria-pressed="false"><b>Car Smash</b><small data-sub="smash"></small></button><button class="mcard" data-m="target" aria-pressed="false"><b>Target Range</b><small data-sub="target"></small></button><button class="mcard" data-m="race" aria-pressed="false"><b>Highway Run</b><small data-sub="race"></small></button><button class="mcard" data-m="soccer" aria-pressed="false"><b>Robot Soccer</b><small data-sub="soccer"></small></button><button class="mcard" data-m="koth" aria-pressed="false"><b>King of the Hill</b><small data-sub="koth"></small></button><button class="mcard" data-m="dodge" aria-pressed="false"><b>Dodge the Boss</b><small data-sub="dodge"></small></button></div>
       <h4 class="grpH">Challenges</h4>
@@ -756,14 +756,15 @@ body.fin #stage{filter:saturate(.35) contrast(1.15) brightness(1.05)}
       <span data-for="versus">Opponent</span><div class="seg" id="opp" data-for="versus"></div>
       <span data-for="arcade versus tourney">Rounds</span><div class="seg" id="rounds" data-for="arcade versus tourney"></div>
       <span data-for="arcade versus tourney">Skill</span><div class="seg" id="diff" data-for="arcade versus tourney"></div>
+      <span data-for="horde">Players</span><div class="seg" id="hordeOpt" data-for="horde"></div>
       <span data-for="versus">Player 2</span><div class="seg" id="p2ctl" data-for="versus"></div>
       <span data-for="campaign">Difficulty</span><div class="seg" id="campDiff" data-for="campaign"></div>
-      <span data-for="campaign survival arcade versus bossrush daily ranked training" id="partnerLbl">Partner</span><div class="seg" id="partnerOpt" data-for="campaign survival arcade versus bossrush daily ranked training"></div>
-      <span data-for="campaign survival arcade versus bossrush daily ranked">Hazards</span><div class="seg" id="hzOpt" data-for="campaign survival arcade versus bossrush daily ranked"></div>
-      <span data-for="campaign survival arcade versus bossrush daily tourney ranked">Weather</span><div class="seg" id="wxOpt" data-for="campaign survival arcade versus bossrush daily tourney ranked"></div>
-      <span data-for="campaign survival arcade versus bossrush daily tourney ranked">Breakables</span><div class="seg" id="brOpt" data-for="campaign survival arcade versus bossrush daily tourney ranked"></div>
-      <span data-for="campaign survival arcade versus bossrush daily tourney ranked">KO replays</span><div class="seg" id="rpOpt" data-for="campaign survival arcade versus bossrush daily tourney ranked"></div>
-      <span data-for="campaign survival arcade versus bossrush daily tourney">Power-ups</span><div class="seg" id="puOpt" data-for="campaign survival arcade versus bossrush daily tourney"></div>
+      <span data-for="campaign horde survival arcade versus bossrush daily ranked training" id="partnerLbl">Partner</span><div class="seg" id="partnerOpt" data-for="campaign horde survival arcade versus bossrush daily ranked training"></div>
+      <span data-for="campaign horde survival arcade versus bossrush daily ranked">Hazards</span><div class="seg" id="hzOpt" data-for="campaign horde survival arcade versus bossrush daily ranked"></div>
+      <span data-for="campaign horde survival arcade versus bossrush daily tourney ranked">Weather</span><div class="seg" id="wxOpt" data-for="campaign horde survival arcade versus bossrush daily tourney ranked"></div>
+      <span data-for="campaign horde survival arcade versus bossrush daily tourney ranked">Breakables</span><div class="seg" id="brOpt" data-for="campaign horde survival arcade versus bossrush daily tourney ranked"></div>
+      <span data-for="campaign horde survival arcade versus bossrush daily tourney ranked">KO replays</span><div class="seg" id="rpOpt" data-for="campaign horde survival arcade versus bossrush daily tourney ranked"></div>
+      <span data-for="campaign horde survival arcade versus bossrush daily tourney">Power-ups</span><div class="seg" id="puOpt" data-for="campaign horde survival arcade versus bossrush daily tourney"></div>
       <span data-for="training">Dummy</span><div class="seg" id="dummy" data-for="training"></div>
     </div>
     </div></div>
@@ -1472,6 +1473,7 @@ const CHALS=[
  ['camp','Liberator','Beat the Tyrant',300,s=>!!s.tyrant],
  ['ch5','Master builder','Finish chapter 5 and beat the Architect',400,s=>!!s.ch5],
  ['ch6','Final design','Finish chapter 6 and beat Omega',500,s=>!!s.ch6],
+ ['horde10','Hold the line','Reach wave 10 in Horde',150,s=>(s.st.horde||0)>=9],
  ['ch7','Scrap royalty','Finish chapter 7 and beat the Scrap King',500,s=>!!s.ch7],
  ['ch8','Total eclipse','Finish chapter 8 and beat the Eclipse',600,s=>!!s.ch8],
  ['stars','Perfectionist','Earn 3 stars on every mission',500,s=>CAMP.every((_,i)=>s.camp[i]>=3)],
@@ -1548,6 +1550,7 @@ const DIFF={
 };
 const MODES={
  campaign:{note:`The Tyrant has seized the Forge. Fight through ${CAMP.length} missions in eight chapters, earn up to 3 stars on each, and take it back.`,btn:'Start mission'},
+ horde:{note:'Small robots attack in waves, one after another, and each wave is tougher. Every fifth wave is a full-size boss. You heal a little between waves and more after each boss. Play solo, or pick With a friend: you each control one robot and tag in and out, and the robot on the bench can call air strikes.',btn:'Start the horde'},
  survival:{note:'One life. Enemies keep coming and keep getting tougher. You heal a little between fights.',btn:'Start survival'},
  arcade:{note:'Beat eight random frames in a row. Lose a match and you can retry that stage.',btn:'Start arcade'},
  versus:{note:'One match against the frame of your choice.',btn:'Fight'},
@@ -4032,7 +4035,7 @@ function wireBuilder(d){const i=d.slot,c=customOf(i),D=$('workshop');
 function applyCustom(i,quiet){const idx=DEFS.findIndex(d=>d.custom&&d.slot===i);Object.assign(DEFS[idx],computeCustom(i));rebuildShowcase(idx,0);if(quiet)return;persist();renderPilot();renderRoster();renderDetail();renderChals();renderOpp();}
 function toggleVeh(){G.showVeh=!G.showVeh;const v=$('vehBtn');if(v)v.textContent=G.showVeh?'Show robot':'Show vehicle';$('dockVeh').textContent=G.showVeh?'Robot':'Vehicle';sfx('transform');}
 function renderDock(){renderHub();const d=DEFS[G.sel];$('dockName').textContent=d.name;
- $('dockInfo').textContent=(G.mode==='campaign'?`${G.coopOn?'Co-op · ':''}Mission ${G.stageSel+1} · ${CAMP[G.stageSel].name}`:({smash:'Car Smash',target:'Target Range',race:'Highway Run',soccer:'Robot Soccer',koth:'King of the Hill',dodge:'Dodge the Boss',tourney:'Tournament',bossrush:'Boss Rush',daily:'Daily Boss'}[G.mode]||G.mode[0].toUpperCase()+G.mode.slice(1))+' mode')+' · '+SAVE.bolts+' bolts';
+ $('dockInfo').textContent=(G.mode==='campaign'?`${G.coopOn?'Co-op · ':''}Mission ${G.stageSel+1} · ${CAMP[G.stageSel].name}`:({smash:'Car Smash',target:'Target Range',race:'Highway Run',soccer:'Robot Soccer',koth:'King of the Hill',dodge:'Dodge the Boss',horde:'Horde',tourney:'Tournament',bossrush:'Boss Rush',daily:'Daily Boss'}[G.mode]||G.mode[0].toUpperCase()+G.mode.slice(1))+' mode')+' · '+SAVE.bolts+' bolts';
  $('dockVeh').textContent=G.showVeh?'Robot':'Vehicle';}
 function setShop(open){G.shop=open;const p=$('selPanel');p.hidden=!open;p.classList.toggle('open',open);$('hub').hidden=open;if(!open)renderHub();
  $('shopBtn').textContent=open?'Close menu':'Menu';$('shopBtn').setAttribute('aria-expanded',String(open));
@@ -4215,10 +4218,10 @@ function renderPilot(){const k=rankInfo(SAVE.xp);$('secBolts').textContent=SAVE.
 function pickFrame(i){if(i===G.sel||locked(i))return;if(showcase[G.sel].pal!==0)rebuildShowcase(G.sel,0);G.sel=i;G.pal=0;renderRoster();renderDetail();sfx('ui');}
 function renderMode(){
  {const co=G.mode==='campaign'&&!!G.coopOn;$('modes').querySelectorAll('button').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.m==='coop'?co:b.dataset.m===G.mode&&!(b.dataset.m==='campaign'&&co))));}
- {const k=rkState(),D=dbState(),rk=rookie(),sub={campaign:[SAVE.ch8?'All 8 chapters cleared':`Mission ${campOpen()+1} of ${CAMP.length} · chapter ${chapOf(campOpen())+1}`,0],versus:['One match vs anyone',0],arcade:['8 fights in a row',0],survival:[`Best: ${SAVE.st.surv||0} defeated`,0],training:['Practice, no timer',0],
+ {const k=rkState(),D=dbState(),rk=rookie(),sub={campaign:[SAVE.ch8?'All 8 chapters cleared':`Mission ${campOpen()+1} of ${CAMP.length} · chapter ${chapOf(campOpen())+1}`,0],versus:['One match vs anyone',0],arcade:['8 fights in a row',0],survival:[`Best: ${SAVE.st.surv||0} defeated`,0],horde:[`Best: wave ${(SAVE.st.horde||0)+1}`,0],training:['Practice, no timer',0],
   ranked:[rk?'After 5 fights':`${RKT[k.tier]} · ${k.tier>=6?k.stars+' pts':k.stars+'/'+RKS+' stars'}`,rk],daily:[rk?'After 5 fights':D.won?'Beaten today':'New boss today',rk],bossrush:[SAVE.tyrant?`${rushList().length} bosses`:'Beat the Tyrant',!SAVE.tyrant],coop:['2 players, one keyboard',0],smash:[`Best: ${(SAVE.mini||{}).smash||0}`,0],target:[`Best: ${(SAVE.mini||{}).target||0}`,0],race:[`Best: ${(SAVE.mini||{}).race||0}`,0],soccer:[`Best: ${(SAVE.mini||{}).soccer||0}`,0],koth:[`Best: ${(SAVE.mini||{}).koth||0}`,0],dodge:[`Best: ${(SAVE.mini||{}).dodge||0}`,0],tourney:[G.tn&&!G.tn.champ?`Round ${G.tn.rn} in progress`:'2 to 8 players',0]};
   for(const m in sub){const el=document.querySelector(`[data-sub="${m}"]`);if(el){el.textContent=sub[m][0];el.parentElement.classList.toggle('lk',!!sub[m][1]);}}
-  $('modeTitle').textContent=G.mode==='campaign'&&G.coopOn?'Co-op Campaign':{smash:'Car Smash',target:'Target Range',race:'Highway Run',soccer:'Robot Soccer',koth:'King of the Hill',dodge:'Dodge the Boss',tourney:'Tournament',campaign:'Campaign',versus:'Versus',arcade:'Arcade',survival:'Survival',training:'Training',ranked:'Ranked',daily:'Daily Boss',bossrush:'Boss Rush'}[G.mode];}
+  $('modeTitle').textContent=G.mode==='campaign'&&G.coopOn?'Co-op Campaign':{smash:'Car Smash',target:'Target Range',race:'Highway Run',soccer:'Robot Soccer',koth:'King of the Hill',dodge:'Dodge the Boss',horde:'Horde',tourney:'Tournament',campaign:'Campaign',versus:'Versus',arcade:'Arcade',survival:'Survival',training:'Training',ranked:'Ranked',daily:'Daily Boss',bossrush:'Boss Rush'}[G.mode];}
  $('modeNote').textContent=(G.mode==='campaign'&&G.coopOn?'Play the campaign with a friend on one keyboard. Player 1 picks the robot in the garage, Player 2 picks theirs below. One robot fights at a time: tag with T (Player 1) or Enter (Player 2). The player waiting can call an air strike on the enemy with their punch key every few seconds. Player 1: A D W S, J K Y H, U I O, Left Shift. Player 2: arrow keys, comma, period, slash, M, [ ] \\, Right Shift.':MODES[G.mode].note)+(G.mode==='campaign'?{story:' Story difficulty: enemies are weaker and you get 30% more armor. Up to 2 stars per mission.',normal:'',hard:' Hard difficulty: tougher enemies, 50% more bolts and XP, and a crown on every mission you clear.'}[G.campDiff||'normal']:'')+(G.mode==='versus'&&G.p2human?' Two players on one keyboard. Player 1: A D W S, J K Y H, U I O, Left Shift. Player 2: arrow keys, comma, period, slash, M, [ ] \\, Right Shift. Pick Player 2’s robot under Opponent.':'')+(G.mode==='survival'?' Best run: '+(SAVE.st.surv||0)+' defeated.':'')+(G.mode==='daily'?dailyNote():'')+(G.mode==='ranked'?rankedNote():'')+(G.mode==='bossrush'?(SAVE.tyrant?` ${rushList().length} bosses: ${rushList().map(b=>DEFS[b.i].name).join(', ')}. Best: ${SAVE.st.brBest||0}.`:' Locked for now.'):'');$('fightBtn').textContent=MODES[G.mode].btn;
  document.querySelectorAll('[data-for]').forEach(el=>{el.hidden=!el.dataset.for.split(' ').includes(G.mode);});
  if(G.mode==='campaign'){if(G.arena!==CAMP[G.stageSel].arena)applyArena(CAMP[G.stageSel].arena);renderMissions();}
@@ -4233,7 +4236,7 @@ function rankedNote(){if(rookie())return 'Climb from Bronze to Legend. Unlocks a
 function dailyNote(){if(rookie())return 'One tough boss a day with a big reward. Unlocks after your first five fights.';const B=dailyBoss(),D=dbState(),h=24-new Date().getHours();
  return `Today: ${B.def.name}, ${B.def.vehicle.toLowerCase()} on ${ARENAS[B.arena].name}. Twist: ${B.twist[0]}. ${B.twist[1]} It has a lot more armor than a normal frame. `+(D.won?`Beaten today. A new boss arrives in about ${h} hour${h>1?'s':''}.`:`First win today: +250 bolts and +300 XP.`);}
 function renderArena(){seg($('arena'),ARENAS.map((a,i)=>[i,a.name]),G.arena,v=>applyArena(v));}
-function renderPartner(){const co=G.mode==='campaign'&&G.coopOn;$('partnerLbl').textContent=co?'Player 2':'Partner';
+function renderPartner(){const co=G.mode==='campaign'&&G.coopOn||G.mode==='horde'&&G.hordeFriend;$('partnerLbl').textContent=co?'Player 2':'Partner';
  if(co){const L=DEFS.map((d,i)=>[i,d.name]).filter(([i])=>!locked(i)&&!DEFS[i].enemy&&i!==G.sel);if(!(G.partner>=0)||!L.some(([i])=>i===G.partner))G.partner=L.length?L[0][0]:-1;seg($('partnerOpt'),L,G.partner,v=>{G.partner=v;sfx('ui');});return;}
  if(!SAVE.tyrant){G.partner=-1;const el=$('partnerOpt');el.innerHTML='<button disabled>Beat the Tyrant to unlock tag teams</button>';return;}if(G.partner>=0&&(locked(G.partner)||G.partner===G.sel))G.partner=-1;seg($('partnerOpt'),[[-1,'None'],...DEFS.map((d,i)=>[i,d.name]).filter(([i])=>!locked(i)&&!DEFS[i].enemy&&i!==G.sel)],G.partner,v=>{G.partner=v;sfx('ui');});}
 function renderOpp(){renderPartner();if(G.opp>=0&&bossLocked(G.opp))G.opp=-1;seg($('opp'),[[-1,'Random'],...DEFS.map((d,i)=>[i,d.name]).filter(([i])=>!bossLocked(i)&&!DEFS[i].enemy)],G.opp,v=>G.opp=v);}
@@ -4261,6 +4264,7 @@ function renderBinds(){const g=$('bindGrid');if(!g)return;g.innerHTML=BIND_ACTS.
 $('bindReset').addEventListener('click',()=>{SAVE.binds={};G.rebind=null;rebuildKeys();persist();renderBinds();sfx('ui');toast('Controls reset to the default keys.');});
 rebuildKeys();renderBinds();
 seg($('hzOpt'),[['on','On'],['off','Off']],'on',v=>{G.hzOn=v==='on';});
+seg($('hordeOpt'),[['solo','Solo'],['friend','With a friend']],'solo',v=>{G.hordeFriend=v==='friend';renderPartner();});
 seg($('wxOpt'),[['on','On'],['off','Off']],SAVE.wxOff?'off':'on',v=>{SAVE.wxOff=v==='off';persist();});
 seg($('brOpt'),[['on','On'],['off','Off']],SAVE.brOff?'off':'on',v=>{SAVE.brOff=v==='off';persist();});
 seg($('rpOpt'),[['on','On'],['off','Off']],SAVE.rpOff?'off':'on',v=>{SAVE.rpOff=v==='off';persist();});
@@ -4491,6 +4495,10 @@ function propsTick(dt){for(const p of G.props||[]){
  if(!p.broken){for(const f of [G.p1,G.p2])if(f&&(f.state==='hit'||f.state==='ko')&&Math.abs(f.vx)>5&&Math.abs(f.x-p.x)<p.w/2+.5&&f.y<p.h){propBreak(p,f);break;}}
  else if(p.parts){p.life-=dt;for(const q of p.parts){q.vy-=GRAV*dt;q.m.position.x+=q.vx*dt;q.m.position.y=Math.max(.1,q.m.position.y+q.vy*dt);q.m.position.z+=q.vz*dt;q.m.rotation.x+=q.vr*dt;q.m.rotation.z+=q.vr*dt*.7;if(q.m.position.y<=.1){q.vx*=.8;q.vz*=.8;q.vr*=.8;}}
   if(p.life<0){const s=Math.max(.01,1+p.life*1.5);p.g.scale.setScalar(s);if(s<=.02){p.parts=null;p.g.visible=false;}}}}}
+/* ================= horde =================
+   Waves of small, weak robots come one after another and keep getting tougher; every fifth wave is a full-size boss.
+   Play solo with a tag partner, or with a friend: each of you controls one robot and you tag in and out (co-op controls). */
+function hordeFoe(n){const d=randomEnemy();const boss=n%5===0;d.id='mix';d.scale=boss?1.25:.72+Math.min(.18,n*.012);d.name=boss?'WARLORD '+d.name:d.name;d.role=boss?'Horde boss':'Horde drone';if(!boss){d.speed=Math.min(6.5,d.speed*1.12);}return d;}
 /* ================= KO replay =================
    Every frame of a fight is recorded for the last six seconds. After the knockout that ends a match, the last couple of seconds
    play again at half speed from a low orbiting camera, with the hits re-sparking. Any key, click or tap skips it. */
@@ -4850,6 +4858,7 @@ function setupMode(){
  else if(G.mode==='ranked'){const k=rkState(),o=others();R=3;G.diff=RKD[k.tier][0];G.mod=Object.assign({},RKD[k.tier][1]);G.cpuIdx=o[Math.random()*o.length|0];G.cpuDef=Math.random()<.3?randomEnemy():null;const ai=2+(Math.random()*(ARENAS.length-2)|0);if(G.arena!==ai)applyArena(ai);}
  else if(G.mode==='daily'){const B=dailyBoss();R=1;G.diff='prime';G.cpuDef=B.def;G.mod=Object.assign({},B.mod);G.dboss=B;if(G.arena!==B.arena)applyArena(B.arena);}
  else if(G.mode==='bossrush'){R=1;G.diff='veteran';G.rush=rushList();G.rushMod={foeHp:1.2,foeDmg:1.1,enrage:1};G.mod=Object.assign({},G.rushMod);G.cpuIdx=G.rush[0].i;let qi=0;G.nextFoe=()=>++qi<G.rush.length?G.rush[qi].i:null;}
+ else if(G.mode==='horde'){R=1;G.diff='rookie';G.mod={timer:45,foeHp:.42,foeDmg:.8};G.cpuDef=hordeFoe(1);G.cpuIdx=0;G.nextFoe=()=>{const n=G.wave+1;G.diff=n>=12?'prime':n>=5?'veteran':'rookie';G.mod={timer:45,foeHp:n%5===0?1+.06*n:.42+.03*n,foeDmg:.8+.04*n,enrage:n%5===0?1:0};G.cpuDef=hordeFoe(n);if(n%5===0)setTimeout(()=>announce(`Wave ${n} · boss`,'ko',1300),400);return 0;};}
  else if(G.mode==='survival'){R=1;G.diff='rookie';G.nextFoe=()=>{const n=G.wave+1,o=others();G.diff=n>=6?'prime':n>=3?'veteran':'rookie';G.mod={foeHp:1+.1*(n-1),foeDmg:1+.06*(n-1),foeEnergy:1+.15*(n-1)};G.cpuDef=Math.random()<.35?randomEnemy():null;return o[Math.random()*o.length|0];};}
  if(MINI[G.mode]){R=1;G.diff=G.mode==='soccer'?(G.userDiff||'veteran'):'rookie';G.mod={timer:MINI[G.mode].time};if(G.mode==='dodge')G.cpuDef=DEFS.find(d=>d.id==='tyrant');const ai=AID[MINI[G.mode].arena];if(G.arena!==ai)applyArena(ai);}
  if(G.mode==='tourney'){R=G.rounds;G.diff=G.userDiff;const ai=2+(Math.random()*(ARENAS.length-2)|0);if(G.arena!==ai)applyArena(ai);}
@@ -4886,7 +4895,7 @@ function hintsFor(){const H=G.hint;if(!H)return [];const out=[],D=H.dmg,top=Obje
  if(G.mode==='campaign'){const n=(G.losses[G.stageSel]=(G.losses[G.stageSel]||0)+1);if(n>=2&&G.campDiff!=='story'&&out.length<3)out.push('Stuck on this mission? Try Story difficulty in Play, or buy upgrades and a weapon in Robots.');else if(n>=2&&out.length<3)out.push('Stuck? Upgrade your robot in Robots, or try a robot with more armor.');}
  return out.slice(0,2);}
 function beginMatch(){G.hint={dmg:{},hits:0,block:0,full:0,sp:0,gb:0,t:0};G.losses=G.losses||{};
- cleanupMatch();G.twoP=G.mode==='versus'&&!!G.p2human||G.mode==='tourney'&&!!G.tnTwo;G.coop=G.mode==='campaign'&&!!G.coopOn&&!G.tut;G.assistCD=0;setupMode();for(const k in held2)held2[k]=false;G.mlv=G.twoP?0:mastLv(DEFS[G.sel]);G.fw=null;$('tag1').textContent=G.twoP||G.coop?'P1':'YOU'+(mastTitle(G.mlv)?' · '+mastTitle(G.mlv).toUpperCase():'');$('tag2').textContent=G.twoP?'P2':'CPU';
+ cleanupMatch();G.twoP=G.mode==='versus'&&!!G.p2human||G.mode==='tourney'&&!!G.tnTwo;G.coop=(G.mode==='campaign'&&!!G.coopOn||G.mode==='horde'&&!!G.hordeFriend)&&!G.tut;if(G.mode==='horde'&&G.coop&&!(G.partner>=0&&G.partner!==G.sel&&!locked(G.partner))){const L=DEFS.map((d,i)=>i).filter(i=>!locked(i)&&!DEFS[i].enemy&&i!==G.sel);G.partner=L.length?L[0]:-1;}G.assistCD=0;setupMode();for(const k in held2)held2[k]=false;G.mlv=G.twoP?0:mastLv(DEFS[G.sel]);G.fw=null;$('tag1').textContent=G.twoP||G.coop?'P1':'YOU'+(mastTitle(G.mlv)?' · '+mastTitle(G.mlv).toUpperCase():'');$('tag2').textContent=G.twoP?'P2':'CPU';
  G.showVeh=false;showcase.forEach(f=>{f.root.visible=false;f.veh.visible=false;f.morph=0;});
  G.p1=new Fighter(DEFS[G.sel],false,G.pal);G.p1.enter=true;G.p1b=null;G.tagAuto=0;G.tagCD=0;
  if(G.coop&&!(G.partner>=0&&G.partner!==G.sel&&!locked(G.partner)))G.partner=DEFS.findIndex((d,i)=>!d.enemy&&!locked(i)&&i!==G.sel);
@@ -4897,7 +4906,7 @@ function beginMatch(){G.hint={dmg:{},hits:0,block:0,full:0,sp:0,gb:0,t:0};G.loss
  G.wins=[0,0];G.round=1;G.bestCombo=0;G.endSeen=false;G.btyN=0;G.btyBolts=0;
  $('n1').textContent=G.p1.def.name;$('n2').textContent=G.p2.def.name;
  for(const n of [1,2])$('w'+n).innerHTML=G.mode==='training'||G.nextFoe?'':'<i></i>'.repeat(G.need);
- renderTut();$('modeTag').textContent=G.tut?'Tutorial':G.mode==='campaign'?`Mission ${G.stageSel+1}`:G.mode==='survival'?'Survival':G.mode==='bossrush'?'Boss Rush':G.mode==='daily'?'Daily Boss':G.mode==='ranked'?'Ranked · '+RKT[rkState().tier]:G.mode==='arcade'?`Arcade ${G.stage+1}/${G.ladder.length}`:G.mode==='training'?'Training':MINI_N[G.mode]||(G.mode==='tourney'?'Tournament':G.coop?'Co-op':'Versus');
+ renderTut();$('modeTag').textContent=G.tut?'Tutorial':G.mode==='campaign'?`Mission ${G.stageSel+1}`:G.mode==='survival'?'Survival':G.mode==='horde'?'Horde · wave '+G.wave:G.mode==='bossrush'?'Boss Rush':G.mode==='daily'?'Daily Boss':G.mode==='ranked'?'Ranked · '+RKT[rkState().tier]:G.mode==='arcade'?`Arcade ${G.stage+1}/${G.ladder.length}`:G.mode==='training'?'Training':MINI_N[G.mode]||(G.mode==='tourney'?'Tournament':G.coop?'Co-op':'Versus');
  buildMovelist();show(['hud']);gestHint();startRound();
 }
 function startRound(){
@@ -4955,6 +4964,7 @@ function endMatch(){
   k.best=Math.max(k.best||0,k.tier);if(k.tier>G.rkFrom&&!k.paid[k.tier]){k.paid[k.tier]=1;G.rkPromo=100*k.tier;gain+=100*k.tier;extra.push(`Reached ${RKT[k.tier]}: +${G.rkPromo} bolts`);}else G.rkPromo=0;}
  if(G.mode==='daily'){const D=dbState();D.tries++;G.dbFirst=won&&!D.won;if(G.dbFirst){D.won=true;gain+=300;SAVE.st.dboss=(SAVE.st.dboss||0)+1;extra.push('Daily boss bonus: +300 XP and +250 bolts');}else if(won)extra.push('Already beaten today. A new boss arrives tomorrow.');SAVE.dboss=D;}
  if(G.mode==='bossrush'){gain=60+120*G.wins[0]+G.bestCombo*5;if(G.wins[0]>(SAVE.st.brBest||0)){SAVE.st.brBest=G.wins[0];extra.push('New best Boss Rush');}if(won){SAVE.st.brClear=1;gain+=200;}}
+ if(G.mode==='horde'){gain=25+35*G.wins[0]+G.bestCombo*5;if(G.wins[0]>(SAVE.st.horde||0)){SAVE.st.horde=G.wins[0];extra.push('New best horde run');}}
  if(G.mode==='survival'){gain=30+45*G.wins[0]+G.bestCombo*5;if(G.wins[0]>(SAVE.st.surv||0)){SAVE.st.surv=G.wins[0];extra.push('New best run');}}
  if(won){SAVE.won[G.p1.def.id]=true;if(G.diff==='prime'&&(G.mode==='arcade'||G.mode==='versus'))SAVE.st.hard=true;}
  SAVE.st.combo=Math.max(SAVE.st.combo||0,G.bestCombo);weekly();
@@ -4962,7 +4972,7 @@ function endMatch(){
  let bolts=won?({rookie:45,veteran:50,prime:55})[G.diff]:25;
  if(G.mode==='campaign'&&won&&stars===3)bolts+=5;
  if(G.mode==='campaign'&&G.campDiff==='hard'&&won)bolts=Math.round(bolts*1.5);
- if(G.mode==='survival')bolts=Math.max(25,20*G.wins[0]);
+ if(G.mode==='survival')bolts=Math.max(25,20*G.wins[0]);if(G.mode==='horde')bolts=Math.max(20,15*G.wins[0]);
  if(G.mode==='bossrush')bolts=Math.max(25,40*G.wins[0]+(won?150:0));
  if(G.mode==='daily'&&G.dbFirst)bolts+=250;
  if(G.mode==='ranked'){bolts=won?40+10*rkState().tier:20;bolts+=G.rkPromo||0;}
@@ -4992,6 +5002,9 @@ function endMatch(){
  }else if(G.mode==='bossrush'){
   t.textContent=won?'Boss Rush cleared':G.wins[0]+' of '+G.rush.length+' bosses';sub='Best: '+(SAVE.st.brBest||0)+' of '+G.rush.length+' bosses';if(won)sfx('win');
   lad.innerHTML=G.rush.map((b,i)=>`<span class="${i<G.wins[0]?'done':i===G.wins[0]?'next':''}">${DEFS[b.i].name}</span>`).join('');
+  B('Try again',()=>startMatch(),true);B('Change setup',goSelect);B('Title',goTitle);
+ }else if(G.mode==='horde'){
+  t.textContent=`Wave ${G.wave}`;sub=`${G.wins[0]} robots stopped · best ${SAVE.st.horde||0}`+(G.coop?' · with a friend':'');
   B('Try again',()=>startMatch(),true);B('Change setup',goSelect);B('Title',goTitle);
  }else if(G.mode==='survival'){
   t.textContent=G.wins[0]+' defeated';sub='Best run: '+(SAVE.st.surv||0)+' defeated';
@@ -5038,7 +5051,7 @@ function phaseTick(dt){
    if(w===G.p1&&G.p2.def.enemy&&G.p2.def.id!=='mix'&&G.p2.def.id!=='dailyboss'){SAVE.beaten[G.p2.def.id]=1;}
    if(w===G.p1&&!G.twoP&&G.mode!=='training'&&G.p2.def.id!=='mix'&&G.p2.def.id!=='dailyboss')SAVE.kos[G.p2.def.id]=(SAVE.kos[G.p2.def.id]||0)+1;
    const nx=w===G.p1&&G.nextFoe?G.nextFoe():null;
-   if(nx!=null){G.wave++;G.round++;const keep=Math.min(G.p1.maxHp,G.p1.hp+G.p1.maxHp*.25),en=G.p1.energy;G.cpuIdx=nx;spawnFoe();startRound();G.p1.hp=G.p1.trail=keep;G.p1.energy=en;}
+   if(nx!=null){G.wave++;G.round++;const keep=Math.min(G.p1.maxHp,G.p1.hp+G.p1.maxHp*(G.mode==='horde'?(G.wave%5===1?.35:.1):.25)),en=G.p1.energy;G.cpuIdx=nx;spawnFoe();startRound();G.p1.hp=G.p1.trail=keep;G.p1.energy=en;}
    else if(G.nextFoe||G.wins[0]>=G.need||G.wins[1]>=G.need||G.round>=G.maxRounds+2)endMatch();else{G.round++;startRound();}
   }
  }
