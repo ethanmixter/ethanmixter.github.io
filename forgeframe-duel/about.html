@@ -1,0 +1,159 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Forgeframe Duel · Giant robot 1v1</title>
+<meta name="description" content="Forgeframe Duel is a free 3D giant-robot fighting game that runs in your browser. Robots that transform into vehicles, a 40-mission campaign, a robot builder, mini-games and local 2-player.">
+<meta property="og:title" content="Forgeframe Duel">
+<meta property="og:description" content="Free 3D giant-robot fighting in your browser. 40 missions, build your own robots, 2-player, mini-games.">
+<meta property="og:image" content="https://ethanmixter.github.io/forgeframe-duel/media/og.jpg">
+<meta property="og:url" content="https://ethanmixter.github.io/forgeframe-duel/about.html">
+<meta property="og:type" content="website">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="theme-color" content="#0b0f14">
+<link rel="icon" href="media/icon.svg" type="image/svg+xml">
+<link rel="icon" href="media/favicon-32.png" sizes="32x32">
+<link rel="apple-touch-icon" href="media/apple-touch-icon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Saira+Stencil+One&family=Saira+Condensed:wght@500;700;800&family=Saira:wght@400;600&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#0b0f14;--steel:#1a2129;--steel2:#232c36;--line:#2c3642;--amber:#ffb21e;--hot:#ff4d2e;--cyan:#7fe8ff;--text:#e8edf2;--muted:#8b97a4;
+ --f-display:"Saira Stencil One",Impact,"Arial Black",sans-serif;--f-label:"Saira Condensed","Arial Narrow",sans-serif;--f-body:"Saira",system-ui,sans-serif}
+*{box-sizing:border-box}
+html{background:var(--bg)}
+body{margin:0;background:radial-gradient(ellipse at 50% -10%,rgba(255,150,40,.16),transparent 55%),var(--bg);color:var(--text);font:16px/1.6 var(--f-body)}
+a{color:var(--amber)}
+.wrap{width:min(1080px,100% - 32px);margin:0 auto}
+header{padding:28px 0 8px;display:flex;align-items:center;gap:14px}
+header img{width:44px;height:44px}
+header .nav{margin-left:auto;display:flex;gap:18px;font-family:var(--f-label);letter-spacing:.14em;text-transform:uppercase;font-size:13px}
+header .nav a{color:var(--muted);text-decoration:none}header .nav a:hover{color:var(--text)}
+.hero{display:grid;grid-template-columns:1.05fr 1fr;gap:36px;align-items:center;padding:30px 0 40px}
+.hero h1{margin:0;line-height:.9}
+.logo{font-family:var(--f-display);font-weight:400;font-size:clamp(52px,8.4vw,92px);letter-spacing:.01em;background:linear-gradient(#fff,#b9c3ce);-webkit-background-clip:text;background-clip:text;color:transparent;border-bottom:5px solid var(--amber);display:inline-block;padding-bottom:4px}
+.logo span{background:linear-gradient(#ffd36b,#ff9a12);-webkit-background-clip:text;background-clip:text;color:transparent}
+.logo small{display:block;font-family:var(--f-label);font-size:14px;letter-spacing:.42em;text-transform:uppercase;color:var(--muted);-webkit-text-fill-color:var(--muted);margin-top:4px}
+.hero p.lead{font-size:19px;color:var(--text);margin:18px 0 22px;max-width:46ch}
+.btn{display:inline-block;font-family:var(--f-label);font-weight:800;letter-spacing:.18em;text-transform:uppercase;text-decoration:none;padding:14px 28px;color:#1a1206;background:linear-gradient(#ffd36b,#ff9a12);clip-path:polygon(10px 0,100% 0,calc(100% - 10px) 100%,0 100%);font-size:16px}
+.btn:hover{filter:brightness(1.08)}
+.btn.ghost{background:linear-gradient(#3a434e,#232a32);color:var(--text)}
+.ctas{display:flex;gap:12px;flex-wrap:wrap;align-items:center}
+.ctas small{color:var(--muted);font-size:13px}
+.vid{position:relative;border:1px solid var(--line);box-shadow:0 20px 60px rgba(0,0,0,.55);background:#000;aspect-ratio:16/9;overflow:hidden}
+.vid video{width:100%;height:100%;display:block;object-fit:cover}
+.stats{display:flex;gap:28px;flex-wrap:wrap;padding:18px 0;border-top:1px solid var(--line);border-bottom:1px solid var(--line);margin-bottom:46px}
+.stats div{font-family:var(--f-label);letter-spacing:.12em;text-transform:uppercase;color:var(--muted);font-size:13px}
+.stats b{display:block;font-family:var(--f-display);font-weight:400;font-size:34px;color:var(--text);letter-spacing:0;line-height:1.1}
+h2{font-family:var(--f-display);font-weight:400;font-size:36px;margin:0 0 6px;letter-spacing:.02em}
+h2 + p{color:var(--muted);margin:0 0 22px}
+section{margin-bottom:60px}
+.feat{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
+.card{background:linear-gradient(180deg,var(--steel2),var(--steel));border:1px solid var(--line);padding:18px 18px 16px;position:relative}
+.card::before{content:"";position:absolute;left:0;top:0;right:0;height:3px;background:var(--amber)}
+.card h3{font-family:var(--f-label);font-weight:800;letter-spacing:.1em;text-transform:uppercase;font-size:16px;margin:2px 0 6px}
+.card p{margin:0;color:#c7d0d9;font-size:15px}
+.shots{display:grid;grid-template-columns:repeat(2,1fr);gap:12px}
+.shots figure{margin:0;border:1px solid var(--line);background:#000}
+.shots img{width:100%;height:auto;display:block;aspect-ratio:16/9;object-fit:cover}
+.shots figcaption{font-family:var(--f-label);letter-spacing:.12em;text-transform:uppercase;font-size:12px;color:var(--muted);padding:8px 12px}
+.ctl{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
+.ctl table{width:100%;border-collapse:collapse;font-size:14.5px}
+.ctl td{padding:5px 0;border-bottom:1px solid #222a33;vertical-align:top}
+.ctl td:first-child{color:#c7d0d9}
+.ctl td:last-child{text-align:right;white-space:nowrap}
+kbd{font-family:var(--f-label);font-weight:700;font-size:13px;display:inline-block;min-width:24px;padding:1px 7px;text-align:center;color:#14181d;background:linear-gradient(#ffe2a0,#e9a93a);border-radius:4px;box-shadow:0 2px 0 #8a5a12;margin-left:3px}
+.modes{columns:3 220px;column-gap:28px}
+.modes p{margin:0 0 12px;break-inside:avoid;color:#c7d0d9;font-size:15px}
+.modes b{color:var(--text);font-family:var(--f-label);letter-spacing:.06em;font-size:16px}
+footer{border-top:1px solid var(--line);padding:26px 0 40px;color:var(--muted);font-size:14px;display:flex;gap:16px;flex-wrap:wrap;justify-content:space-between}
+@media (max-width:860px){.hero{grid-template-columns:1fr}.feat,.ctl{grid-template-columns:1fr 1fr}}
+@media (max-width:560px){.feat,.ctl,.shots{grid-template-columns:1fr}header .nav{display:none}h2{font-size:30px}.stats{gap:18px}.stats b{font-size:28px}}
+@media (prefers-reduced-motion:reduce){.vid video{display:none}.vid{background:url(media/poster.jpg) center/cover}}
+</style>
+</head>
+<body>
+<div class="wrap">
+<header>
+ <img src="media/icon.svg" alt="">
+ <nav class="nav" aria-label="Page"><a href="#features">Features</a><a href="#modes">Modes</a><a href="#controls">Controls</a><a href="./">Play</a></nav>
+</header>
+
+<div class="hero">
+ <div>
+  <h1 class="logo">FORGE<span>FRAME</span><small>Duel · Giant robot 1v1</small></h1>
+  <p class="lead">Giant robots that turn into cars, trucks and jets slug it out in 3D arenas. Fight through a 40-mission story, build your own robot from hundreds of parts, and take on a friend on the same keyboard.</p>
+  <div class="ctas"><a class="btn" href="./">Play free</a><a class="btn ghost" href="#controls">Controls</a><small>Runs in your browser · keyboard, controller or touch</small></div>
+ </div>
+ <div class="vid"><video src="media/gameplay.mp4" poster="media/poster.jpg" autoplay muted loop playsinline aria-label="Gameplay clip: two robots fighting in a desert arena"></video></div>
+</div>
+
+<div class="stats" aria-label="Game at a glance">
+ <div><b>40</b>Story missions</div><div><b>8</b>Chapters</div><div><b>217</b>Robot parts</div><div><b>48</b>Robots to beat</div><div><b>6</b>Mini-games</div><div><b>2</b>Players, one keyboard</div>
+</div>
+
+<section id="features">
+ <h2>What's inside</h2><p>Everything in one free game, with no download or account needed.</p>
+ <div class="feat">
+  <div class="card"><h3>Transforming robots</h3><p>Every frame turns into its own vehicle. Transform Rush rams the enemy, and each class has its own weapon: heavy, medium or light.</p></div>
+  <div class="card"><h3>40-mission story</h3><p>Eight chapters, cutscenes, bosses with their own attacks, side missions with special goals, and a proper ending.</p></div>
+  <div class="card"><h3>Build your robot</h3><p>Mix head, torso, arms and legs from crates, pick powers, colors, patterns and stickers, then save your designs.</p></div>
+  <div class="card"><h3>Boss creator</h3><p>Blow up any custom robot to giant size, give it a rage phase and fight it, alone or with a friend at the controls.</p></div>
+  <div class="card"><h3>Seasons and rewards</h3><p>A 30-tier season track, weekly challenges, daily rewards, 74 achievements and mastery for every robot.</p></div>
+  <div class="card"><h3>Plays anywhere</h3><p>Keyboard with rebindable keys, game controllers, and touch controls on phones and tablets. Your progress saves on its own.</p></div>
+ </div>
+</section>
+
+<section>
+ <h2>Screenshots</h2><p>Taken straight from the game.</p>
+ <div class="shots">
+  <figure><img src="media/fight.jpg" alt="Bulwark and Voltaic squaring off in the desert arena" loading="lazy"><figcaption>Versus · Desert arena</figcaption></figure>
+  <figure><img src="media/boss.jpg" alt="Voltaic fighting the Tyrant boss in a red-lit arena" loading="lazy"><figcaption>Boss fight · The Tyrant</figcaption></figure>
+  <figure><img src="media/garage.jpg" alt="The garage menu with the Talon robot on display" loading="lazy"><figcaption>The garage</figcaption></figure>
+  <figure><img src="media/horde.jpg" alt="Aegis and a partner fighting a horde wave" loading="lazy"><figcaption>Horde · Co-op waves</figcaption></figure>
+ </div>
+</section>
+
+<section id="modes">
+ <h2>Modes</h2><p>Story first, then whatever you feel like.</p>
+ <div class="modes">
+  <p><b>Campaign.</b> 40 missions across 8 chapters, with Story, Normal and Hard difficulty.</p>
+  <p><b>Side missions.</b> Escort a convoy, win with fists only, never block, and more.</p>
+  <p><b>Versus.</b> Pick any two robots and fight the computer or a friend.</p>
+  <p><b>Arcade and Survival.</b> Climb a ladder, or see how many fights you can last.</p>
+  <p><b>Horde.</b> Waves of drones with a boss every fifth wave. Bring a partner.</p>
+  <p><b>Ranked, Daily Boss, Boss Rush.</b> Climb tiers, beat today's boss, take on every boss in a row.</p>
+  <p><b>Co-op campaign and Tournament.</b> Tag-team the story, or run a bracket for up to 8 players.</p>
+  <p><b>Mini-games.</b> Car Smash, Target Range, Highway Run, Robot Soccer, King of the Hill and Dodge the Boss.</p>
+  <p><b>Training.</b> A guided tutorial, plus a dummy to practise combos on.</p>
+ </div>
+</section>
+
+<section id="controls">
+ <h2>Controls</h2><p>Keys can be changed any time in Settings. New players get a step-by-step tutorial.</p>
+ <div class="ctl">
+  <div class="card"><h3>Keyboard</h3><table>
+   <tr><td>Move</td><td><kbd>A</kbd><kbd>D</kbd></td></tr><tr><td>Jump</td><td><kbd>W</kbd></td></tr><tr><td>Block (tap to parry)</td><td><kbd>L</kbd></td></tr>
+   <tr><td>Punch · Kick</td><td><kbd>J</kbd><kbd>K</kbd></td></tr><tr><td>Heavy hit</td><td><kbd>Y</kbd></td></tr><tr><td>Blaster</td><td><kbd>H</kbd></td></tr>
+   <tr><td>Dodge</td><td><kbd>Shift</kbd></td></tr><tr><td>Special moves</td><td><kbd>U</kbd><kbd>I</kbd></td></tr><tr><td>Transform Rush</td><td><kbd>O</kbd></td></tr>
+   <tr><td>Ultimate · Taunt</td><td><kbd>E</kbd><kbd>G</kbd></td></tr><tr><td>Pause</td><td><kbd>P</kbd></td></tr></table></div>
+  <div class="card"><h3>Controller</h3><table>
+   <tr><td>Move</td><td>Left stick</td></tr><tr><td>Jump</td><td><kbd>A</kbd></td></tr><tr><td>Punch · Kick</td><td><kbd>X</kbd><kbd>Y</kbd></td></tr>
+   <tr><td>Heavy hit</td><td><kbd>B</kbd></td></tr><tr><td>Blaster · Block</td><td><kbd>RB</kbd><kbd>LB</kbd></td></tr><tr><td>Dodge</td><td>Right stick</td></tr>
+   <tr><td>Special moves</td><td><kbd>RT</kbd><kbd>LT</kbd></td></tr><tr><td>Transform Rush</td><td><kbd>LT+RT</kbd></td></tr><tr><td>Ultimate · Taunt</td><td><kbd>L3</kbd><kbd>R3</kbd></td></tr></table></div>
+  <div class="card"><h3>Touch and 2 players</h3><table>
+   <tr><td>Touch</td><td>Buttons or swipe</td></tr><tr><td>Swipe toward / away</td><td>Dash</td></tr><tr><td>Tap right · hold right</td><td>Hit · heavy</td></tr><tr><td>Tap left · hold left</td><td>Blaster · block</td></tr>
+   <tr><td>Player 2 move</td><td>Arrow keys</td></tr><tr><td>Player 2 hits</td><td><kbd>,</kbd><kbd>.</kbd><kbd>/</kbd></td></tr><tr><td>Player 2 specials</td><td><kbd>[</kbd><kbd>]</kbd><kbd>\</kbd></td></tr></table></div>
+ </div>
+</section>
+
+<section style="text-align:center">
+ <h2>Ready?</h2><p>The tutorial takes about two minutes. Mission 1 is right after.</p>
+ <a class="btn" href="./">Play Forgeframe Duel</a>
+</section>
+
+<footer><span>Forgeframe Duel · Version 1.0 · Made by Ethan Mixter with Claude</span><span>Built with three.js · Free to play in your browser</span></footer>
+</div>
+</body>
+</html>

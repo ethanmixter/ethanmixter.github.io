@@ -1,4 +1,4 @@
-<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><style>body{margin:0}img{max-width:100%}[hidden]{display:none!important}</style></head><body><title>Forgeframe Duel</title>
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><title>Forgeframe Duel</title><meta name="description" content="Free 3D giant-robot fighting game in your browser. 40-mission campaign, build your own robots, 2-player, mini-games."><meta property="og:title" content="Forgeframe Duel"><meta property="og:description" content="Free 3D giant-robot fighting in your browser. 40 missions, build your own robots, 2-player, mini-games."><meta property="og:image" content="https://ethanmixter.github.io/forgeframe-duel/media/og.jpg"><meta property="og:url" content="https://ethanmixter.github.io/forgeframe-duel/"><meta name="twitter:card" content="summary_large_image"><meta name="theme-color" content="#0b0f14"><link rel="icon" href="media/icon.svg" type="image/svg+xml"><link rel="icon" href="media/favicon-32.png" sizes="32x32"><link rel="apple-touch-icon" href="media/apple-touch-icon.png"><style>body{margin:0}img{max-width:100%}[hidden]{display:none!important}</style></head><body><title>Forgeframe Duel</title>
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -612,6 +612,8 @@ body.fin #stage{filter:saturate(.35) contrast(1.15) brightness(1.05)}
 .crRoll .cols{display:grid;grid-template-columns:1fr 1fr;gap:2px 20px;font-size:15px;color:var(--text);opacity:.9}
 .crRoll .end{margin-top:60vh;font-family:var(--f-display);font-size:34px;color:var(--amber)}
 #crSkip{position:absolute;right:16px;bottom:calc(env(safe-area-inset-bottom,0px) + 16px);opacity:.7}
+.errBox{position:fixed;left:50%;top:50%;transform:translate(-50%,-50%);z-index:60;width:min(420px,calc(100% - 32px));padding:18px 20px;text-align:center;background:linear-gradient(180deg,rgba(22,28,35,.98),rgba(10,13,17,.98));box-shadow:inset 0 0 0 1px var(--line),inset 0 3px 0 var(--hot),0 20px 60px #000a}.errBox b{font-family:var(--f-display);font-weight:400;font-size:26px}.errBox p{color:var(--text);margin:8px 0 14px}
+a.btn{text-decoration:none;display:inline-flex;align-items:center;justify-content:center;color:var(--text)}a.btn:visited{color:var(--text)}
 .hb.lk{opacity:.5}.hb.lk i{font-size:0}.hb.lk i::before{content:'🔒';font-size:16px}
 .hb.main.pulse{animation:hbPulse 1.6s ease-in-out infinite}@keyframes hbPulse{0%,100%{box-shadow:0 0 0 0 rgba(255,180,60,0)}50%{box-shadow:0 0 0 3px rgba(255,180,60,.75),0 0 24px rgba(255,180,60,.5)}}
 .hb{position:relative;display:grid;grid-template-columns:40px minmax(0,1fr);align-items:center;gap:0 12px;text-align:left;padding:8px 16px;background:linear-gradient(90deg,rgba(18,23,29,.95),rgba(14,18,23,.78));border:1px solid var(--line);box-shadow:inset 3px 0 0 var(--line);cursor:pointer;clip-path:polygon(0 0,calc(100% - 14px) 0,100% 14px,100% 100%,0 100%);transition:transform .12s,border-color .12s,box-shadow .12s}
@@ -776,6 +778,7 @@ body.fin #stage{filter:saturate(.35) contrast(1.15) brightness(1.05)}
       <button id="startBtn" class="btn primary">Start</button>
       <button id="howBtn" class="btn small">How to play</button>
       <button class="btn small soundToggle">Sound on</button>
+      <a class="btn small" id="aboutLink" href="about.html" hidden>About &amp; controls</a>
       <span class="hint">or press Enter</span>
     </div>
     <p class="ver">Version 1.0</p>
@@ -927,7 +930,7 @@ body.fin #stage{filter:saturate(.35) contrast(1.15) brightness(1.05)}
   </div>
   <div class="pad acts">
     <div class="tb sp" data-h="s1" id="ts1">S1</div><div class="tb sp" data-h="s2" id="ts2">S2</div><div class="tb rush" data-h="rush" id="tsr">RUSH</div>
-    <div class="tb" data-h="shoot">SHOOT</div><div class="tb" data-h="dodge">DODGE</div><div class="tb" data-h="heavy">HEAVY</div>
+    <div class="tb" data-h="shoot">BLAST</div><div class="tb" data-h="dodge">DODGE</div><div class="tb" data-h="heavy">HEAVY</div>
     <span></span><div class="tb big" data-h="punch">PUNCH</div><div class="tb big" data-h="kick">KICK</div>
   </div>
 </div>
@@ -1026,8 +1029,17 @@ const PATS=['None','Stripes','Camo','Flames','Hazard','Digital','Carbon'];
 const SAVE_KEY='forgeframe-save-v1',MAXC=8,SLOT_COST=100,MAXD=12;
 const freshSave=()=>({xp:0,bolts:0,up:{},wins:0,champs:{},camp:{},st:{},done:{},won:{},tyrant:false,parts:{},pow:{},custom:[],fights:0,tutDone:false,beaten:{},seen:{},daily:{last:'',streak:0,total:0},designs:[],ts:0});
 let SAVE=freshSave();
-try{const sv=JSON.parse(localStorage.getItem(SAVE_KEY)||'null');if(sv&&typeof sv==='object')SAVE=Object.assign(SAVE,sv);}catch(e){}
-function persist(){SAVE.ts=Date.now();try{localStorage.setItem(SAVE_KEY,JSON.stringify(SAVE));}catch(e){}cloudQueue();}
+/* save safety: a second copy is kept as a backup; if the main save is ever damaged, the backup is loaded instead */
+const SAVE_BAK=SAVE_KEY+'-backup';let SAVE_NOTE='',SAVE_FAIL=false,SAVE_BAK_AT=0;
+{const rd=k=>{try{const v=JSON.parse(localStorage.getItem(k)||'null');return v&&typeof v==='object'&&!Array.isArray(v)?v:null;}catch(e){return undefined;}};
+ const main=rd(SAVE_KEY),bak=rd(SAVE_BAK);
+ if(main)SAVE=Object.assign(SAVE,main);
+ else if(bak&&(main===undefined||(bak.xp||0)>0)){SAVE=Object.assign(SAVE,bak);if(main===undefined)SAVE_NOTE='Your save file was damaged, so your backup was loaded.';}
+ if(main&&bak&&(bak.xp||0)>(main.xp||0)+500&&(bak.ts||0)>(main.ts||0)){SAVE=Object.assign(freshSave(),bak);SAVE_NOTE='Your newest progress was in the backup, so it was loaded.';}}
+function persist(){SAVE.ts=Date.now();let js;try{js=JSON.stringify(SAVE);}catch(e){return;}
+ try{localStorage.setItem(SAVE_KEY,js);if(SAVE_FAIL){SAVE_FAIL=false;}if(Date.now()-SAVE_BAK_AT>60000){localStorage.setItem(SAVE_BAK,js);SAVE_BAK_AT=Date.now();}}
+ catch(e){if(!SAVE_FAIL){SAVE_FAIL=true;setTimeout(()=>{try{toast('Progress could not be saved in this browser. Make a backup code in Rewards, then Save.');}catch(_){}} ,0);}}
+ cloudQueue();}
 /* cloud save: the same save is kept in the player's Claude account, so progress follows them to other browsers and devices */
 const CLOUD={ref:null,state:'local',at:0,busy:false,again:false,timer:0};
 const betterSave=(a,b)=>(a.xp||0)>(b.xp||0)||((a.xp||0)===(b.xp||0)&&(a.ts||0)>(b.ts||0));
@@ -4188,15 +4200,15 @@ const TUT=[
  ['Combo','Land three hits in a row without stopping: {punch}, {punch}, {kick}.','Land three hits in a row without stopping: PUNCH, PUNCH, KICK.',p=>p.chain>=3,'Combo|Tap the right side three times fast to land a combo.'],
  ['Block','Hold {block} to block. Blocking stops most damage. Tap it just before a hit to parry.','Hold BLOCK. Blocking stops most damage.',(p,T,dt)=>{T.hold=p.state==='block'?(T.hold||0)+dt:0;return T.hold>.5;},'Block|Hold your finger on the left side of the screen to block.'],
  ['Dodge','Press {dodge} to dodge. Nothing can hit you while you dodge.','Tap DODGE. Nothing can hit you while you dodge.',p=>p.state==='dodge'&&!p.side,'Dash back|Swipe away from the enemy to dash back out of reach.'],
- ['Heavy hit','Press {heavy} for a slow heavy hit. It breaks through a block.','Heavy hits need the Swipe and tap controls, so this step is skipped.',(p,T)=>T.hit==='heavy'||(coarse&&G.touchMode!=='gesture'),'Heavy hit|Hold your finger on the right side for a heavy hit. It breaks through a block.'],
- ['Blaster','Press {shoot} to fire your blaster. It is weak but reaches across the arena.','The blaster needs the Swipe and tap controls, so this step is skipped.',(p,T)=>(p.state==='attack'&&p.atkName==='blast')||(coarse&&G.touchMode!=='gesture'),'Blaster|Tap the left side of the screen to fire your blaster.'],
+ ['Heavy hit','Press {heavy} for a slow heavy hit. It breaks through a block.','Tap HEAVY for a slow heavy hit. It breaks through a block.',(p,T)=>T.hit==='heavy','Heavy hit|Hold your finger on the right side for a heavy hit. It breaks through a block.'],
+ ['Blaster','Press {shoot} to fire your blaster. It is weak but reaches across the arena.','Tap BLAST to fire your blaster. It is weak but reaches across the arena.',(p,T)=>(p.state==='attack'&&p.atkName==='blast'),'Blaster|Tap the left side of the screen to fire your blaster.'],
  ['Special 1','Special moves use the blue energy bar under your health. Press {s1}.','Special moves use the blue energy bar under your health. Tap the first blue button.',p=>p.state==='special'&&p.sp===SPECIALS[p.def.specials[0]],'Special 1|Special moves use the blue energy bar under your health. Tap the first blue button.'],
  ['Special 2','Press {s2} for your second special move.','Tap the second blue button for your other special.',p=>p.state==='special'&&p.sp===SPECIALS[p.def.specials[1]],'Special 2|Tap the second blue button for your other special.'],
  ['Transform Rush','When the blue bar is full, press {rush} to transform and ram the enemy.','When the blue bar is full, tap RUSH to transform and ram the enemy.',p=>p.state==='special'&&p.sp===SPECIALS[p.def.rush||'rush'],'Transform Rush|When the blue bar is full, tap RUSH to transform and ram the enemy.']
 ];
 const TUT_ACT=[['left','right'],['jump'],['punch'],['kick'],['punch','punch','kick'],['block'],['dodge'],['heavy'],['shoot'],['s1'],['s2'],['rush']];
 const TUT_LES=[[0,'Moving'],[0,'Moving'],[1,'Attacking'],[1,'Attacking'],[1,'Attacking'],[2,'Defending'],[2,'Defending'],[3,'More attacks'],[3,'More attacks'],[4,'Special moves'],[4,'Special moves'],[4,'Special moves']];
-const TUT_TOUCH={left:'◀',right:'▶',jump:'JUMP',punch:'PUNCH',kick:'KICK',block:'BLOCK',dodge:'DODGE',heavy:'HEAVY',shoot:'SHOOT',s1:'S1',s2:'S2',rush:'RUSH'};
+const TUT_TOUCH={left:'◀',right:'▶',jump:'JUMP',punch:'PUNCH',kick:'KICK',block:'BLOCK',dodge:'DODGE',heavy:'HEAVY',shoot:'BLAST',s1:'S1',s2:'S2',rush:'RUSH'};
 function tutKeysHTML(i){const gm=coarse&&G.touchMode==='gesture';if(gm&&i>=0&&i<9)return '';const A=TUT_ACT[i]||[];
  const lab=a=>coarse?TUT_TOUCH[a]:kl(a);return A.map((a,j)=>{const t=lab(a);return (j&&A.length===2&&i===0?'<em>or</em>':'')+`<kbd class="${t.length>2?'wide':''}" data-a="${a}">${lbEsc(t)}</kbd>`;}).join('');}
 function renderTut(){const T=G.tut,box=$('tut');document.querySelectorAll('#touch .tutGlow').forEach(x=>x.classList.remove('tutGlow'));$('hud').classList.toggle('tutOn',!!T);
@@ -4318,7 +4330,8 @@ $('codeLoad').addEventListener('click',()=>{const b=$('codeLoad');let o;try{o=re
  if(!b.dataset.arm){b.dataset.arm=1;b.textContent='Press again to replace your progress';setTimeout(()=>{delete b.dataset.arm;b.textContent='Load pasted code';},3500);return;}
  delete b.dataset.arm;b.textContent='Load pasted code';adoptSave(o);persist();toast('Backup loaded',1);});
 setInterval(()=>{if(G.phase==='select'&&!$('selPanel').hidden)renderSave();},15000);
-cloudInit();lbInit();
+try{if(/github\.io$/.test(location.hostname))$('aboutLink').hidden=false;}catch(e){}
+cloudInit();lbInit();if(SAVE_NOTE)setTimeout(()=>toast(SAVE_NOTE),1800);
 $('boxRev').addEventListener('click',()=>{const rv=$('boxRev');if(rv.classList.contains('open'))rv.hidden=true;});
 function upRows(d){const u=upOf(d.id);return UPS.map(([k,n,desc])=>{const l=u[k],cost=100*(l+1);return `<div class="up"><b>${n}</b><span class="meter">${[0,1,2,3,4].map(j=>`<i class="${j<l?'on':''}"></i>`).join('')}</span><button class="buy" data-up="${k}" ${l>=5?'disabled':''}>${l>=5?'Max':cost+' bolts'}</button><span>${desc}</span></div>`;}).join('');}
 /* the main menu buttons show a short status so you know what is waiting behind each one */
@@ -5462,10 +5475,17 @@ function step(dt){
  }
  updateParts(dt);updateAmb(dt);ARENAS[G.arena].update(dt);
 }
+/* if something breaks mid-game, keep running and offer a way back to the menu instead of freezing */
+const FERR={n:0,shown:false,last:''};
+function frameErr(e){FERR.n++;FERR.last=String(e&&e.message||e);if(FERR.n<3)console.error(e);if(FERR.n>12&&!FERR.shown){FERR.shown=true;try{persist();}catch(_){}
+ const d=document.createElement('div');d.className='errBox';d.setAttribute('role','alertdialog');d.innerHTML='<b>Something went wrong</b><p>Your progress is saved. Head back to the menu to keep playing.</p><button class="btn primary">Back to menu</button>';
+ d.querySelector('button').onclick=()=>{d.remove();FERR.n=0;FERR.shown=false;try{G.tut=null;goSelect();}catch(_){location.reload();}};document.body.appendChild(d);}}
+window.addEventListener('error',e=>{FERR.last=String(e.message||'');});
 function frame(now){
  requestAnimationFrame(frame);
  try{padPoll();}catch(e){}
  const real=Math.min(.1,(now-last)/1000);last=now;
+ try{
  if(G.phase!=='paused'){
   phaseTick(real);
   tutFrame(real);acc+=real*(G.tut&&G.tut.freeze>0?0:1)*(G.slowT>0?Math.min(G.timeScale,.3):G.timeScale);if(G.slowT>0)G.slowT-=real;
@@ -5473,8 +5493,10 @@ function frame(now){
   if(n===8)acc=0;
   updateCamera(real);updateHUD();try{gfxTick(real);}catch(e){}
  }
+ FERR.n=Math.max(0,FERR.n-real*2);}catch(e){frameErr(e);}
+ try{
  for(const f of AOS)f.ao.visible=!!(f.root.visible||f.veh.visible)&&f.ao.visible!==false&&(f!==G.p2||!G.mini||!!SOLO2[G.mini.type]||G.mini.type==='dodge');
- if(G_FINAL)G_FINAL.uniforms.time.value=(G_FINAL.uniforms.time.value+.61)%97;if(composer)composer.render();else renderer.render(scene,camera);
+ if(G_FINAL)G_FINAL.uniforms.time.value=(G_FINAL.uniforms.time.value+.61)%97;if(composer)composer.render();else renderer.render(scene,camera);}catch(e){frameErr(e);}
  if(G.ph&&G.ph.snap){G.ph.snap=0;try{canvas.toBlob(photoReady,'image/png');}catch(e){photoReady(null);}}
 }
 {const sb=document.querySelectorAll('.spec b');if(sb[0])sb[0].textContent=CAMP.length;if(sb[2])sb[2].textContent=CHALS.length;}
