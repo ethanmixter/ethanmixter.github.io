@@ -43,13 +43,15 @@
     .bar { height: 12px; padding: 2px; border: 1px solid #66869e; background: #02070d; transform: skewX(-12deg); box-shadow: inset 0 2px 5px #000, 0 1px 0 #ffffff12; }
     .fill { height: 100%; width: 100%; background: linear-gradient(90deg, #ff435d, #ff9b5b); transition: width .08s linear; }
     #bossFill { background: linear-gradient(90deg, #ffb638, #ff4e45); }
+    #bossTwist { margin-top: 6px; color: #ffd978; font-size: 9px; font-weight: 900; letter-spacing: .12em; text-transform: uppercase; }
     #heatFill { background: linear-gradient(90deg, #39d8ff, #f7ef64, #ff4e45); width: 0; }
     #readout { text-align: center; min-width: 165px; }
     #money { color: #ffd765; font-size: 22px; font-weight: 900; letter-spacing: .04em; text-shadow: 0 0 16px #ffb52f55; }
     #stage { margin-top: 4px; color: var(--muted); font-size: 10px; font-weight: 800; letter-spacing: .14em; text-transform: uppercase; }
+    #combatStatus { margin-top: 6px; color: #8defff; font-size: 9px; font-weight: 900; letter-spacing: .11em; text-transform: uppercase; }
     #attachments {
       position: absolute; left: 18px; bottom: 18px; z-index: 5;
-      display: flex; gap: 7px; pointer-events: none;
+      display: flex; flex-wrap: wrap; gap: 7px; max-width: min(940px, calc(100vw - 36px)); pointer-events: none;
     }
     .chip {
       padding: 7px 9px; border: 1px solid #365069; border-radius: 5px;
@@ -62,7 +64,7 @@
       padding: 22px; background:
         linear-gradient(115deg, #02070cf2, #0a1a27df),
         repeating-linear-gradient(90deg, transparent 0 79px, #8fe9ff0a 80px);
-      backdrop-filter: blur(8px);
+      backdrop-filter: blur(8px); overflow: auto;
     }
     .hidden { display: none !important; }
     .card { width: min(920px, 94vw); text-align: center; }
@@ -77,14 +79,46 @@
       box-shadow: inset 0 1px #fff8, inset 0 -5px 10px #001d4c88, 0 8px 24px #0009, 0 0 30px #1bdcf844; cursor: pointer;
     }
     .primary:hover { filter: brightness(1.15); transform: translateY(-1px); }
+    .secondary {
+      margin: 16px 6px 0; padding: 11px 18px; border: 1px solid #47677d; border-radius: 4px;
+      background: #081522; color: #a9c5d7; font-weight: 800; letter-spacing: .1em; text-transform: uppercase; cursor: pointer;
+    }
+    .secondary:hover { border-color: #65dced; color: white; }
     .controls { margin-top: 25px; color: #6f8a9e; font-size: 10px; font-weight: 800; letter-spacing: .1em; text-transform: uppercase; }
+    #missions .card { width: min(1120px, 96vw); padding: 24px 0; }
+    #missions h2 { margin: 5px 0 4px; font-size: clamp(30px, 5vw, 56px); text-transform: uppercase; }
+    #missionProgress { margin: 0 0 18px; color: #8ca9bc; font-size: 12px; }
+    #missionGrid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 11px; text-align: left; }
+    .mission-card {
+      position: relative; min-height: 155px; padding: 16px; overflow: hidden; border: 1px solid #345168; border-radius: 8px;
+      background: linear-gradient(150deg, #10243a, #060e18); color: white; cursor: pointer; transition: .16s ease;
+    }
+    .mission-card::after { content: ""; position: absolute; inset: auto -25px -45px auto; width: 110px; height: 110px; border: 18px solid var(--mission-color); border-radius: 50%; opacity: .13; }
+    .mission-card:hover:not(:disabled) { transform: translateY(-3px); border-color: var(--mission-color); box-shadow: 0 12px 28px #0009, inset 0 0 25px color-mix(in srgb, var(--mission-color) 12%, transparent); }
+    .mission-card:disabled { cursor: default; opacity: .38; filter: grayscale(.7); }
+    .mission-number { color: var(--mission-color); font-size: 10px; font-weight: 900; letter-spacing: .18em; }
+    .mission-card h3 { margin: 10px 0 5px; font-size: 18px; text-transform: uppercase; }
+    .mission-card p { margin: 0; color: #91aabd; font-size: 11px; line-height: 1.45; }
+    .mission-threat { display: block; margin-top: 13px; color: #ffd36b; font-size: 10px; font-weight: 900; letter-spacing: .1em; text-transform: uppercase; }
+    #research .card { width: min(1000px, 96vw); padding: 24px 0; }
+    #research h2 { margin: 5px 0 4px; font-size: clamp(30px, 5vw, 56px); text-transform: uppercase; }
+    #researchBalance { margin: 0 0 18px; color: #9eeeff; font-weight: 800; }
+    #researchGrid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 11px; text-align: left; }
+    .research-card { min-height: 175px; padding: 16px; border: 1px solid #345168; border-radius: 8px; background: linear-gradient(150deg, #10243a, #060e18); color: white; cursor: pointer; }
+    .research-card:hover:not(:disabled) { transform: translateY(-2px); border-color: #68eaff; }
+    .research-card:disabled { cursor: default; opacity: .48; }
+    .research-card.unlocked { border-color: #3cc6d8; background: linear-gradient(150deg, #123947, #07141d); }
+    .research-card .icon { color: #74efff; font-size: 25px; }
+    .research-card h3 { margin: 10px 0 6px; text-transform: uppercase; font-size: 14px; }
+    .research-card p { min-height: 48px; margin: 0; color: #91aabd; font-size: 11px; line-height: 1.5; }
+    .research-cost { display: block; margin-top: 12px; color: #ffd36b; font-size: 11px; font-weight: 900; text-transform: uppercase; }
     #shop .card { width: min(1040px, 96vw); }
     #shopTitle { margin: 3px 0; font-size: clamp(29px, 4vw, 48px); letter-spacing: -.04em; text-transform: uppercase; }
     #shopSub { margin: 0 0 18px; color: #88a4b8; font-size: 13px; }
     #shopMoney { color: #ffd765; }
     #shopGrid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 11px; text-align: left; }
     .upgrade {
-      min-height: 190px; padding: 16px; border: 1px solid #2a465c; border-radius: 7px;
+      min-height: 164px; padding: 14px; border: 1px solid #2a465c; border-radius: 7px;
       background: linear-gradient(150deg, #10243a, #07101b); color: white; cursor: pointer;
       transition: .15s ease;
     }
@@ -112,7 +146,11 @@
       #attachments { bottom: 95px; left: 8px; gap: 3px; }
       .chip { padding: 5px; font-size: 7px; }
       #shopGrid { grid-template-columns: repeat(2, 1fr); }
-      .upgrade { min-height: 140px; padding: 11px; }
+      #missionGrid { grid-template-columns: repeat(2, 1fr); }
+      #researchGrid { grid-template-columns: repeat(2, 1fr); }
+      .mission-card { min-height: 135px; padding: 12px; }
+      #shop .card { padding: 18px 0; }
+      .upgrade { min-height: 126px; padding: 11px; }
       .upgrade p { min-height: 42px; font-size: 9px; }
       .upgrade h3 { font-size: 11px; margin: 7px 0 4px; }
       .upgrade .icon { font-size: 17px; }
@@ -139,10 +177,11 @@
       <div class="label" style="margin-top:8px"><span>Repulsor heat</span><span id="heatText">Ready</span></div>
       <div class="bar"><div class="fill" id="heatFill"></div></div>
     </div>
-    <div id="readout"><div id="money">$0</div><div id="stage">Target 1 / 3</div></div>
+    <div id="readout"><div id="money">$0</div><div id="stage">Target 1 / 5</div><div id="combatStatus">Dash ready · Overdrive 0</div></div>
     <div class="meter right">
       <div class="label"><span id="bossName">Boss</span><span id="bossHpText">100%</span></div>
       <div class="bar"><div class="fill" id="bossFill"></div></div>
+      <div id="bossTwist">Standard weapons</div>
     </div>
   </section>
   <div id="attachments" class="hidden"></div>
@@ -152,9 +191,30 @@
     <div class="card">
       <div class="eyebrow">Arc Division presents</div>
       <h1>Repulsor<br><span>Forge</span></h1>
-      <p class="lead">Break into the machine arena. Defeat war machines with your repulsor, claim their bounty, and bolt powerful attachments onto your gauntlet.</p>
-      <button class="primary" id="start">Enter the arena</button>
-      <div class="controls">Move: WASD / arrows &nbsp; Aim: mouse &nbsp; Fire: hold click / space &nbsp; Dash: shift</div>
+      <p class="lead">Fight through an eight-mission machine uprising. Every operation contains five bosses, new threat variants, bigger bounties, and a fresh gauntlet build.</p>
+      <button class="primary" id="start">Choose a mission</button>
+      <div class="controls">Move: WASD / arrows &nbsp; Aim: mouse &nbsp; Fire: hold click / space &nbsp; Dash: shift<br><br>Land 10 hits without a break to trigger Overdrive repair and cooling</div>
+    </div>
+  </section>
+
+  <section id="missions" class="overlay hidden">
+    <div class="card">
+      <div class="eyebrow">Campaign operations</div>
+      <h2>Select mission</h2>
+      <p id="missionProgress">Mission 1 of 8 unlocked</p>
+      <div id="missionGrid"></div>
+      <button class="secondary" id="researchOpen">Research lab · <span id="researchCount">0</span> RP</button>
+      <button class="secondary" id="missionBack">Back</button>
+    </div>
+  </section>
+
+  <section id="research" class="overlay hidden">
+    <div class="card">
+      <div class="eyebrow">Arc Division R&amp;D</div>
+      <h2>Research lab</h2>
+      <p id="researchBalance">0 research points available</p>
+      <div id="researchGrid"></div>
+      <button class="secondary" id="researchBack">Back to missions</button>
     </div>
   </section>
 
@@ -162,7 +222,7 @@
     <div class="card">
       <div class="eyebrow">Workshop unlocked</div>
       <h2 id="shopTitle">Boss destroyed</h2>
-      <p id="shopSub">Bounty secured. Available funds: <strong id="shopMoney">$0</strong></p>
+      <p id="shopSub"><span id="shopStats">Bounty secured.</span> Available funds: <strong id="shopMoney">$0</strong></p>
       <div id="shopGrid"></div>
       <button class="primary" id="continue">Fight next boss</button>
     </div>
@@ -174,6 +234,7 @@
       <h1 id="endTitle">Forged in<br><span>victory</span></h1>
       <p class="lead" id="endText"></p>
       <button class="primary" id="restart">Run it again</button>
+      <button class="secondary" id="missionSelectEnd">Mission select</button>
     </div>
   </section>
 
@@ -197,29 +258,67 @@
   const $ = (s) => document.querySelector(s);
   const ui = {
     hud: $("#hud"), hp: $("#hpFill"), hpText: $("#hpText"), heat: $("#heatFill"), heatText: $("#heatText"),
-    money: $("#money"), stage: $("#stage"), boss: $("#bossFill"), bossText: $("#bossHpText"), bossName: $("#bossName"),
-    chips: $("#attachments"), message: $("#message"), menu: $("#menu"), shop: $("#shop"), grid: $("#shopGrid"),
-    shopMoney: $("#shopMoney"), continue: $("#continue"), end: $("#end"), endTitle: $("#endTitle"),
+    money: $("#money"), stage: $("#stage"), combat: $("#combatStatus"), boss: $("#bossFill"), bossText: $("#bossHpText"), bossName: $("#bossName"), bossTwist: $("#bossTwist"),
+    chips: $("#attachments"), message: $("#message"), menu: $("#menu"), missions: $("#missions"), missionGrid: $("#missionGrid"), missionProgress: $("#missionProgress"), research: $("#research"), researchGrid: $("#researchGrid"), researchBalance: $("#researchBalance"), researchCount: $("#researchCount"), shop: $("#shop"), grid: $("#shopGrid"),
+    shopMoney: $("#shopMoney"), shopStats: $("#shopStats"), continue: $("#continue"), end: $("#end"), endTitle: $("#endTitle"),
     endEyebrow: $("#endEyebrow"), endText: $("#endText"), mobile: $("#mobileControls")
   };
 
   let W = 1280, H = 720, dpr = 1, state = "menu", last = 0, time = 0, shake = 0, flash = 0;
-  let bossIndex = 0, money = 0, shots = [], enemyShots = [], particles = [], rings = [], mouse = { x: 900, y: 350, down: false };
+  let bossIndex = 0, money = 0, shots = [], enemyShots = [], particles = [], rings = [], pendingAttacks = [], mouse = { x: 900, y: 350, down: false };
+  let combo = 0, comboTimer = 0, fightBestCombo = 0, fightShots = 0, fightHits = 0;
   const keys = {};
-  const player = { x: 220, y: 390, vx: 0, vy: 0, r: 19, hp: 100, maxHp: 100, heat: 0, overheated: false, fireCd: 0, dashCd: 0, dash: 0, invuln: 0, angle: 0 };
+  const player = { x: 220, y: 390, vx: 0, vy: 0, r: 19, hp: 100, maxHp: 100, heat: 0, maxHeat: 100, overheated: false, fireCd: 0, dashCd: 0, dash: 0, invuln: 0, angle: 0, reviveReady: false };
   const upgrades = [
     { id: "focus", name: "Focus Lens", icon: "◉", cost: 90, desc: "+45% beam damage. Generates slightly more heat." },
     { id: "cooling", name: "Cryo Sink", icon: "❄", cost: 110, desc: "Heat drains 60% faster and overheat recovery is shorter." },
     { id: "splitter", name: "Arc Splitter", icon: "⋔", cost: 140, desc: "Every fourth shot splits into two angled energy bolts." },
-    { id: "barrier", name: "Kinetic Guard", icon: "⬡", cost: 125, desc: "+30 maximum armor and restores armor after each purchase." }
+    { id: "barrier", name: "Kinetic Guard", icon: "⬡", cost: 125, desc: "+30 maximum armor and restores armor after installation." },
+    { id: "rapid", name: "Pulse Accelerator", icon: "≋", cost: 105, desc: "Repulsor fires 30% faster for sustained pressure." },
+    { id: "stabilizer", name: "Vector Stabilizer", icon: "➤", cost: 120, desc: "Bolts travel 33% faster with a larger impact profile." },
+    { id: "dash", name: "Phase Thrusters", icon: "⌁", cost: 135, desc: "Dash recharges faster, travels farther, and shields longer." },
+    { id: "nanites", name: "Repair Nanites", icon: "✚", cost: 150, desc: "Regenerate 3 armor per second during combat." }
+  ];
+  const researchUpgrades = [
+    { id: "aegis", name: "Aegis Burst", icon: "◎", research: 2, cost: 165, desc: "Dashing vaporizes nearby enemy fire." },
+    { id: "thermal", name: "Thermal Reclaimer", icon: "♨", research: 3, cost: 180, desc: "Overdrive repairs more armor and vents more heat." },
+    { id: "hunter", name: "Hunter Rounds", icon: "⌖", research: 4, cost: 195, desc: "Repulsor bolts curve gently toward the boss." },
+    { id: "quantum", name: "Quantum Capacitor", icon: "◈", research: 5, cost: 220, desc: "Raises maximum repulsor heat capacity by 30%." },
+    { id: "salvage", name: "Salvage Drone", icon: "◇", research: 6, cost: 245, desc: "Recovers 25% more bounty from destroyed bosses." },
+    { id: "phoenix", name: "Phoenix Plating", icon: "✦", research: 8, cost: 285, desc: "Survive one fatal hit per mission at 45% armor." }
   ];
   const owned = new Set();
   const bossData = [
     { name: "Crusher MK-II", color: "#ff653f", hp: 520, bounty: 130, r: 54, kind: 0 },
-    { name: "Volt Mantis", color: "#d3ff4b", hp: 760, bounty: 210, r: 47, kind: 1 },
-    { name: "The Iron Sun", color: "#ffb938", hp: 1100, bounty: 360, r: 68, kind: 2 }
+    { name: "Volt Mantis", color: "#d3ff4b", hp: 620, bounty: 210, r: 47, kind: 1 },
+    { name: "The Iron Sun", color: "#ffb938", hp: 1350, bounty: 360, r: 68, kind: 2 },
+    { name: "Prism Warden", color: "#c16cff", hp: 1650, bounty: 450, r: 61, kind: 3 },
+    { name: "Void Regent", color: "#ff397d", hp: 2150, bounty: 575, r: 74, kind: 4 }
   ];
+  const missions = [
+    { name: "Foundry Breach", sector: "Break the siege around Arc Division's forge.", hp: 1, attack: 1, damage: 1, speed: 1, bounty: 1, color: "#ff7048", twists: [{name:"Ramming chassis",type:"native"},{name:"Six-leg crossfire",type:"native"},{name:"Solar barrage",type:"native"},{name:"Orbiting blades",type:"native"},{name:"Royal crossfire",type:"native"}], palette: ["#ff653f", "#d3ff4b", "#ffb938", "#c16cff", "#ff397d"], bosses: ["Crusher MK-II", "Volt Mantis", "The Iron Sun", "Prism Warden", "Void Regent"] },
+    { name: "Neon Uprising", sector: "Hunt weaponized racers through the electric district.", hp: 1.12, attack: 1.05, damage: 1.05, speed: 1.06, bounty: 1.08, color: "#32e7ff", twists: [{name:"Predictive targeting",type:"hunter"},{name:"Pulse shield",type:"shield"},{name:"Proximity mines",type:"mines"},{name:"Blink drive",type:"blink"},{name:"Arc storm",type:"storm"}], palette: ["#22d9ff", "#ff4fd8", "#ffe45a", "#50ffad", "#ab6cff"], bosses: ["Chrome Ram", "Circuit Stalker", "Neon Helios", "Laser Bishop", "Grid Sovereign"] },
+    { name: "Arctic Siege", sector: "Recover a frozen reactor beneath the polar shield.", hp: 1.25, attack: 1.1, damage: 1.1, speed: 1.1, bounty: 1.16, color: "#8ee8ff", twists: [{name:"Cryo field",type:"slow"},{name:"Permafrost armor",type:"armor"},{name:"Ice mines",type:"mines"},{name:"Borealis tracker",type:"hunter"},{name:"Dash freeze",type:"freeze"}], palette: ["#69cfff", "#b8ffef", "#e8f8ff", "#82aaff", "#b49cff"], bosses: ["Glacier Grinder", "Frost Mantis", "White Dwarf", "Cryo Sentinel", "Zero Monarch"] },
+    { name: "Desert Crucible", sector: "Cross a furnace canyon ruled by scavenger machines.", hp: 1.4, attack: 1.16, damage: 1.16, speed: 1.13, bounty: 1.24, color: "#ffb347", twists: [{name:"Sand burrow",type:"blink"},{name:"Scarab seeker",type:"hunter"},{name:"Heat siphon",type:"heat"},{name:"Mirage shield",type:"shield"},{name:"Meteor furnace",type:"storm"}], palette: ["#ff7138", "#e8d34d", "#ffbf3f", "#e98247", "#ff4f46"], bosses: ["Dune Crusher", "Scarab Volt", "Solar Tyrant", "Mirage Warden", "Ash Emperor"] },
+    { name: "Orbital Fall", sector: "Board a collapsing weapons station above the planet.", hp: 1.58, attack: 1.22, damage: 1.22, speed: 1.17, bounty: 1.32, color: "#6fa8ff", twists: [{name:"Gravity well",type:"gravity"},{name:"Satellite storm",type:"storm"},{name:"Deflector ring",type:"shield"},{name:"Warp jump",type:"blink"},{name:"Orbital mines",type:"mines"}], palette: ["#5f8fff", "#71e6ff", "#f5f7ff", "#9c8cff", "#ff628f"], bosses: ["Dockbreaker", "Vector Mantis", "Fusion Star", "Orbit Keeper", "Vacuum Crown"] },
+    { name: "Phantom Grid", sector: "Expose cloaked machines inside a corrupted simulation.", hp: 1.76, attack: 1.28, damage: 1.28, speed: 1.21, bounty: 1.4, color: "#c268ff", twists: [{name:"Ghost barrier",type:"shield"},{name:"Phase skip",type:"blink"},{name:"Signal jammer",type:"jammer"},{name:"Cipher lock",type:"hunter"},{name:"Data leech",type:"leech"}], palette: ["#875cff", "#55ffd0", "#e86dff", "#bba0ff", "#ff3dbb"], bosses: ["Ghost Saw", "Phase Mantis", "False Sun", "Cipher Warden", "Phantom Regent"] },
+    { name: "Titan Protocol", sector: "Destroy the command machines built to replace armies.", hp: 1.96, attack: 1.34, damage: 1.36, speed: 1.25, bounty: 1.5, color: "#ff3f55", twists: [{name:"Siege plating",type:"armor"},{name:"Drone foundry",type:"mines"},{name:"Artillery lock",type:"hunter"},{name:"Imperial shield",type:"shield"},{name:"Berserker core",type:"rage"}], palette: ["#ff3b32", "#ffd52f", "#ff773d", "#ff4f8c", "#e338ff"], bosses: ["Titan Breaker", "War Mantis", "Siege Sun", "Imperial Warden", "Titan Prime"] },
+    { name: "Core Collapse", sector: "Enter the machine core and end the uprising forever.", hp: 2.18, attack: 1.42, damage: 1.45, speed: 1.3, bounty: 1.62, color: "#ffdf58", twists: [{name:"Time fracture",type:"blink"},{name:"Adaptive shell",type:"armor"},{name:"Core gravity",type:"gravity"},{name:"Null field",type:"jammer"},{name:"Apocalypse drive",type:"rage"}], palette: ["#ff4b2b", "#f7ff3c", "#fff06a", "#ff71e6", "#ffffff"], bosses: ["Omega Crusher", "Apex Mantis", "Final Sun", "Core Warden", "The Last Regent"] }
+  ];
+  const CAMPAIGN_KEY = "repulsor-forge-campaign-v1";
+  let currentMission = 0, unlockedMissions = 1, researchPoints = 0, blueprints = new Set(), lastResult = "loss";
+  try {
+    const saved = JSON.parse(localStorage.getItem(CAMPAIGN_KEY) || "1");
+    if (typeof saved === "number") unlockedMissions = saved;
+    else { unlockedMissions = saved.unlocked || 1; researchPoints = saved.research || 0; blueprints = new Set(saved.blueprints || []); }
+    unlockedMissions = Math.max(1, Math.min(missions.length, unlockedMissions));
+  } catch {}
   let boss, shotCount = 0;
+
+  function saveCampaign() {
+    try { localStorage.setItem(CAMPAIGN_KEY, JSON.stringify({ unlocked: unlockedMissions, research: researchPoints, blueprints: [...blueprints] })); } catch {}
+  }
+  function activeUpgrades() { return upgrades.concat(researchUpgrades.filter(u => blueprints.has(u.id))); }
 
   function resize() {
     dpr = Math.min(devicePixelRatio || 1, 2);
@@ -233,8 +332,13 @@
   const rand = (a, b) => a + Math.random() * (b - a);
 
   function createBoss(i) {
-    const d = bossData[i];
-    return { ...d, maxHp: d.hp, x: W * .78, y: H * .5, vx: 0, vy: 0, attack: 1.2, phase: 0, hit: 0, charge: 0, dead: false };
+    const base = bossData[i], mission = missions[currentMission];
+    const d = {
+      ...base,
+      name: mission.bosses[i], color: mission.palette[i], twist: mission.twists[i],
+      hp: Math.round(base.hp * mission.hp), bounty: Math.round(base.bounty * mission.bounty)
+    };
+    return { ...d, maxHp: d.hp, x: W * .78, y: H * .5, vx: 0, vy: 0, attack: 1.2, phase: 0, hit: 0, charge: 0, twistTimer: 2.4, shieldHits: 0, blink: 0, enraged: false, dead: false };
   }
   function resetPlayer(full = true) {
     player.x = Math.max(95, W * .18); player.y = H * .55; player.vx = player.vy = 0;
@@ -242,16 +346,58 @@
     if (full) player.hp = player.maxHp;
   }
   function startFight() {
-    state = "fight"; shots = []; enemyShots = []; particles = []; rings = [];
+    state = "fight"; shots = []; enemyShots = []; particles = []; rings = []; pendingAttacks = [];
+    combo = 0; comboTimer = 0; fightBestCombo = 0; fightShots = 0; fightHits = 0;
     boss = createBoss(bossIndex); resetPlayer(true);
-    ui.shop.classList.add("hidden"); ui.menu.classList.add("hidden"); ui.end.classList.add("hidden");
+    ui.shop.classList.add("hidden"); ui.menu.classList.add("hidden"); ui.missions.classList.add("hidden"); ui.research.classList.add("hidden"); ui.end.classList.add("hidden");
     ui.hud.classList.remove("hidden"); ui.chips.classList.remove("hidden");
     if (matchMedia("(pointer: coarse)").matches) ui.mobile.classList.remove("hidden");
-    announce(boss.name, 1.4); updateUI();
+    announce(`${missions[currentMission].name} · ${boss.name}`, 1.4); updateUI();
   }
   function newRun() {
-    bossIndex = 0; money = 0; owned.clear(); player.maxHp = 100; shotCount = 0;
+    bossIndex = 0; money = 0; owned.clear(); player.maxHp = 100; player.maxHeat = 100; player.reviveReady = false; shotCount = 0;
     renderChips(); startFight();
+  }
+  function openMissionSelect() {
+    state = "missions"; ui.menu.classList.add("hidden"); ui.shop.classList.add("hidden"); ui.end.classList.add("hidden");
+    ui.research.classList.add("hidden");
+    ui.hud.classList.add("hidden"); ui.chips.classList.add("hidden"); ui.mobile.classList.add("hidden");
+    ui.missions.classList.remove("hidden"); renderMissions();
+  }
+  function renderMissions() {
+    ui.missionGrid.innerHTML = "";
+    missions.forEach((m, i) => {
+      const unlocked = i < unlockedMissions, cleared = i < unlockedMissions - 1;
+      const btn = document.createElement("button");
+      btn.className = "mission-card"; btn.disabled = !unlocked; btn.style.setProperty("--mission-color", m.color);
+      const threat = i ? `+${Math.round((m.hp - 1) * 100)}% armor · +${Math.round((m.damage - 1) * 100)}% damage` : "Baseline threat · five bosses";
+      btn.innerHTML = `<span class="mission-number">MISSION ${i + 1} ${cleared ? "· CLEARED" : unlocked ? "· AVAILABLE" : "· LOCKED"}</span><h3>${m.name}</h3><p>${m.sector}</p><span class="mission-threat">${threat}</span>`;
+      btn.onclick = () => startMission(i); ui.missionGrid.append(btn);
+    });
+    ui.missionProgress.textContent = `${unlockedMissions} of ${missions.length} missions unlocked · each operation has five bosses`;
+    ui.researchCount.textContent = researchPoints;
+  }
+  function openResearch() {
+    state = "research"; ui.missions.classList.add("hidden"); ui.research.classList.remove("hidden"); renderResearch();
+  }
+  function renderResearch() {
+    ui.researchGrid.innerHTML = "";
+    researchUpgrades.forEach(u => {
+      const unlocked = blueprints.has(u.id), poor = researchPoints < u.research;
+      const btn = document.createElement("button");
+      btn.className = `research-card${unlocked ? " unlocked" : ""}`; btn.disabled = unlocked || poor;
+      btn.innerHTML = `<span class="icon">${u.icon}</span><h3>${u.name}</h3><p>${u.desc}</p><span class="research-cost">${unlocked ? "Blueprint unlocked" : `${u.research} research points`}</span>`;
+      btn.onclick = () => unlockResearch(u); ui.researchGrid.append(btn);
+    });
+    ui.researchBalance.textContent = `${researchPoints} research point${researchPoints === 1 ? "" : "s"} available · blueprints add upgrades to mission workshops`;
+  }
+  function unlockResearch(u) {
+    if (blueprints.has(u.id) || researchPoints < u.research) return;
+    researchPoints -= u.research; blueprints.add(u.id); saveCampaign(); renderResearch();
+  }
+  function startMission(i) {
+    if (i < 0 || i >= unlockedMissions || i >= missions.length) return;
+    currentMission = i; newRun();
   }
   function announce(text, duration = 1) {
     ui.message.textContent = text; ui.message.style.opacity = 1;
@@ -268,21 +414,27 @@
   function firePlayer() {
     if (player.fireCd > 0 || player.overheated) return;
     const base = Math.atan2(mouse.y - player.y, mouse.x - player.x);
-    player.angle = base; player.fireCd = .115;
+    player.angle = base; player.fireCd = owned.has("rapid") ? .08 : .115;
     let damage = owned.has("focus") ? 20 : 14;
     player.heat += owned.has("focus") ? 12 : 9;
-    const addShot = (a) => shots.push({ x: player.x + Math.cos(a) * 27, y: player.y + Math.sin(a) * 27, vx: Math.cos(a) * 765, vy: Math.sin(a) * 765, r: 6, damage, life: 1.3 });
+    const boltSpeed = owned.has("stabilizer") ? 1020 : 765;
+    const boltRadius = owned.has("stabilizer") ? 8 : 6;
+    const addShot = (a) => {
+      shots.push({ x: player.x + Math.cos(a) * 27, y: player.y + Math.sin(a) * 27, vx: Math.cos(a) * boltSpeed, vy: Math.sin(a) * boltSpeed, r: boltRadius, damage, life: 1.3 });
+      fightShots++;
+    };
     addShot(base); shotCount++;
     if (owned.has("splitter") && shotCount % 4 === 0) { addShot(base - .18); addShot(base + .18); }
     player.vx -= Math.cos(base) * 20; player.vy -= Math.sin(base) * 20;
     burst(player.x + Math.cos(base) * 29, player.y + Math.sin(base) * 29, "#68efff", 4, 100);
-    if (player.heat >= 100) { player.heat = 100; player.overheated = true; announce("Repulsor overheated", .8); }
+    if (player.heat >= player.maxHeat) { player.heat = player.maxHeat; player.overheated = true; announce("Repulsor overheated", .8); }
   }
   function enemyBullet(x, y, angle, speed, damage = 10, color = "#ff6649", r = 7) {
-    enemyShots.push({ x, y, vx: Math.cos(angle) * speed, vy: Math.sin(angle) * speed, damage, color, r, life: 5 });
+    const mission = missions[currentMission]; speed *= mission.speed; damage *= mission.damage;
+    enemyShots.push({ x, y, vx: Math.cos(angle) * speed, vy: Math.sin(angle) * speed, damage, color, r, life: 5, homing: boss?.twist?.type === "hunter" ? .75 : 0, arming: 0 });
   }
-  function aimedBurst(count, spread, speed, damage, color) {
-    const aim = Math.atan2(player.y - boss.y, player.x - boss.x);
+  function aimedBurst(count, spread, speed, damage, color, target = player) {
+    const aim = Math.atan2(target.y - boss.y, target.x - boss.x);
     for (let i = 0; i < count; i++) {
       const off = count === 1 ? 0 : (i / (count - 1) - .5) * spread;
       enemyBullet(boss.x, boss.y, aim + off, speed, damage, color);
@@ -291,87 +443,205 @@
   function radial(count, speed, damage, offset = 0, color = boss.color) {
     for (let i = 0; i < count; i++) enemyBullet(boss.x, boss.y, offset + i / count * Math.PI * 2, speed, damage, color);
   }
+  function queueAttack(delay, style, color, fire) {
+    pendingAttacks.push({ attacker: boss, life: delay, max: delay, style, color, fire, target: { x: player.x, y: player.y } });
+  }
+  function updatePendingAttacks(dt) {
+    pendingAttacks.forEach(t => {
+      t.life -= dt;
+      if (t.life <= 0 && !t.fired) {
+        t.fired = true;
+        if (state === "fight" && boss === t.attacker && !boss.dead) t.fire(t.target);
+      }
+    });
+    pendingAttacks = pendingAttacks.filter(t => !t.fired && t.attacker === boss && !t.attacker.dead);
+  }
+  function registerHit() {
+    fightHits++; combo++; comboTimer = 1.3; fightBestCombo = Math.max(fightBestCombo, combo);
+    if (combo % 10 === 0) {
+      player.heat = Math.max(0, player.heat - (owned.has("thermal") ? 42 : 25));
+      player.hp = Math.min(player.maxHp, player.hp + (owned.has("thermal") ? 10 : 5));
+      ring(player.x, player.y, "#62f4ff", 105); burst(player.x, player.y, "#8df8ff", 14, 180);
+      announce(`Overdrive ${combo} · cooled + repaired`, .8);
+    }
+  }
+  function applyBossTwist(dt, hpRatio) {
+    const type = boss.twist?.type;
+    boss.twistTimer -= dt;
+    boss.shielded = type === "shield" && Math.sin(time * 1.45) > -.2;
+    boss.armored = type === "armor" && hpRatio > .5;
+    if (type === "gravity") {
+      const d = dist(player, boss), pull = d < 440 ? (1 - d / 440) * 430 : 0;
+      if (pull > 0) { const a = Math.atan2(boss.y - player.y, boss.x - player.x); player.vx += Math.cos(a) * pull * dt; player.vy += Math.sin(a) * pull * dt; }
+    } else if (type === "jammer" && dist(player, boss) < 340) {
+      player.heat = Math.min(player.maxHeat, player.heat + 7 * dt);
+    } else if (type === "rage" && hpRatio < .55) {
+      boss.attack -= dt * .65;
+    }
+    if (boss.twistTimer > 0) return;
+    if (type === "mines") {
+      for (let i = 0; i < 5; i++) {
+        const x = rand(W * .28, W * .9), y = rand(125, H - 70);
+        enemyShots.push({ x, y, vx: 0, vy: 0, damage: 13 * missions[currentMission].damage, color: boss.color, r: 12, life: 6, homing: 0, arming: .8, mine: true });
+        ring(x, y, boss.color, 44);
+      }
+      boss.twistTimer = 4.2;
+    } else if (type === "blink") {
+      ring(boss.x, boss.y, boss.color, 120); boss.x = rand(W * .56, W * .88); boss.y = rand(H * .22, H * .7); ring(boss.x, boss.y, "#ffffff", 120); boss.blink = .75; boss.twistTimer = 3.4;
+    } else if (type === "storm") {
+      queueAttack(.45, "radial", boss.color, () => radial(hpRatio < .5 ? 18 : 12, 270, 9, time * .8, boss.color)); boss.twistTimer = 3.6;
+    } else boss.twistTimer = 2.5;
+  }
 
   function bossAI(dt) {
-    boss.attack -= dt; boss.hit = Math.max(0, boss.hit - dt);
+    boss.attack -= dt * missions[currentMission].attack; boss.hit = Math.max(0, boss.hit - dt); boss.blink = Math.max(0, boss.blink - dt);
     const hpRatio = boss.hp / boss.maxHp;
+    if (hpRatio < .4 && !boss.enraged) {
+      boss.enraged = true; ring(boss.x, boss.y, boss.color, boss.r * 2.8); announce(`${boss.name} enraged`, 1);
+    }
     if (boss.kind === 0) {
-      boss.y = H * .5 + Math.sin(time * 1.3) * H * .24;
+      if (boss.blink <= 0) boss.y = H * .5 + Math.sin(time * 1.3) * H * .24;
       if (boss.attack <= 0) {
-        if (Math.random() < .66) { aimedBurst(hpRatio < .5 ? 5 : 3, .55, 252, 11, boss.color); boss.attack = hpRatio < .5 ? 1.15 : 1.55; }
-        else { boss.vx = -650; boss.charge = .65; boss.attack = 2.8; announce("Crusher charge", .55); }
+        if (Math.random() < .66) {
+          queueAttack(.32, "aim", boss.color, target => aimedBurst(hpRatio < .5 ? 5 : 3, .55, 252, 11, boss.color, target));
+          boss.attack = hpRatio < .5 ? 1.15 : 1.55;
+        } else {
+          queueAttack(.48, "charge", boss.color, () => { boss.vx = -650 * missions[currentMission].speed; boss.charge = .65; });
+          boss.attack = 2.8;
+        }
       }
-      if (boss.charge > 0) {
+      if (boss.blink > 0) {
+        // Blink-drive bosses hold the teleported position briefly.
+      } else if (boss.charge > 0) {
         boss.charge -= dt; boss.x += boss.vx * dt;
         if (boss.x < W * .18 || boss.x > W * .85) boss.vx *= -1;
       } else boss.x += (W * .78 - boss.x) * dt * 2;
     } else if (boss.kind === 1) {
-      boss.x = W * .72 + Math.cos(time * 1.8) * W * .13;
-      boss.y = H * .46 + Math.sin(time * 2.7) * H * .27;
+      if (boss.blink <= 0) { boss.x = W * .72 + Math.cos(time * 1.5) * W * .12; boss.y = H * .46 + Math.sin(time * 2.1) * H * .24; }
       if (boss.attack <= 0) {
         if (Math.random() < .55) {
-          aimedBurst(hpRatio < .55 ? 7 : 5, 1.0, 315, 9, boss.color); boss.attack = 1.05;
+          queueAttack(.34, "aim", boss.color, target => aimedBurst(hpRatio < .55 ? 5 : 3, 1.0, 280, 8, boss.color, target)); boss.attack = 1.35;
         } else {
-          radial(hpRatio < .5 ? 16 : 12, 212, 9, time, boss.color); boss.attack = 1.8; ring(boss.x, boss.y, boss.color, 150);
+          queueAttack(.44, "radial", boss.color, () => { radial(hpRatio < .5 ? 14 : 10, 190, 8, time, boss.color); ring(boss.x, boss.y, boss.color, 150); }); boss.attack = 2.1;
         }
       }
-    } else {
-      boss.x = W * .76 + Math.sin(time * .8) * W * .08;
-      boss.y = H * .45 + Math.cos(time * 1.1) * H * .13;
+    } else if (boss.kind === 2) {
+      if (boss.blink <= 0) { boss.x = W * .76 + Math.sin(time * .8) * W * .08; boss.y = H * .45 + Math.cos(time * 1.1) * H * .13; }
       if (boss.attack <= 0) {
         boss.phase++;
         if (boss.phase % 3 === 0) {
-          radial(hpRatio < .5 ? 24 : 18, 189, 11, time * .4, "#ffbd3d"); boss.attack = 1.9;
+          queueAttack(.46, "radial", "#ffbd3d", () => radial(hpRatio < .5 ? 28 : 20, 210, 12, time * .4, "#ffbd3d")); boss.attack = 1.65;
         } else if (boss.phase % 3 === 1) {
-          aimedBurst(hpRatio < .45 ? 9 : 6, 1.15, 351, 12, "#ff6247"); boss.attack = 1.45;
+          queueAttack(.32, "aim", "#ff6247", target => aimedBurst(hpRatio < .45 ? 11 : 7, 1.15, 380, 13, "#ff6247", target)); boss.attack = 1.2;
         } else {
-          for (let i = 0; i < 5; i++) setTimeout(() => {
-            if (state === "fight" && boss && !boss.dead) aimedBurst(1, 0, 414, 8, "#fff17a");
-          }, i * 190);
-          boss.attack = 2.1;
+          queueAttack(.42, "aim", "#fff17a", target => {
+            const attacker = boss;
+            for (let i = 0; i < 7; i++) setTimeout(() => {
+              if (state === "fight" && boss === attacker && !boss.dead) aimedBurst(1, 0, 440, 9, "#fff17a", target);
+            }, i * 150);
+          });
+          boss.attack = 1.8;
+        }
+      }
+    } else if (boss.kind === 3) {
+      if (boss.blink <= 0) { boss.x = W * .72 + Math.sin(time * 1.35) * W * .15; boss.y = H * .44 + Math.sin(time * 2.15) * H * .2; }
+      if (boss.attack <= 0) {
+        boss.phase++;
+        if (boss.phase % 2) {
+          queueAttack(.34, "aim", boss.color, target => aimedBurst(hpRatio < .5 ? 9 : 6, .82, 372, 11, boss.color, target)); boss.attack = 1.35;
+        } else {
+          queueAttack(.46, "radial", boss.color, () => { radial(hpRatio < .5 ? 26 : 20, 244, 10, time * .75, boss.color); ring(boss.x, boss.y, "#e5b6ff", 190); }); boss.attack = 1.7;
+        }
+      }
+    } else {
+      if (boss.blink <= 0) { boss.x = W * .77 + Math.sin(time * .72) * W * .09; boss.y = H * .43 + Math.cos(time * 1.18) * H * .15; }
+      if (boss.attack <= 0) {
+        boss.phase++;
+        if (boss.phase % 3 === 0) {
+          queueAttack(.5, "radial", "#ff397d", () => {
+            radial(hpRatio < .5 ? 32 : 24, 252, 13, time * .55, "#ff397d");
+            const attacker = boss;
+            setTimeout(() => {
+              if (state === "fight" && boss === attacker && !boss.dead) radial(hpRatio < .5 ? 22 : 16, 310, 10, time * .55 + .13, "#873dff");
+            }, 320);
+          });
+          boss.attack = 1.75;
+        } else if (boss.phase % 3 === 1) {
+          queueAttack(.36, "aim", "#ff4f85", target => aimedBurst(hpRatio < .45 ? 13 : 9, 1.3, 420, 14, "#ff4f85", target)); boss.attack = 1.35;
+        } else {
+          queueAttack(.42, "aim", "#d06cff", target => {
+            const attacker = boss;
+            for (let i = 0; i < 6; i++) setTimeout(() => {
+              if (state === "fight" && boss === attacker && !boss.dead) aimedBurst(3, .34, 470, 10, "#d06cff", target);
+            }, i * 170);
+          });
+          boss.attack = 2;
         }
       }
     }
-    if (dist(player, boss) < player.r + boss.r && player.invuln <= 0) hurtPlayer(18);
+    applyBossTwist(dt, hpRatio);
+    const collisionDamage = ([18, 14, 20, 22, 26][boss.kind] || 18) * missions[currentMission].damage;
+    if (dist(player, boss) < player.r + boss.r && player.invuln <= 0) hurtPlayer(collisionDamage);
   }
 
   function hurtPlayer(damage) {
     if (player.invuln > 0) return;
-    player.hp -= damage; player.invuln = .75; shake = 12; flash = .18;
+    player.hp -= damage; player.invuln = .75; shake = 12; flash = .18; combo = 0; comboTimer = 0;
+    if (boss?.twist?.type === "leech") boss.hp = Math.min(boss.maxHp, boss.hp + damage * 2.2);
+    if (boss?.twist?.type === "heat") player.heat = Math.min(player.maxHeat, player.heat + 24);
+    if (boss?.twist?.type === "freeze") player.dashCd = Math.max(player.dashCd, 2.2);
     const a = Math.atan2(player.y - boss.y, player.x - boss.x);
     player.vx += Math.cos(a) * 390; player.vy += Math.sin(a) * 390;
     burst(player.x, player.y, "#ff5266", 18, 260);
-    if (player.hp <= 0) lose();
+    if (player.hp <= 0) {
+      if (owned.has("phoenix") && player.reviveReady) {
+        player.reviveReady = false; player.hp = player.maxHp * .45; player.invuln = 2; enemyShots = []; pendingAttacks = [];
+        ring(player.x, player.y, "#ffd86b", 180); announce("Phoenix plating restored armor", 1.2);
+      } else lose();
+    }
   }
   function killBoss() {
     if (boss.dead) return;
-    boss.dead = true; money += boss.bounty; shake = 22; flash = .3;
+    const earnedBounty = Math.round(boss.bounty * (owned.has("salvage") ? 1.25 : 1));
+    boss.dead = true; pendingAttacks = []; money += earnedBounty; shake = 22; flash = .3;
     burst(boss.x, boss.y, boss.color, 55, 440); ring(boss.x, boss.y, "#ffffff", 360);
-    announce(`+$${boss.bounty} bounty`, 1.4);
+    announce(`+$${earnedBounty} bounty`, 1.4);
     setTimeout(openShop, 1200);
   }
   function openShop() {
     if (state !== "fight") return;
     state = "shop"; ui.hud.classList.add("hidden"); ui.chips.classList.add("hidden"); ui.mobile.classList.add("hidden");
     ui.shop.classList.remove("hidden"); ui.shopMoney.textContent = `$${money}`;
-    ui.continue.textContent = bossIndex === bossData.length - 1 ? "Finish run" : "Fight next boss";
+    const accuracy = fightShots ? Math.round(fightHits / fightShots * 100) : 0;
+    ui.shopStats.textContent = `${accuracy}% accuracy · best overdrive ${fightBestCombo}.`;
+    ui.continue.textContent = bossIndex === bossData.length - 1 ? "Complete mission" : "Fight next boss";
     renderShop();
   }
   function lose() {
+    lastResult = "loss";
     state = "end"; ui.hud.classList.add("hidden"); ui.chips.classList.add("hidden"); ui.mobile.classList.add("hidden");
     ui.end.classList.remove("hidden"); ui.endEyebrow.textContent = "System failure";
     ui.endTitle.innerHTML = "Armor<br><span>breached</span>";
-    ui.endText.textContent = `${boss.name} ended the run. You reached target ${bossIndex + 1} with $${money} in recovered bounty.`;
+    ui.endText.textContent = `${boss.name} ended ${missions[currentMission].name}. You reached boss ${bossIndex + 1} of 5 with $${money} in recovered bounty.`;
+    $("#restart").textContent = "Retry mission";
   }
   function win() {
+    lastResult = "win";
+    const researchEarned = 2 + currentMission; researchPoints += researchEarned;
+    if (currentMission + 1 < missions.length && unlockedMissions < currentMission + 2) {
+      unlockedMissions = currentMission + 2;
+    }
+    saveCampaign();
     state = "end"; ui.shop.classList.add("hidden"); ui.end.classList.remove("hidden");
-    ui.endEyebrow.textContent = "Arena cleared"; ui.endTitle.innerHTML = "Forged in<br><span>victory</span>";
-    ui.endText.textContent = `All three war machines destroyed. Final reserve: $${money}. Attachments installed: ${owned.size}.`;
+    ui.endEyebrow.textContent = `Mission ${currentMission + 1} cleared`; ui.endTitle.innerHTML = "Forged in<br><span>victory</span>";
+    const next = currentMission + 1 < missions.length ? ` ${missions[currentMission + 1].name} is now unlocked.` : " The machine uprising is over.";
+    ui.endText.textContent = `${missions[currentMission].name} complete: all five war machines destroyed. Research earned: ${researchEarned} RP. Final reserve: $${money}. Attachments installed: ${owned.size}.${next}`;
+    $("#restart").textContent = currentMission + 1 < missions.length ? "Start next mission" : "Replay final mission";
   }
 
   function renderShop() {
     ui.grid.innerHTML = "";
-    upgrades.forEach(u => {
+    activeUpgrades().forEach(u => {
       const btn = document.createElement("button");
       const isOwned = owned.has(u.id), poor = money < u.cost;
       btn.className = `upgrade${isOwned ? " owned" : ""}`; btn.disabled = isOwned || poor;
@@ -385,19 +655,24 @@
     if (owned.has(u.id) || money < u.cost) return;
     money -= u.cost; owned.add(u.id);
     if (u.id === "barrier") { player.maxHp += 30; player.hp = player.maxHp; }
+    if (u.id === "quantum") player.maxHeat = 130;
+    if (u.id === "phoenix") player.reviveReady = true;
     renderShop(); renderChips();
   }
   function renderChips() {
-    ui.chips.innerHTML = upgrades.map(u => `<span class="chip ${owned.has(u.id) ? "on" : ""}">${u.icon} ${u.name}</span>`).join("");
+    ui.chips.innerHTML = activeUpgrades().map(u => `<span class="chip ${owned.has(u.id) ? "on" : ""}">${u.icon} ${u.name}</span>`).join("");
   }
   function updateUI() {
     ui.hp.style.width = `${clamp(player.hp / player.maxHp * 100, 0, 100)}%`;
     ui.hpText.textContent = `${Math.ceil(Math.max(0, player.hp))} / ${player.maxHp}`;
-    ui.heat.style.width = `${player.heat}%`; ui.heatText.textContent = player.overheated ? "Overheated" : player.heat < 5 ? "Ready" : `${Math.ceil(player.heat)}%`;
-    ui.money.textContent = `$${money}`; ui.stage.textContent = `Target ${bossIndex + 1} / ${bossData.length}`;
+    ui.heat.style.width = `${player.heat / player.maxHeat * 100}%`; ui.heatText.textContent = player.overheated ? "Overheated" : player.heat < 5 ? "Ready" : `${Math.ceil(player.heat)} / ${player.maxHeat}`;
+    ui.money.textContent = `$${money}`; ui.stage.textContent = `Mission ${currentMission + 1} · Boss ${bossIndex + 1} / ${bossData.length}`;
+    const dashText = player.dashCd <= 0 ? "Dash ready" : `Dash ${Math.max(0, player.dashCd).toFixed(1)}s`;
+    ui.combat.textContent = `${dashText} · Overdrive ${combo}`;
     if (boss) {
       ui.boss.style.width = `${clamp(boss.hp / boss.maxHp * 100, 0, 100)}%`;
       ui.bossText.textContent = `${Math.ceil(Math.max(0, boss.hp) / boss.maxHp * 100)}%`; ui.bossName.textContent = boss.name;
+      ui.bossTwist.textContent = boss.twist?.name || "Standard weapons";
     }
   }
 
@@ -408,14 +683,20 @@
     rings.forEach(r => { r.life -= dt; r.r += (r.max - r.r) * dt * 7; }); rings = rings.filter(r => r.life > 0);
     if (state !== "fight" || boss.dead) return;
 
-    player.fireCd -= dt; player.dashCd -= dt; player.invuln -= dt;
+    player.fireCd -= dt; player.dashCd -= dt; player.invuln -= dt; comboTimer -= dt;
+    if (comboTimer <= 0) combo = 0;
+    updatePendingAttacks(dt);
     const cooling = owned.has("cooling") ? 35 : 22;
     player.heat = Math.max(0, player.heat - cooling * dt);
-    if (player.overheated && player.heat <= (owned.has("cooling") ? 25 : 15)) player.overheated = false;
+    if (owned.has("nanites")) player.hp = Math.min(player.maxHp, player.hp + 3 * dt);
+    if (player.overheated && player.heat <= player.maxHeat * (owned.has("cooling") ? .25 : .15)) player.overheated = false;
     let dx = (keys.right ? 1 : 0) - (keys.left ? 1 : 0), dy = (keys.down ? 1 : 0) - (keys.up ? 1 : 0);
     if (dx || dy) { const n = Math.hypot(dx, dy); dx /= n; dy /= n; }
     if (keys.dash && player.dashCd <= 0 && (dx || dy)) {
-      player.dash = .17; player.dashCd = 1.25; player.invuln = .25; player.vx = dx * 900; player.vy = dy * 900;
+      const phased = owned.has("dash");
+      player.dash = phased ? .22 : .17; player.dashCd = phased ? .8 : 1.25; player.invuln = phased ? .36 : .25;
+      player.vx = dx * (phased ? 1050 : 900); player.vy = dy * (phased ? 1050 : 900);
+      if (owned.has("aegis")) enemyShots = enemyShots.filter(s => dist(s, player) > 135);
       ring(player.x, player.y, "#54edff", 80);
     }
     if (player.dash > 0) player.dash -= dt;
@@ -423,7 +704,8 @@
       const accel = 1950;
       player.vx += dx * accel * dt; player.vy += dy * accel * dt;
       const drag = Math.pow(.00045, dt); player.vx *= drag; player.vy *= drag;
-      const speed = Math.hypot(player.vx, player.vy), max = 340;
+      const slowed = boss.twist?.type === "slow" && dist(player, boss) < 340;
+      const speed = Math.hypot(player.vx, player.vy), max = slowed ? 225 : 340;
       if (speed > max) { player.vx *= max / speed; player.vy *= max / speed; }
     }
     player.x = clamp(player.x + player.vx * dt, 35, W - 35); player.y = clamp(player.y + player.vy * dt, 95, H - 42);
@@ -432,16 +714,26 @@
 
     bossAI(dt);
     shots.forEach(s => {
+      if (owned.has("hunter") && boss && !boss.dead) {
+        const speed = Math.hypot(s.vx, s.vy), desired = Math.atan2(boss.y - s.y, boss.x - s.x), turn = Math.min(.09, dt * 3.5);
+        s.vx += (Math.cos(desired) * speed - s.vx) * turn; s.vy += (Math.sin(desired) * speed - s.vy) * turn;
+      }
       s.life -= dt; s.x += s.vx * dt; s.y += s.vy * dt;
       if (s.life > 0 && dist(s, boss) < s.r + boss.r) {
-        boss.hp -= s.damage; boss.hit = .08; s.life = 0; burst(s.x, s.y, "#beffff", 5, 120);
+        const mitigation = boss.shielded ? .28 : boss.armored ? .62 : 1;
+        boss.hp -= s.damage * mitigation; boss.hit = .08; s.life = 0; registerHit(); burst(s.x, s.y, boss.shielded ? boss.color : "#beffff", 5, 120);
         if (boss.hp <= 0) killBoss();
       }
     });
     shots = shots.filter(s => s.life > 0 && s.x > -20 && s.x < W + 20 && s.y > 50 && s.y < H + 20);
     enemyShots.forEach(s => {
-      s.life -= dt; s.x += s.vx * dt; s.y += s.vy * dt;
-      if (s.life > 0 && dist(s, player) < s.r + player.r && player.invuln <= 0) { s.life = 0; hurtPlayer(s.damage); }
+      s.life -= dt; s.arming = Math.max(0, (s.arming || 0) - dt);
+      if (s.homing && !s.mine) {
+        const speed = Math.hypot(s.vx, s.vy), a = Math.atan2(player.y - s.y, player.x - s.x), turn = Math.min(.045, dt * s.homing);
+        s.vx += (Math.cos(a) * speed - s.vx) * turn; s.vy += (Math.sin(a) * speed - s.vy) * turn;
+      }
+      s.x += s.vx * dt; s.y += s.vy * dt;
+      if (s.life > 0 && s.arming <= 0 && dist(s, player) < s.r + player.r && player.invuln <= 0) { s.life = 0; hurtPlayer(s.damage); }
     });
     enemyShots = enemyShots.filter(s => s.life > 0 && s.x > -40 && s.x < W + 40 && s.y > 40 && s.y < H + 40);
     updateUI();
@@ -498,6 +790,7 @@
       ctx.fillStyle = `rgba(255,63,38,${on})`; ctx.shadowBlur = 14; ctx.shadowColor = "#ff321e";
       ctx.beginPath(); ctx.arc(x, 78, 4, 0, Math.PI * 2); ctx.fill();
     }
+    ctx.globalAlpha = .07; ctx.fillStyle = missions[currentMission].color; ctx.fillRect(0, 0, W, H); ctx.globalAlpha = 1;
     ctx.shadowBlur = 0;
   }
   function entityShadow(x, y, r, alpha = .55) {
@@ -542,38 +835,133 @@
     ctx.globalAlpha *= .32; ctx.fillStyle = core; ctx.beginPath(); ctx.moveTo(42, -7); ctx.lineTo(65, -16); ctx.lineTo(65, 16); ctx.lineTo(42, 7); ctx.fill();
     ctx.restore();
   }
+  function drawTelegraphs() {
+    pendingAttacks.forEach(t => {
+      if (t.attacker !== boss || t.attacker.dead) return;
+      const p = clamp(1 - t.life / t.max, 0, 1), pulse = .55 + Math.sin(time * 30) * .25;
+      ctx.save(); ctx.globalAlpha = pulse; ctx.strokeStyle = t.color; ctx.fillStyle = t.color;
+      ctx.shadowBlur = 20; ctx.shadowColor = t.color; ctx.lineWidth = 3;
+      ctx.beginPath(); ctx.arc(t.attacker.x, t.attacker.y, t.attacker.r + 14 + p * 24, 0, Math.PI * 2); ctx.stroke();
+      if (t.style === "aim") {
+        ctx.setLineDash([11, 9]); ctx.lineWidth = 2;
+        ctx.beginPath(); ctx.moveTo(t.attacker.x, t.attacker.y); ctx.lineTo(t.target.x, t.target.y); ctx.stroke();
+        ctx.setLineDash([]); ctx.beginPath(); ctx.arc(t.target.x, t.target.y, 12 + p * 10, 0, Math.PI * 2); ctx.stroke();
+      } else if (t.style === "charge") {
+        ctx.globalAlpha = .12 + p * .12; ctx.fillRect(0, t.attacker.y - t.attacker.r - 10, W, t.attacker.r * 2 + 20);
+      } else {
+        ctx.globalAlpha = .22; ctx.beginPath(); ctx.arc(t.attacker.x, t.attacker.y, t.attacker.r + 38 + p * 42, 0, Math.PI * 2); ctx.stroke();
+      }
+      ctx.globalAlpha = .85; ctx.font = "900 10px system-ui"; ctx.textAlign = "center";
+      ctx.fillText(t.style === "aim" ? "TARGET LOCK" : t.style === "charge" ? "CHARGE PATH" : "ENERGY SURGE", t.attacker.x, t.attacker.y - t.attacker.r - 28);
+      ctx.restore();
+    });
+  }
+  function drawMissionHardware() {
+    const m = currentMission;
+    ctx.save(); ctx.shadowColor = boss.color; ctx.shadowBlur = 15; ctx.strokeStyle = boss.color; ctx.lineWidth = 3;
+    if (m === 1) {
+      ctx.fillStyle = "#09233a";
+      for (const side of [-1, 1]) { ctx.beginPath(); ctx.moveTo(side * 35, -18); ctx.lineTo(side * 82, -8); ctx.lineTo(side * 66, 8); ctx.lineTo(side * 34, 15); ctx.closePath(); ctx.fill(); ctx.stroke(); }
+    } else if (m === 2) {
+      ctx.fillStyle = "#d9f8ff";
+      for (let i = 0; i < 6; i++) { const a = i * Math.PI / 3; ctx.save(); ctx.rotate(a); ctx.beginPath(); ctx.moveTo(boss.r * .68, -8); ctx.lineTo(boss.r + 30, 0); ctx.lineTo(boss.r * .68, 8); ctx.closePath(); ctx.fill(); ctx.stroke(); ctx.restore(); }
+    } else if (m === 3) {
+      ctx.fillStyle = "#5c3518"; ctx.strokeStyle = "#ffb14c";
+      ctx.fillRect(-boss.r - 20, boss.r * .45, boss.r * 2 + 40, 18); ctx.strokeRect(-boss.r - 20, boss.r * .45, boss.r * 2 + 40, 18);
+      for (let x = -boss.r - 12; x < boss.r + 12; x += 15) bolt(x, boss.r * .45 + 9, 3);
+    } else if (m === 4) {
+      ctx.setLineDash([10, 7]); ctx.beginPath(); ctx.ellipse(0, 0, boss.r + 35, boss.r * .48, time * .35, 0, Math.PI * 2); ctx.stroke(); ctx.setLineDash([]);
+      for (const a of [time, time + Math.PI]) { ctx.fillStyle = "#eef7ff"; ctx.beginPath(); ctx.arc(Math.cos(a) * (boss.r + 34), Math.sin(a) * boss.r * .48, 6, 0, Math.PI * 2); ctx.fill(); }
+    } else if (m === 5) {
+      ctx.globalAlpha = .22 + Math.sin(time * 9) * .1;
+      for (const off of [-18, 18]) { ctx.strokeRect(-boss.r + off, -boss.r + off * .25, boss.r * 2, boss.r * 2); }
+      ctx.globalAlpha = 1; ctx.beginPath(); ctx.moveTo(-boss.r, 0); ctx.lineTo(boss.r, 0); ctx.stroke();
+    } else if (m === 6) {
+      ctx.fillStyle = "#49151d"; ctx.strokeStyle = "#ff5367";
+      for (const side of [-1, 1]) { ctx.fillRect(side * (boss.r + 30) - (side < 0 ? 24 : 0), -31, 24, 62); ctx.strokeRect(side * (boss.r + 30) - (side < 0 ? 24 : 0), -31, 24, 62); }
+    } else if (m === 7) {
+      ctx.strokeStyle = "#fff06a"; ctx.lineWidth = 5;
+      for (let i = 0; i < 4; i++) { const a = time * .5 + i * Math.PI / 2; ctx.beginPath(); ctx.moveTo(Math.cos(a) * boss.r * .6, Math.sin(a) * boss.r * .6); ctx.lineTo(Math.cos(a) * (boss.r + 35), Math.sin(a) * (boss.r + 35)); ctx.stroke(); }
+    }
+    ctx.restore();
+  }
+  function drawTwistHardware() {
+    const type = boss.twist?.type; if (!type || type === "native") return;
+    ctx.save(); ctx.strokeStyle = boss.color; ctx.fillStyle = boss.color; ctx.shadowColor = boss.color; ctx.shadowBlur = 18; ctx.lineWidth = 3;
+    if (type === "shield") {
+      ctx.globalAlpha = boss.shielded ? .9 : .22; ctx.lineWidth = 6; ctx.beginPath(); ctx.arc(0, 0, boss.r + 23, -.8, Math.PI * 1.65); ctx.stroke();
+    } else if (type === "mines") {
+      for (let i = 0; i < 4; i++) { const a = i * Math.PI / 2; ctx.save(); ctx.translate(Math.cos(a) * (boss.r + 17), Math.sin(a) * (boss.r + 17)); ctx.rotate(a); ctx.strokeRect(-8, -8, 16, 16); ctx.fillRect(-3, -3, 6, 6); ctx.restore(); }
+    } else if (type === "blink") {
+      ctx.globalAlpha = .55; for (const r of [boss.r + 14, boss.r + 25]) { ctx.setLineDash([7, 9]); ctx.beginPath(); ctx.arc(0, 0, r, time * 2, time * 2 + Math.PI * 1.3); ctx.stroke(); } ctx.setLineDash([]);
+    } else if (type === "hunter") {
+      ctx.beginPath(); ctx.arc(0, 0, 16, 0, Math.PI * 2); ctx.stroke(); ctx.moveTo(-25, 0); ctx.lineTo(25, 0); ctx.moveTo(0, -25); ctx.lineTo(0, 25); ctx.stroke();
+    } else if (type === "storm") {
+      for (let i = 0; i < 4; i++) { const a = time * 1.4 + i * Math.PI / 2; ctx.beginPath(); ctx.arc(Math.cos(a) * (boss.r + 22), Math.sin(a) * (boss.r + 22), 9, 0, Math.PI * 2); ctx.stroke(); }
+    } else if (type === "gravity") {
+      ctx.globalAlpha = .6; for (const r of [boss.r + 18, boss.r + 34]) { ctx.beginPath(); ctx.ellipse(0, 0, r, r * .38, time * .25, 0, Math.PI * 2); ctx.stroke(); }
+    } else if (type === "jammer") {
+      for (const side of [-1, 1]) { ctx.beginPath(); ctx.moveTo(side * 20, -boss.r * .55); ctx.lineTo(side * 34, -boss.r - 30); ctx.stroke(); ctx.beginPath(); ctx.arc(side * 34, -boss.r - 30, 6 + Math.sin(time * 8) * 2, 0, Math.PI * 2); ctx.fill(); }
+    } else if (type === "leech") {
+      for (let i = 0; i < 3; i++) { const a = i * Math.PI * 2 / 3 + time * .3; ctx.beginPath(); ctx.moveTo(Math.cos(a) * boss.r * .6, Math.sin(a) * boss.r * .6); ctx.quadraticCurveTo(Math.cos(a + .5) * (boss.r + 24), Math.sin(a + .5) * (boss.r + 24), Math.cos(a) * (boss.r + 45), Math.sin(a) * (boss.r + 45)); ctx.stroke(); }
+    } else if (type === "armor") {
+      ctx.globalAlpha = boss.armored ? .9 : .35; for (let i = 0; i < 4; i++) { const a = i * Math.PI / 2; ctx.save(); ctx.rotate(a); ctx.strokeRect(boss.r * .55, -14, 30, 28); ctx.restore(); }
+    } else if (type === "rage") {
+      for (let i = 0; i < 8; i++) { const a = i * Math.PI / 4; ctx.save(); ctx.rotate(a); ctx.beginPath(); ctx.moveTo(boss.r * .7, -5); ctx.lineTo(boss.r + 24, 0); ctx.lineTo(boss.r * .7, 5); ctx.closePath(); ctx.fill(); ctx.restore(); }
+    } else if (type === "slow" || type === "freeze") {
+      for (let i = 0; i < 6; i++) { const a = i * Math.PI / 3; ctx.save(); ctx.rotate(a); ctx.beginPath(); ctx.moveTo(boss.r * .65, -6); ctx.lineTo(boss.r + 22, 0); ctx.lineTo(boss.r * .65, 6); ctx.closePath(); ctx.stroke(); ctx.restore(); }
+    } else if (type === "heat") {
+      for (const side of [-1, 1]) { for (let y = -18; y <= 18; y += 12) { ctx.globalAlpha = .5 + Math.sin(time * 10 + y) * .3; ctx.fillRect(side * (boss.r + 8), y, side * 22, 5); } }
+    }
+    ctx.restore();
+  }
   function drawBoss() {
     if (!boss || boss.dead) return;
     entityShadow(boss.x, boss.y + boss.r, boss.r * 1.25, .7);
     ctx.save(); ctx.translate(boss.x, boss.y);
     ctx.shadowBlur = boss.hit ? 38 : 12; ctx.shadowColor = boss.hit ? "#fff" : boss.color;
-    ctx.rotate(time * (boss.kind === 2 ? .35 : -.2));
+    if (boss.enraged) {
+      ctx.globalAlpha = .45 + Math.sin(time * 12) * .18; ctx.strokeStyle = boss.color; ctx.lineWidth = 4;
+      ctx.beginPath(); ctx.arc(0, 0, boss.r + 17 + Math.sin(time * 8) * 5, 0, Math.PI * 2); ctx.stroke(); ctx.globalAlpha = 1;
+    }
+    const rotations = [-time * .2, Math.sin(time * 3) * .07, time * .35, Math.sin(time * 1.8) * .08, Math.sin(time) * .035];
+    ctx.rotate(rotations[boss.kind] || 0);
     if (boss.kind === 0) {
-      ctx.fillStyle = metalGradient(boss.r, "#773428", "#160c09"); ctx.strokeStyle = "#080a0b"; ctx.lineWidth = 5;
+      ctx.fillStyle = "#31100c"; ctx.strokeStyle = "#090606"; ctx.lineWidth = 4;
+      ctx.fillRect(-boss.r - 34, -31, 34, 62); ctx.strokeRect(-boss.r - 34, -31, 34, 62);
+      ctx.fillRect(boss.r, -31, 34, 62); ctx.strokeRect(boss.r, -31, 34, 62);
+      for (const side of [-1, 1]) for (let y = -22; y <= 22; y += 11) {
+        ctx.fillStyle = "#9c392b"; ctx.fillRect(side * (boss.r + 29) - (side < 0 ? 6 : 0), y, 6, 7);
+      }
+      ctx.fillStyle = metalGradient(boss.r, currentMission ? boss.color : "#773428", "#160c09"); ctx.strokeStyle = "#080a0b"; ctx.lineWidth = 5;
       ctx.beginPath(); for (let i = 0; i < 16; i++) { const a = i / 16 * Math.PI * 2, r = i % 2 ? boss.r * .91 : boss.r * 1.18; ctx.lineTo(Math.cos(a) * r, Math.sin(a) * r); } ctx.closePath(); ctx.fill(); ctx.stroke();
-      ctx.fillStyle = metalGradient(38, "#9f4d39", "#160b09"); ctx.beginPath(); ctx.arc(0, 0, 38, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+      ctx.fillStyle = metalGradient(38, currentMission ? boss.color : "#9f4d39", "#160b09"); ctx.beginPath(); ctx.arc(0, 0, 38, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
       for (let i = 0; i < 8; i++) { const a = i * Math.PI / 4; bolt(Math.cos(a) * 29, Math.sin(a) * 29, 3); }
       ctx.fillStyle = boss.hit ? "#fff" : "#ff3f1f"; ctx.shadowBlur = 28; ctx.shadowColor = "#ff321d";
       ctx.beginPath(); ctx.ellipse(0, 0, 22, 8, 0, 0, Math.PI * 2); ctx.fill();
       ctx.fillStyle = "#250806"; ctx.fillRect(-8, -3, 16, 6);
     } else if (boss.kind === 1) {
       ctx.strokeStyle = "#101618"; ctx.lineWidth = 14; ctx.lineCap = "round";
-      for (let i = 0; i < 4; i++) {
-        const a = i * Math.PI / 2 + Math.sin(time * 5) * .15, ex = Math.cos(a) * 86, ey = Math.sin(a) * 86;
+      for (let i = 0; i < 6; i++) {
+        const a = i * Math.PI / 3 + Math.sin(time * 5 + i) * .12, ex = Math.cos(a) * 91, ey = Math.sin(a) * 76;
         ctx.beginPath(); ctx.moveTo(0, 0); ctx.lineTo(ex * .68, ey * .68); ctx.lineTo(ex, ey); ctx.stroke();
         ctx.strokeStyle = "#66754b"; ctx.lineWidth = 7; ctx.stroke(); bolt(ex * .68, ey * .68, 4);
         ctx.strokeStyle = "#101618"; ctx.lineWidth = 14;
       }
-      ctx.fillStyle = metalGradient(boss.r, "#68783f", "#10150b"); ctx.strokeStyle = "#111719"; ctx.lineWidth = 4;
+      ctx.fillStyle = "#263313"; ctx.strokeStyle = "#0b1008"; ctx.lineWidth = 4;
+      for (const side of [-1, 1]) {
+        ctx.beginPath(); ctx.moveTo(side * 28, -17); ctx.lineTo(side * 78, -48); ctx.lineTo(side * 68, -7); ctx.lineTo(side * 39, 4); ctx.closePath(); ctx.fill(); ctx.stroke();
+      }
+      ctx.fillStyle = metalGradient(boss.r, currentMission ? boss.color : "#68783f", "#10150b"); ctx.strokeStyle = "#111719"; ctx.lineWidth = 4;
       ctx.beginPath(); ctx.moveTo(-43, 0); ctx.quadraticCurveTo(-24, -48, 18, -41); ctx.lineTo(47, 0); ctx.lineTo(16, 42); ctx.quadraticCurveTo(-25, 48, -43, 0); ctx.fill(); ctx.stroke();
       ctx.fillStyle = "#bfff32"; ctx.shadowBlur = 26; ctx.shadowColor = "#aaff28"; ctx.beginPath(); ctx.ellipse(8, -6, 16, 8, 0, 0, Math.PI * 2); ctx.fill();
       ctx.fillStyle = "#172006"; ctx.fillRect(3, -9, 10, 5);
-    } else {
+    } else if (boss.kind === 2) {
       for (let i = 0; i < 12; i++) {
-        ctx.rotate(Math.PI / 6); ctx.fillStyle = metalGradient(20, "#9b6b28", "#181007");
+        ctx.rotate(Math.PI / 6); ctx.fillStyle = metalGradient(20, currentMission ? boss.color : "#9b6b28", "#181007");
         ctx.beginPath(); ctx.moveTo(boss.r - 7, -9); ctx.lineTo(boss.r + 29, -4); ctx.lineTo(boss.r + 29, 4); ctx.lineTo(boss.r - 7, 9); ctx.fill(); ctx.strokeStyle = "#19120a"; ctx.stroke();
       }
-      ctx.fillStyle = metalGradient(boss.r, "#795522", "#171006"); ctx.strokeStyle = "#090b0c"; ctx.lineWidth = 6;
+      ctx.fillStyle = metalGradient(boss.r, currentMission ? boss.color : "#795522", "#171006"); ctx.strokeStyle = "#090b0c"; ctx.lineWidth = 6;
       ctx.beginPath(); ctx.arc(0, 0, boss.r, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
       ctx.strokeStyle = "#c58b2e"; ctx.lineWidth = 3; ctx.beginPath(); ctx.arc(0, 0, 48, 0, Math.PI * 2); ctx.stroke();
       for (let i = 0; i < 10; i++) { const a = i * Math.PI / 5; bolt(Math.cos(a) * 56, Math.sin(a) * 56, 3); }
@@ -581,7 +969,42 @@
       core.addColorStop(0, "#fff9c7"); core.addColorStop(.25, boss.hit ? "#fff" : "#ffbd40"); core.addColorStop(.65, "#f0441d"); core.addColorStop(1, "#4b0900");
       ctx.fillStyle = core; ctx.shadowBlur = 40; ctx.shadowColor = "#ff5a1e";
       ctx.beginPath(); ctx.arc(0, 0, 26 + Math.sin(time * 5) * 3, 0, Math.PI * 2); ctx.fill();
+    } else if (boss.kind === 3) {
+      // Four orbiting crystal blades make the Warden readable even during dense attacks.
+      for (let i = 0; i < 4; i++) {
+        const a = time * .65 + i * Math.PI / 2, ox = Math.cos(a) * 88, oy = Math.sin(a) * 63;
+        ctx.save(); ctx.translate(ox, oy); ctx.rotate(a + Math.PI / 2);
+        ctx.fillStyle = metalGradient(34, currentMission ? boss.color : "#72419c", "#17091f"); ctx.strokeStyle = boss.color; ctx.lineWidth = 2;
+        ctx.beginPath(); ctx.moveTo(0, -31); ctx.lineTo(14, 0); ctx.lineTo(0, 31); ctx.lineTo(-10, 0); ctx.closePath(); ctx.fill(); ctx.stroke();
+        ctx.fillStyle = "#edc8ff"; ctx.shadowBlur = 16; ctx.shadowColor = boss.color; ctx.fillRect(-2, -15, 4, 30);
+        ctx.restore();
+      }
+      ctx.fillStyle = metalGradient(boss.r, currentMission ? boss.color : "#624078", "#120818"); ctx.strokeStyle = boss.color; ctx.lineWidth = 5;
+      ctx.beginPath(); ctx.moveTo(0, -boss.r); ctx.lineTo(boss.r * .72, 0); ctx.lineTo(0, boss.r); ctx.lineTo(-boss.r * .72, 0); ctx.closePath(); ctx.fill(); ctx.stroke();
+      ctx.strokeStyle = "#7d42a6"; ctx.lineWidth = 3; ctx.beginPath(); ctx.moveTo(0, -45); ctx.lineTo(0, 45); ctx.moveTo(-35, 0); ctx.lineTo(35, 0); ctx.stroke();
+      const prism = ctx.createRadialGradient(-5, -7, 1, 0, 0, 28);
+      prism.addColorStop(0, "#fff"); prism.addColorStop(.28, boss.hit ? "#fff" : "#e7a8ff"); prism.addColorStop(.7, "#8b2fce"); prism.addColorStop(1, "#250737");
+      ctx.fillStyle = prism; ctx.shadowBlur = 38; ctx.shadowColor = boss.color;
+      ctx.beginPath(); ctx.moveTo(0, -27); ctx.lineTo(23, 17); ctx.lineTo(-23, 17); ctx.closePath(); ctx.fill();
+    } else {
+      // The final machine reads as a broad crown with two articulated crushing claws.
+      ctx.strokeStyle = "#250b20"; ctx.lineWidth = 18; ctx.lineCap = "round";
+      for (const side of [-1, 1]) {
+        ctx.beginPath(); ctx.moveTo(side * 38, 8); ctx.lineTo(side * 82, 25); ctx.lineTo(side * 108, 4); ctx.stroke();
+        ctx.strokeStyle = "#83335f"; ctx.lineWidth = 9; ctx.stroke();
+        ctx.fillStyle = metalGradient(30, currentMission ? boss.color : "#96355f", "#1d0817"); ctx.strokeStyle = "#160811"; ctx.lineWidth = 4;
+        ctx.beginPath(); ctx.moveTo(side * 92, -15); ctx.lineTo(side * 124, -30); ctx.lineTo(side * 115, 8); ctx.lineTo(side * 126, 37); ctx.lineTo(side * 91, 22); ctx.closePath(); ctx.fill(); ctx.stroke();
+        ctx.strokeStyle = "#250b20"; ctx.lineWidth = 18;
+      }
+      ctx.fillStyle = metalGradient(boss.r, currentMission ? boss.color : "#71304f", "#130712"); ctx.strokeStyle = "#09050a"; ctx.lineWidth = 6;
+      ctx.beginPath(); ctx.moveTo(-boss.r, 30); ctx.lineTo(-61, -35); ctx.lineTo(-35, -69); ctx.lineTo(-14, -43); ctx.lineTo(0, -82); ctx.lineTo(14, -43); ctx.lineTo(35, -69); ctx.lineTo(61, -35); ctx.lineTo(boss.r, 30); ctx.lineTo(42, 66); ctx.lineTo(-42, 66); ctx.closePath(); ctx.fill(); ctx.stroke();
+      for (let i = -1; i <= 1; i++) { ctx.fillStyle = i ? "#ff3f7f" : "#d779ff"; ctx.shadowBlur = 22; ctx.shadowColor = ctx.fillStyle; ctx.beginPath(); ctx.ellipse(i * 25, -9, 11, 5, 0, 0, Math.PI * 2); ctx.fill(); }
+      ctx.fillStyle = "#08040a"; ctx.fillRect(-36, -12, 72, 6);
+      const voidCore = ctx.createRadialGradient(-7, 28, 2, 0, 30, 31);
+      voidCore.addColorStop(0, "#fff"); voidCore.addColorStop(.2, boss.hit ? "#fff" : "#ff68a0"); voidCore.addColorStop(.6, "#8a1d70"); voidCore.addColorStop(1, "#140018");
+      ctx.fillStyle = voidCore; ctx.shadowBlur = 42; ctx.shadowColor = boss.color; ctx.beginPath(); ctx.arc(0, 30, 27, 0, Math.PI * 2); ctx.fill();
     }
+    drawMissionHardware(); drawTwistHardware();
     ctx.restore();
   }
   function render() {
@@ -591,6 +1014,7 @@
     rings.forEach(r => { ctx.globalAlpha = r.life * 2; ctx.strokeStyle = r.color; ctx.lineWidth = 4; ctx.beginPath(); ctx.arc(r.x, r.y, r.r, 0, Math.PI * 2); ctx.stroke(); });
     ctx.globalAlpha = 1;
     if (state === "fight" || state === "shop") { drawBoss(); drawPlayer(); }
+    drawTelegraphs();
     shots.forEach(s => {
       const tail = 44, len = Math.hypot(s.vx, s.vy), nx = s.vx / len, ny = s.vy / len;
       const beam = ctx.createLinearGradient(s.x - nx * tail, s.y - ny * tail, s.x, s.y);
@@ -600,6 +1024,13 @@
       ctx.fillStyle = "#fff"; ctx.beginPath(); ctx.arc(s.x, s.y, s.r * .65, 0, Math.PI * 2); ctx.fill();
     });
     enemyShots.forEach(s => {
+      if (s.mine) {
+        ctx.save(); ctx.translate(s.x, s.y); ctx.rotate(time * 1.8);
+        ctx.globalAlpha = s.arming > 0 ? .45 + Math.sin(time * 24) * .25 : 1;
+        ctx.fillStyle = "#111820"; ctx.strokeStyle = s.color; ctx.lineWidth = 3; ctx.shadowBlur = 18; ctx.shadowColor = s.color;
+        ctx.beginPath(); for (let i = 0; i < 8; i++) { const a = i * Math.PI / 4, rr = i % 2 ? 10 : 17; ctx.lineTo(Math.cos(a) * rr, Math.sin(a) * rr); } ctx.closePath(); ctx.fill(); ctx.stroke();
+        ctx.fillStyle = s.arming > 0 ? "#fff" : s.color; ctx.beginPath(); ctx.arc(0, 0, 4, 0, Math.PI * 2); ctx.fill(); ctx.restore(); return;
+      }
       const glow = ctx.createRadialGradient(s.x - 2, s.y - 2, 0, s.x, s.y, s.r * 2.4);
       glow.addColorStop(0, "#fff"); glow.addColorStop(.22, s.color); glow.addColorStop(1, `${s.color}00`);
       ctx.shadowBlur = 18; ctx.shadowColor = s.color; ctx.fillStyle = glow;
@@ -641,8 +1072,15 @@
     btn.addEventListener("pointerdown", e => { e.preventDefault(); keys[key] = true; if (key === "fire" && boss) { mouse.x = boss.x; mouse.y = boss.y; } });
     ["pointerup", "pointercancel", "pointerleave"].forEach(type => btn.addEventListener(type, () => keys[key] = false));
   });
-  $("#start").onclick = newRun;
-  $("#restart").onclick = newRun;
+  $("#start").onclick = openMissionSelect;
+  $("#researchOpen").onclick = openResearch;
+  $("#researchBack").onclick = openMissionSelect;
+  $("#missionBack").onclick = () => { ui.missions.classList.add("hidden"); ui.menu.classList.remove("hidden"); state = "menu"; };
+  $("#missionSelectEnd").onclick = openMissionSelect;
+  $("#restart").onclick = () => {
+    if (lastResult === "win" && currentMission + 1 < missions.length) startMission(currentMission + 1);
+    else newRun();
+  };
   ui.continue.onclick = () => { if (bossIndex >= bossData.length - 1) win(); else { bossIndex++; startFight(); } };
   renderChips(); requestAnimationFrame(loop);
 })();
