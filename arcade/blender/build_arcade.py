@@ -11,7 +11,7 @@ OUT = sys.argv[-1] if len(sys.argv) > 1 else '/home/claude/arcade/build'
 os.makedirs(OUT, exist_ok=True)
 BAKE_SAMPLES = int(os.environ.get('BAKE_SAMPLES', '96'))
 
-ROOM_W, Y0, Y1, ROOM_H = 8.0, -5.0, 19.0, 3.4
+ROOM_W, Y0, Y1, ROOM_H = 8.0, -5.0, 22.6, 3.4
 HX = ROOM_W / 2
 
 GAMES = [
@@ -20,13 +20,14 @@ GAMES = [
     ('fps-chess',          -1,  6.6, (1.00, 0.76, 0.20)),
     ('coffee-shop-tycoon', -1, 10.2, (0.10, 0.80, 0.50)),
     ('red-shirt-kid',      -1, 13.8, (1.00, 0.16, 0.16)),
+    ('gran-apex',          -1, 17.4, (0.36, 0.55, 1.00)),
     ('repulsor-forge',      1,  3.0, (0.13, 0.78, 0.95)),
     ('foam-forge',          1,  6.6, (0.70, 0.92, 0.10)),
     ('pontoon-battle',      1, 10.2, (1.00, 0.40, 0.20)),
     ('forgeframe-duel',     1, 13.8, (1.00, 0.22, 0.66)),
     ('dronefall',           1, -0.6, (0.95, 0.56, 0.14)),
 ]
-screen_colors = json.load(open('/home/claude/arcade/screen_colors.json'))
+screen_colors = json.load(open(os.path.join(os.path.dirname(os.path.abspath(__file__)), 'screen_colors.json')))
 
 # ---------------------------------------------------------------- reset
 bpy.ops.wm.read_factory_settings(use_empty=True)
@@ -274,7 +275,7 @@ box('NeonCeil_R', (1.28, Y0 + 1, ROOM_H - 0.04), (1.32, Y1 - 1, ROOM_H - 0.005),
 box('Baseboard_L', (-HX, Y0, 0), (-HX + 0.03, Y1, 0.1), m_cyan)
 box('Baseboard_R', (HX - 0.03, Y0, 0), (HX, Y1, 0.1), m_pink)
 
-LIGHT_YS = [-2.6, 1.2, 4.8, 8.4, 12.0, 15.6]
+LIGHT_YS = [-2.6, 1.2, 4.8, 8.4, 12.0, 15.6, 19.2]
 for i, ly in enumerate(LIGHT_YS):
     box(f'CeilPanel_{i}', (-0.6, ly - 0.25, ROOM_H - 0.02), (0.6, ly + 0.25, ROOM_H - 0.001), m_white)
     bpy.ops.object.light_add(type='AREA', location=(0, ly, ROOM_H - 0.03))
@@ -316,7 +317,7 @@ scene.world = bpy.data.worlds.new('World')
 scene.world.use_nodes = True
 scene.world.node_tree.nodes['Background'].inputs['Strength'].default_value = 0.0
 
-BAKE_RES = {'Floor': (512, 1536), 'Ceiling': (256, 768), 'Wall_L': (256, 1536), 'Wall_R': (256, 1536),
+BAKE_RES = {'Floor': (512, 1792), 'Ceiling': (256, 896), 'Wall_L': (256, 1792), 'Wall_R': (256, 1792),
             'Wall_Back': (512, 256), 'Wall_Front': (512, 256)}
 # Plane UVs: U follows local X, V follows local Y. For walls that means U=height (scaled first).
 for ob in ROOM:
