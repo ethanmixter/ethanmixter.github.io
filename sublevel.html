@@ -1,4 +1,3 @@
-<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
 <meta charset="utf-8">
 <title>Sublevel</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -299,9 +298,6 @@ body.pad #xhair { transition: none; }
         <label for="sSens">Mouse <input type="range" id="sSens" min="0.2" max="3" step="0.05"><output id="oSens"></output></label>
         <label for="sPad">Stick <input type="range" id="sPad" min="0.3" max="2.5" step="0.05"><output id="oPad"></output></label>
         <label for="sVol">Volume <input type="range" id="sVol" min="0" max="1" step="0.05"><output id="oVol"></output></label>
-        <label for="sInf">Infinite light <input type="checkbox" id="sInf"><output>test</output></label>
-        <label for="sInfHp">Infinite health <input type="checkbox" id="sInfHp"><output>test</output></label>
-        <label for="sBright">Bright mode <input type="checkbox" id="sBright"><output>test</output></label>
         <label for="sFear">Scares <select id="sFear"><option value="scary">Scary</option><option value="intense">Intense</option></select><output></output></label>
         <label for="sQual">Graphics <select id="sQual"><option value="auto">Auto</option><option value="low">Low (fastest)</option><option value="high">High</option></select><output></output></label>
       </div>
@@ -395,7 +391,11 @@ function store(key, value) {
   return null;
 }
 
-const settings = Object.assign({ sens: 1, vol: 0.8, quality: 'auto', fear: 'scary', infLight: false, infHealth: false, bright: false }, store('sublevel.settings') || {});
+const settings = Object.assign({ sens: 1, vol: 0.8, quality: 'auto', fear: 'scary' }, store('sublevel.settings') || {});
+// (the old testing switches are gone: drop them from settings saved by earlier versions)
+delete settings.infLight; delete settings.infHealth; delete settings.bright;
+// everyone starts with 250 health; Kevlar vests add 60 each
+const BASE_HP = 250, VEST_HP = 60;
 // "scary" is the default; "intense" is the original, harsher version
 const FEAR_LEVELS = {
   scary:   { exposure: 1.34, fog: 0.05,  hemi: 0.6,  flash: 78, brokenLights: 0.12, fixture: 1.35, screech: 0.55, stingerGap: 30, ambientScream: 0.04, gore: 0.45, stalkerDmg: 24, flicker: 0.45, hurtFlash: 0.6, soft: true },
@@ -5750,7 +5750,7 @@ function driftStages() {
     S_.goto('office', 'Find the <b>mine office</b>', { r: 6 }),
     S_.use('office', 'Read the <b>shift board</b> by the office door', 'Read the shift board', { r: 2.8, act: () => { SFX.pickup('note'); openNote(NOTES.driftboard); } }),
     S_.collect('fuel', 2, 'Find diesel for the pump: <b>lamp room, stables</b>', ['lamproom', 'stables']),
-    S_.clear('sump', 'The pump draws from the <b>sump</b>. Clear the nest around it', ['spitter', 'spitter', 'spitter', 'crawler', 'crawler', 'crawler'], { trigger: 16, rMin: 2, rMax: 6, msg: 'Eggs all round the water. Something swollen is crawling out of the pool.' }),
+    S_.clear('sump', 'The pump draws from the <b>sump</b>. Clear the nest around it', ['spitter', 'spitter', 'spitter', 'crawler', 'crawler', 'crawler'], { trigger: 16, rMin: 2, rMax: 6, msg: 'Eggs all around the water. Something swollen is crawling out of the pool.' }),
     S_.use('pump', 'Fuel and start the <b>pump</b>', 'Fuel and start the pump', { r: 3, needs: { fuel: 2 }, consume: true, locked: 'The tank is dry. It needs two cans of diesel',
       act: () => { L.pumpSet.start(false); makeNoise(player.pos.x, player.pos.z, 200); showMsg('The engine coughs, catches, and roars. The whole mine can hear it.', 4); },
       restore: () => L.pumpSet.start(true) }),
@@ -8008,7 +8008,7 @@ const ORDER = ['pistol', 'shotgun', 'rifle'];
 
 const player = {
   pos: new THREE.Vector3(), vel: new THREE.Vector2(), yaw: 0, pitch: 0, r: 0.32,
-  hp: 100, maxHp: 100, stamina: 100, battery: 100, flares: 2, flashOn: true,
+  hp: BASE_HP, maxHp: BASE_HP, stamina: 100, battery: 100, flares: 2, flashOn: true,
   weapon: 'pistol', ammo: {}, owned: { pistol: true }, fuses: 0,
   bob: 0, stepAcc: 0, recoilP: 0, recoilY: 0, shake: 0, bloom: 0, fireCd: 0,
   reloading: 0, reloadTotal: 0, switching: 0, switchTo: null, pumpT: 0,
@@ -8249,11 +8249,11 @@ function makeNoise(x, z, radius) {
 function damagePlayer(amount, fromX, fromZ, knock = 0) {
   if (player.dead || game.state !== 'play') return;
   amount *= DIFF.dmgMult;
-  if (!settings.infHealth && player.hp - amount <= 0 && perkLv('secondwind') && !run.secondWindUsed) {
+  if (player.hp - amount <= 0 && perkLv('secondwind') && !run.secondWindUsed) {
     run.secondWindUsed = true; player.hp = 1; amount = 0; showMsg('Second wind. Get out of here.', 2.5); SFX.stinger();
   }
   stats.damage += Math.min(amount, player.hp);
-  if (!settings.infHealth) player.hp = Math.max(0, player.hp - amount); // testing switch: you still feel hits, but never lose health
+  player.hp = Math.max(0, player.hp - amount);
   player.damageFlash = Math.min(1, player.damageFlash + amount / 30 * FEAR.hurtFlash);
   player.shake = Math.max(player.shake, 0.08 + amount / 120);
   SFX.hurt(amount);
@@ -9050,7 +9050,7 @@ Enemy.prototype.damageMother = function (dmg, dir, head, knock, part) {
     return false;
   }
   // armoured hide: barely scratches it
-  if (part && part.head && Math.random() < 0.3) showMsg('The head is armoured while the sacs live.', 1.4);
+  if (part && part.head && Math.random() < 0.3) showMsg('The head is armored while the sacs live.', 1.4);
   return false;
 };
 Enemy.prototype.updateMother = function (dt, t) {
@@ -9817,7 +9817,7 @@ function startIntro() {
   const B = runs.find((r) => r !== A && far(r, [A])) || runs[1] || A;
   const C = runs.find((r) => r !== A && r !== B && far(r, [A, B])) || runs[2] || A;
   intro.steps = [
-    introText(['HALE–WARDELL RESEARCH ANNEX', '214 METRES BELOW GROUND'], 3.8, { label: true, cps: 26 }),
+    introText(['HALE–WARDELL RESEARCH ANNEX', '214 METERS BELOW GROUND'], 3.8, { label: true, cps: 26 }),
     introText(['Eleven days ago, every floor', 'below Sublevel 1 lost power.'], 4.4),
     introText(['The security cameras', 'kept recording.'], 3.4),
     introStatic(0.45, 0.45),
@@ -10002,7 +10002,7 @@ const CHAPTERS = [
     sub: 'Find the ranger · get the gate card · reach the annex road',
     enemies: { hound: 6, crawler: 3 }, trickle: ['hound', 'hound', 'crawler'], trickleEvery: 34, cap: 7, notes: ['workorder', 'deer'],
     supplies: { ammo: 6, med: 3, battery: 3, flare: 3 },
-    story: [{ k: 'CHAPTER ONE', t: 'DEAD ROAD', b: 'Hale–Wardell called at 02:10. Contractor needed, power restoration, Annex B. Double rate, no questions asked.\n\nYour truck made it to within a few kilometres of the gate. Then the engine died, and every light on the dashboard went out at once.\n\nThe radio is only static. Something out in the trees is breathing.' }] },
+    story: [{ k: 'CHAPTER ONE', t: 'DEAD ROAD', b: 'Hale–Wardell called at 02:10. Contractor needed, power restoration, Annex B. Double rate, no questions asked.\n\nYour truck made it to within a few kilometers of the gate. Then the engine died, and every light on the dashboard went out at once.\n\nThe radio is only static. Something out in the trees is breathing.' }] },
   { id: 'fence', num: 1, title: 'DEAD ROAD', label: 'THE FENCE', theme: 'forest', layout: 'fence', diff: 2, size: 45,
     sub: 'Restore power to the fence · open the annex gate',
     enemies: { hound: 6, crawler: 4, husk: 1 }, trickle: ['hound', 'crawler', 'crawler'], trickleEvery: 32, cap: 8, notes: ['patrol', 'quiet'],
@@ -10040,7 +10040,7 @@ const CHAPTERS = [
     sub: 'Burn the egg clusters · find the way down',
     enemies: { crawler: 6, spitter: 2, hound: 2 }, trickle: ['crawler', 'crawler', 'hound'], trickleEvery: 30, cap: 8, notes: ['pilot', 'okafor3'],
     supplies: { ammo: 8, med: 4, battery: 2, flare: 3 },
-    story: [{ k: 'CHAPTER FIVE', t: 'THE NEST', b: 'The helicopter went down through the street and the street went with it. So did you.\n\nUnderneath Wardell is where they come from, every one of them. The tunnels down here are not rock any more.\n\nOkafor came this far. Somewhere ahead is what he called the Mother.' }] },
+    story: [{ k: 'CHAPTER FIVE', t: 'THE NEST', b: 'The helicopter went down through the street and the street went with it. So did you.\n\nUnderneath Wardell is where they come from, every one of them. The tunnels down here are not rock anymore.\n\nOkafor came this far. Somewhere ahead is what he called the Mother.' }] },
   { id: 'mother', num: 5, title: 'THE NEST', label: 'THE MOTHER', theme: 'nest', layout: 'mother', diff: 8, size: 25, mission: 'boss',
     sub: 'Burst the sacs · kill the Mother',
     enemies: { crawler: 2 }, trickle: [], notes: ['okafor4'],
@@ -10063,19 +10063,19 @@ const STORY_NOTES = {
   patrol: { h: 'PERIMETER PATROL · CHECKLIST', b: '[x] Gate 1 lights\n[x] Fence line north\n[ ] Fence line south\n[ ] Substation\n\nIn pencil, underneath: Dale says the dogs are inside the fence now. Dale says a lot of things. Dale has not come back from the blind.' },
   pilot: { h: 'RESCUE ONE · KNEEBOARD', b: 'QUARRY STN → WARDELL SINK\nWind calm. Vis poor. Signal fires x3.\nLZ: town square, beside memorial.\n\nScrawled across the bottom, in a different hand: something on the skids' },
   okafor0: { h: 'DR. OKAFOR · LOOSE PAGE', b: 'Sublevel 2 was the last level the company built. Below it is the old mine.\nWe broke through into the workings by accident. They were already living down there.\n\nI am going down the shaft ladder. If I am right about where they come from, there is something at the bottom that the rest of them answer to.' },
-  okafor1: { h: 'DR. OKAFOR · FIELD NOTES', b: 'The 1961 flood was not water. The miners broke into a cavity at four hundred metres and something came up through it.\nThe company flooded the east drift to keep it down there.\n\nThe old pump in the drift station still turns over. It drinks diesel. There were cans in the lamp room and the stables.' },
+  okafor1: { h: 'DR. OKAFOR · FIELD NOTES', b: 'The 1961 flood was not water. The miners broke into a cavity at four hundred meters and something came up through it.\nThe company flooded the east drift to keep it down there.\n\nThe old pump in the drift station still turns over. It drinks diesel. There were cans in the lamp room and the stables.' },
   spitter: { h: 'SAFETY NOTICE · HANDWRITTEN', b: 'The swollen ones spit. It burns through boots. Don\'t stand in it.\nThey hate being close. Rush them and they back off instead of spitting.\nHit the sac under the throat. It bursts.' },
   driftboard: { h: 'SHIFT BOARD · DRIFT STATION 4', b: 'B SHIFT, 3 MARCH\nEast drift flooded to the roof. Do NOT enter.\nPump No. 2 to run on diesel only. Cans in the LAMP ROOM and the old STABLES.\nClear the SUMP intake before starting, it chokes.\n\nAnd keep away from the sump after dark. Something is laying in it.\n— Hollis' },
   powder: { h: 'WARDELL MINING CO. · POWDER STORE', b: 'EXPLOSIVES. NO NAKED FLAME.\nKey held by the shift foreman ONLY.\n\nForeman Hollis, B shift. If found, return to the lamp room.' },
   okafor1b: { h: 'DR. OKAFOR · FIELD NOTES', b: 'Hollis was the foreman on the night of the flood. They never found him.\nThe company sealed this tunnel with a controlled collapse and left the charges they did not use in the powder store.\n\nThree charges on the fall will open it again. Please don\'t.' },
   wardell: { h: 'WARDELL GAZETTE · 3 MARCH 1961', b: 'MINE FLOOD: 41 MEN MISSING\nCompany officials deny reports of "animals" in the lower workings. Residents describe hearing screaming from the drainage culverts at night.\nThe council has voted to [the rest of the page is torn away]' },
-  brute: { h: 'SPRAY PAINT ON A SHOP WINDOW', b: 'THE BIG ONE CANT TURN FAST\nGET BEHIND IT\nTHE BACK IS SOFT\nDONT STAND STILL WHEN IT LIFTS ITS ARMS' },
-  sheriff: { h: 'WARDELL SHERIFF · DUTY LOG', b: 'March 4. Square barricaded with the cars from the lot. Chained the gap. Bolt cutters are back at Mercer\'s Garage if anyone needs through.\nThe radio post in the square runs on a battery. Took it out so the kids would stop playing with it. Spare at Kessler\'s Hardware, back room.\nMarch 5. The ground is moving.' },
+  brute: { h: 'SPRAY PAINT ON A SHOP WINDOW', b: 'THE BIG ONE CAN\'T TURN FAST\nGET BEHIND IT\nTHE BACK IS SOFT\nDON\'T STAND STILL WHEN IT LIFTS ITS ARMS' },
+  sheriff: { h: 'WARDELL SHERIFF · DUTY LOG', b: 'March 4. Square barricaded with the cars from the lot. Chained the gap. Bolt cutters are back at Mercer\'s Garage if anyone needs to get through.\nThe radio post in the square runs on a battery. Took it out so the kids would stop playing with it. Spare at Kessler\'s Hardware, back room.\nMarch 5. The ground is moving.' },
   square: { h: 'NOTICE · MIGRANT RELIEF', b: 'IN CASE OF EMERGENCY\nUse the radio post in the square to call Quarry Station.\nRescue aircraft need to see you: light the signal fires on the north, south and east roads.' },
   sheriff2: { h: 'SCRATCHED INTO A CAR DOOR', b: 'they come up through the church\nthey come up through the church\nthey come up through' },
   okafor2: { h: 'DR. OKAFOR · JOURNAL', b: 'The eggs are everywhere down here. Clusters of them, warm, in the walls.\nThey burn. I have a can of fuel and an igniter, and I have been burning every cluster I can find. The tunnels get angrier each time.\n\nIf you are reading this, take the fuel. Finish it.' },
   okafor3: { h: 'DR. OKAFOR · LAST PAGE', b: 'She is not a mother the way you mean it. She is the one they came out of and the one they go back to.\nThe sacs on her body are where the young grow. Burst them and she has nothing left to hide behind.\nAim for the glow.' },
-  okafor4: { h: 'SCRAWLED ON A BONE', b: 'when she goes under, the brood comes out\nwhen she comes up, shoot the glow\ndont let them pin you to the wall' },
+  okafor4: { h: 'SCRAWLED ON A BONE', b: 'when she goes under, the brood comes out\nwhen she comes up, shoot the glow\ndon\'t let them pin you to the wall' },
 };
 const ITEM_LABEL_EXTRA = { keycard: 'Take gate keycard', charge: 'Take demolition charge', radiobat: 'Take radio battery', keys: 'Take the keys', cell: 'Take breaker fuse', fuel: 'Take fuel can', cutters: 'Take bolt cutters', seccard: 'Take security pass' };
 
@@ -10124,9 +10124,9 @@ function storyEnding() {
 function chapterLoadout(n) {
   const c = (CHAPTERS[n - 1] || CHAPTERS[0]).num;
   if (c >= 2) giveWeapon('shotgun');
-  if (c >= 3) { giveWeapon('rifle'); run.perks.vest = 1; run.perks.hollow = 1; run.perks.loader = 1; player.maxHp = 125; player.hp = 125; player.flares = 3; }
-  if (c >= 4) { run.perks.vest = 2; run.perks.steady = 1; run.perks.pockets = 1; player.maxHp = 150; player.hp = 150; player.flares = 4; }
-  if (c >= 5) { run.perks.hollow = 2; run.perks.headhunter = 1; run.perks.vest = 3; player.maxHp = 175; player.hp = 175; }
+  if (c >= 3) { giveWeapon('rifle'); run.perks.vest = 1; run.perks.hollow = 1; run.perks.loader = 1; player.maxHp = BASE_HP + VEST_HP; player.hp = player.maxHp; player.flares = 3; }
+  if (c >= 4) { run.perks.vest = 2; run.perks.steady = 1; run.perks.pockets = 1; player.maxHp = BASE_HP + VEST_HP * 2; player.hp = player.maxHp; player.flares = 4; }
+  if (c >= 5) { run.perks.hollow = 2; run.perks.headhunter = 1; run.perks.vest = 3; player.maxHp = BASE_HP + VEST_HP * 3; player.hp = player.maxHp; }
   ORDER.forEach((w) => { if (player.owned[w]) player.ammo[w].reserve = Math.round(weaponDef(w).reserveMax * 0.7); });
 }
 
@@ -10702,7 +10702,7 @@ const NOTES = {
   quiet: { h: 'PERSONAL · UNSIGNED', b: 'Day 9 underground.\nNoise carries a long way down here. Gunfire especially. Running too.\nI walk now. I keep my light low. Most of them hunt by sight and sound, and in the dark they are nearly as blind as we are.' },
   crawler: { h: 'DR. OKAFOR · NOTES', b: 'The crawling ones move in packs. When one sees you it shrieks and the others come.\nThey do not all come the same way. One will follow you. Another will go around and wait for you at the next corner.' },
   husk: { h: 'SECURITY MEMO 14', b: 'Specimen H is slow. Do not let it get a run at you.\nWhen it rears back and roars it is about to charge, and once it charges it cannot turn well.\nStep aside. If it hits a wall it is stunned for a few seconds and takes a lot more damage. That is your window.' },
-  stalker: { h: 'SCRATCHED INTO THE PAPER', b: 'it only moves when nobody is looking at it\nkeep it in your light. it cannot move in the light\ndont blink dont turn around dont let the batteries die\nDONT LOOK AWAY' },
+  stalker: { h: 'SCRATCHED INTO THE PAPER', b: 'it only moves when nobody is looking at it\nkeep it in your light. it cannot move in the light\ndon\'t blink don\'t turn around don\'t let the batteries die\nDON\'T LOOK AWAY' },
   wailer: { h: 'AUDIO TRANSCRIPT · ROOM B-7', b: '[screaming, 4 seconds]\nThe screaming one does not attack. It calls the others.\nWhen it screams everything on the floor knows where you are. It keeps its distance. Find it and kill it first.' },
   lights: { h: 'PERSONAL · UNSIGNED', b: 'If the lights come on, run.\nThe generators are loud. Every time we restarted one, they came from everywhere at once.\nKnow your way back to the lift before you put in the last cell.' },
   down: { h: 'FOUND IN A LOCKER', b: 'Whoever finds this:\nthe lifts only go down.\nI have counted nine floors. Okafor says there is a bottom. Okafor also said we would be home by spring.' },
@@ -10715,7 +10715,7 @@ function pickNote(floor, k) {
 }
 
 const PERKS = [
-  { id: 'vest', name: 'Kevlar Vest', max: 3, desc: '+25 max health and fully heals you.', apply() { player.maxHp += 25; player.hp = player.maxHp; } },
+  { id: 'vest', name: 'Kevlar Vest', max: 3, desc: `+${VEST_HP} max health and fully heals you.`, apply() { player.maxHp += VEST_HP; player.hp = player.maxHp; } },
   { id: 'hollow', name: 'Hollow Points', max: 3, desc: 'All weapons deal 20% more damage.' },
   { id: 'steady', name: 'Steady Hands', max: 2, desc: '30% tighter spread and 25% less recoil.' },
   { id: 'loader', name: 'Speed Loader', max: 2, desc: 'Reload 30% faster.' },
@@ -10726,7 +10726,7 @@ const PERKS = [
   { id: 'headhunter', name: 'Headhunter', max: 2, desc: 'Headshots deal 60% more damage.' },
   { id: 'flares', name: 'Flare Belt', max: 2, desc: '+2 flares now, and carry 2 more.', apply() { player.flares += 2; } },
   { id: 'secondwind', name: 'Second Wind', max: 1, desc: 'Once per sublevel, survive a killing blow with 1 health.' },
-  { id: 'medic', name: 'Field Medic', max: 1, desc: 'Medkits heal 60% more. Health slowly recovers up to 35.' },
+  { id: 'medic', name: 'Field Medic', max: 1, desc: 'Medkits heal 60% more. Health slowly recovers up to 85.' },
   { id: 'shotgun', name: 'Salvaged Shotgun', max: 1, desc: 'A pump shotgun with 12 shells. Devastating up close.', need: () => !player.owned.shotgun, apply() { giveWeapon('shotgun'); } },
   { id: 'rifle', name: 'Salvaged Carbine', max: 1, desc: 'A fully automatic carbine with 60 rounds.', need: () => !player.owned.rifle, apply() { giveWeapon('rifle'); } },
 ];
@@ -10739,7 +10739,7 @@ function giveWeapon(w) {
 /* ---------------- runs and floors ---------------- */
 function newRun(mode = 'story', start = 1) {
   run = { mode, floor: start, perks: {}, secondWindUsed: false, totals: runStats() };
-  Object.assign(player, { hp: 100, maxHp: 100, battery: 100, flares: 2, owned: { pistol: true }, weapon: 'pistol', ammo: { pistol: { mag: 12, reserve: 36 } } });
+  Object.assign(player, { hp: BASE_HP, maxHp: BASE_HP, battery: 100, flares: 2, owned: { pistol: true }, weapon: 'pistol', ammo: { pistol: { mag: 12, reserve: 36 } } });
   if (mode === 'story') { if (start > 1) chapterLoadout(start); chapterStory(start, () => startFloor(start)); }
   else startFloor(start);
 }
@@ -10751,6 +10751,8 @@ function snapshot() {
 function restore(s) {
   run = JSON.parse(JSON.stringify(s.run));
   Object.assign(player, JSON.parse(JSON.stringify(s.p)));
+  // a save from before health went up to 250: scale it up the same way (100 → 250, each vest 25 → 60)
+  if (player.maxHp < BASE_HP) { const nm = BASE_HP + Math.round((player.maxHp - 100) / 25) * VEST_HP; player.hp = Math.max(1, Math.round(player.hp * nm / player.maxHp)); player.maxHp = nm; }
 }
 function startFloor(n, cp = null) {
   stopAttract();
@@ -10932,7 +10934,7 @@ function doInteract() {
       const def = weaponDef(target), a = player.ammo[target], add = Math.round(def.ammoPickup * (1 + 0.5 * perkLv('pockets')));
       a.reserve = Math.min(def.reserveMax, a.reserve + add);
       SFX.pickup(); showMsg(`+${add} ${def.name.toLowerCase()} rounds`, 1.6);
-    } else if (it.type === 'med') { const heal = 40 * (1 + 0.6 * perkLv('medic')); player.hp = Math.min(player.maxHp, player.hp + heal); SFX.pickup(); showMsg(`+${Math.round(heal)} health`, 1.6); }
+    } else if (it.type === 'med') { const heal = 100 * (1 + 0.6 * perkLv('medic')); player.hp = Math.min(player.maxHp, player.hp + heal); SFX.pickup(); showMsg(`+${Math.round(heal)} health`, 1.6); }
     else if (it.type === 'battery') { player.battery = Math.min(100, player.battery + 55); SFX.pickup(); showMsg('Flashlight battery replaced', 1.6); }
     else if (it.type === 'flare') { const cap = 4 + 2 * perkLv('flares'); player.flares = Math.min(cap, player.flares + 2); SFX.pickup(); showMsg('+2 flares', 1.6); }
     else if (it.type === 'note') { SFX.pickup('note'); openNote(it.note); }
@@ -10960,12 +10962,12 @@ function showMsg(text, sec = 2.5, delay = 0) {
 }
 function updateHud(dt) {
   const hp = Math.ceil(player.hp);
-  setText('hHp', settings.infHealth ? '∞' : String(hp));
-  $('#hHp').classList.toggle('low', player.hp < 30);
+  setText('hHp', String(hp));
+  $('#hHp').classList.toggle('low', player.hp < 75);
   $('#hHpBar').style.width = (player.hp / player.maxHp * 100) + '%';
   $('#hStBar').style.width = (player.stamina / (100 * (1 + 0.4 * perkLv('adrenaline'))) * 100) + '%';
   const bat = Math.ceil(player.battery);
-  setText('hBat', `<em>LIGHT</em>${player.flashOn ? (settings.infLight ? '∞' : bat + '%') : 'OFF'}`, true);
+  setText('hBat', `<em>LIGHT</em>${player.flashOn ? bat + '%' : 'OFF'}`, true);
   $('#hBat').classList.toggle('warn', bat < 20);
   setText('hFlare', `<em>FLARES</em>${player.flares}`, true);
   const w = player.weapon, a = player.ammo[w];
@@ -10984,7 +10986,7 @@ function updateHud(dt) {
   // messages
   if (game.msgT > 0) { game.msgT -= dt; if (game.msgT <= 0) $('#msg').style.opacity = 0; }
   if (game.cardT > 0) { game.cardT -= dt; if (game.cardT <= 1.2) $('#card').style.opacity = 0; }
-  $('#hurt').style.opacity = clamp(player.damageFlash * 1.2 + (player.hp < 30 ? 0.35 + 0.15 * Math.sin(clock.t * 5) : 0), 0, 1);
+  $('#hurt').style.opacity = clamp(player.damageFlash * 1.2 + (player.hp < 75 ? 0.35 + 0.15 * Math.sin(clock.t * 5) : 0), 0, 1);
   // interact prompt
   const label = interactLabel(game.interact);
   const pr = $('#prompt');
@@ -11134,12 +11136,6 @@ function initSettingsUI() {
   sens.addEventListener('input', () => { settings.sens = Number(sens.value); sync(); store('sublevel.settings', settings); });
   vol.addEventListener('input', () => { settings.vol = Number(vol.value); SFX.setVolume(settings.vol); sync(); store('sublevel.settings', settings); });
   q.addEventListener('change', () => { settings.quality = q.value; store('sublevel.settings', settings); applyQuality(); });
-  const inf = $('#sInf'); inf.checked = !!settings.infLight;
-  inf.addEventListener('change', () => { settings.infLight = inf.checked; store('sublevel.settings', settings); });
-  const ih = $('#sInfHp'); ih.checked = !!settings.infHealth;
-  ih.addEventListener('change', () => { settings.infHealth = ih.checked; store('sublevel.settings', settings); });
-  const br = $('#sBright'); br.checked = !!settings.bright;
-  br.addEventListener('change', () => { settings.bright = br.checked; store('sublevel.settings', settings); applyLighting(); });
   const fr = $('#sFear'); fr.value = FEAR_LEVELS[settings.fear] ? settings.fear : 'scary';
   fr.addEventListener('change', () => { settings.fear = fr.value; store('sublevel.settings', settings); applyFear(); });
 }
@@ -11149,7 +11145,7 @@ function applyFear() {
   applyLighting();
 }
 function applyLighting() {
-  const b = !!settings.bright && game.state !== 'intro', th = themeDef();
+  const b = false, th = themeDef();
   renderer.toneMappingExposure = b ? 1.25 : FEAR.exposure;
   scene.fog.density = b ? 0.008 : FEAR.fog * th.fogMul;
   scene.fog.color.setHex(th.fog); scene.background.setHex(th.bg);
@@ -11287,8 +11283,7 @@ function updatePlayer(dt, t) {
   if (p.switching > 0) { const before = p.switching; p.switching -= dt; if (before > 0.22 && p.switching <= 0.22 && p.switchTo) { p.weapon = p.switchTo; p.switchTo = null; showWeapon(p.weapon); } if (p.switching < 0) p.switching = 0; }
   if ((mouseDown || pad.r2 > 0.5) && WEAPONS[p.weapon].auto && game.state === 'play') fire();
   // flashlight battery
-  if (settings.infLight) p.battery = 100;
-  else if (p.flashOn) p.battery = Math.max(0, p.battery - dt * 0.42 * (1 - 0.4 * perkLv('cells')));
+  if (p.flashOn) p.battery = Math.max(0, p.battery - dt * 0.315 * (1 - 0.4 * perkLv('cells')));
   p.flicker = Math.max(0, p.flicker - dt);
   let lvl = p.flashOn && p.battery > 0 ? 1 : 0;
   if (p.battery < 20) lvl *= 0.45 + p.battery / 36;
@@ -11296,7 +11291,7 @@ function updatePlayer(dt, t) {
   if (p.flicker > 0 && Math.random() < 0.35) lvl *= rand(0, 0.3);
   flashlightLevel = lerp(flashlightLevel, lvl, 1 - Math.exp(-dt * 25));
   // regen with Field Medic
-  if (perkLv('medic') && p.hp < 35 && !p.dead) p.hp = Math.min(35, p.hp + dt * 1.2);
+  if (perkLv('medic') && p.hp < 85 && !p.dead) p.hp = Math.min(85, p.hp + dt * 3);
   p.damageFlash = Math.max(0, p.damageFlash - dt * 1.6);
   p.shake = Math.max(0, p.shake - dt * 1.8);
   // camera
@@ -11361,7 +11356,7 @@ function frame(now) {
     // heartbeat when hurt or something is close and hunting
     const threat = enemies.some((e) => !e.dead && e.state === 'chase' && e.distP < 10);
     heartT -= dt;
-    if ((player.hp < 35 || threat) && heartT <= 0 && !player.dead) { heartT = player.hp < 20 ? 0.6 : 0.9; SFX.heartbeat(player.hp < 35 ? 1 : 0.6); }
+    if ((player.hp < 85 || threat) && heartT <= 0 && !player.dead) { heartT = player.hp < 50 ? 0.6 : 0.9; SFX.heartbeat(player.hp < 85 ? 1 : 0.6); }
     if (L.mission) L.mission.update(dt, clock.t);
     if (L.anim) for (const f of L.anim) f(dt, clock.t);
     updateAcid(dt);
@@ -11437,5 +11432,3 @@ async function boot(data) {
 if (window.claude?.hot?.ready) window.claude.hot.ready(boot); else boot(window.claude?.hot?.data ?? {});
 
 </script>
-
-</body></html>
