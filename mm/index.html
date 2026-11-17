@@ -3520,8 +3520,83 @@ function setMenuMode(m) {
 }
 document.querySelectorAll('.mode').forEach(b => b.addEventListener('click', () => setMenuMode(b.dataset.mode)));
 if (isTouch) document.querySelector('.mode[data-mode="split"]').hidden = true;   // two players need a keyboard or gamepads
-// Online play runs through claude.ai; anywhere else it's one player or two on one screen
-if (!(window.claude && window.claude.use)) { document.querySelector('.mode[data-mode="online"]').hidden = true; if (isTouch) document.querySelector('.modes').hidden = true; }
+
+// ---------- online outside claude.ai: PeerJS stands in for the claude.ai room ----------
+// Same shape as claude.use('room'), minus the lobby (no list of open games, join by code). Whoever opens a game claims
+// the PeerJS id for its code and is the hub: everyone else connects to him and he relays each player's presence to all.
+// If the hub leaves, the game ends for the others (they keep smashing on their own).
+const PEERJS = 'https://cdn.jsdelivr.net/npm/peerjs@1.5.4/dist/peerjs.min.js', PEER_PREFIX = 'ethanmixter-';
+const claudeRoom = () => !!(window.claude && window.claude.use);
+const loadScript = src => new Promise((ok, no) => { const s = document.createElement('script'); s.src = src; s.onload = ok; s.onerror = no; document.head.appendChild(s); });
+function openPeer(id) {
+  return new Promise((ok, no) => {
+    const pe = id ? new Peer(id, { debug: 0 }) : new Peer({ debug: 0 });
+    pe.once('open', () => ok(pe));
+    pe.once('error', e => { pe.destroy(); no(Object.assign(new Error(e.type), { code: e.type })); });
+  });
+}
+async function peerRoom() {
+  if (!window.Peer) await loadScript(PEERJS);
+  return {
+    onPeers(cb) { setTimeout(() => cb({ peers: [] })); return () => {}; },
+    presence: () => Promise.resolve(),
+    async join(name) {
+      const hubId = PEER_PREFIX + name;
+      let pe, hub = null;
+      try { pe = await openPeer(hubId); }
+      catch (e) {
+        if (e.code !== 'unavailable-id') throw e;   // taken: someone is hosting, so connect to him
+        pe = await openPeer();
+        hub = pe.connect(hubId, { serialization: 'json', reliable: true });
+        await new Promise((ok, no) => {
+          const t = setTimeout(() => no(Object.assign(new Error('timeout'), { code: 'timeout' })), 8000);
+          hub.once('open', () => { clearTimeout(t); ok(); });
+          pe.once('error', er => { clearTimeout(t); no(Object.assign(new Error(er.type), { code: er.type })); });
+        });
+      }
+      return peerGame(pe, hub);
+    },
+  };
+}
+function peerGame(pe, hub) {
+  const me = pe.id, state = new Map(), seen = new Map(), conns = new Map(), peersCbs = new Set(), connCbs = new Set(), errCbs = new Set();
+  let mine = null, gone = false, sentAt = 0, hubSeen = Date.now();
+  const peers = () => [{ peer: me, by: me, sameTab: true, presence: mine }, ...[...state].map(([peer, presence]) => ({ peer, by: peer, sameTab: false, presence }))];
+  const emit = () => { const ps = peers(); for (const f of peersCbs) f({ peers: ps }); };
+  const toAll = (msg, skip) => { for (const [id, c] of conns) if (id !== skip && c.open) c.send(msg); };
+  const drop = peer => { state.delete(peer); seen.delete(peer); const c = conns.get(peer); if (c) { conns.delete(peer); c.close(); toAll({ peer, gone: true }); } emit(); };
+  const lost = () => { if (gone) return; gone = true; state.clear(); emit(); for (const f of connCbs) f(false); for (const f of errCbs) f(); pe.destroy(); };
+  const send = () => { sentAt = Date.now(); if (hub) { if (hub.open) hub.send({ pr: mine }); } else toAll({ peer: me, pr: mine }); };
+  pe.on('disconnected', () => { if (!gone) pe.reconnect(); });   // lost the PeerJS server; open connections carry on
+  if (hub) {
+    hub.on('data', d => { hubSeen = Date.now(); if (!d || !d.peer || d.peer === me) return; if (d.gone) state.delete(d.peer); else { state.set(d.peer, d.pr); seen.set(d.peer, Date.now()); } emit(); });
+    hub.on('close', lost);
+  } else pe.on('connection', c => {
+    c.on('open', () => { conns.set(c.peer, c); if (mine) c.send({ peer: me, pr: mine }); for (const [peer, pr] of state) c.send({ peer, pr }); });
+    c.on('data', d => { if (!d || !d.pr) return; state.set(c.peer, d.pr); seen.set(c.peer, Date.now()); toAll({ peer: c.peer, pr: d.pr }, c.peer); emit(); });
+    c.on('close', () => drop(c.peer));
+  });
+  // a closed tab doesn't always close its connection, so anyone quiet for 10 s is gone. Hidden tabs stop drawing frames,
+  // so keep resending the last presence once a second to stay in the game while you look at another tab.
+  const beat = setInterval(() => {
+    if (gone) return clearInterval(beat);
+    if (mine && Date.now() - sentAt > 1000) send();
+    const old = Date.now() - 10000;
+    if (hub && hubSeen < old) return lost();
+    for (const [peer, t] of seen) if (t < old) drop(peer);
+  }, 1000);
+  const leave = () => { gone = true; clearInterval(beat); pe.destroy(); return Promise.resolve(); };
+  addEventListener('pagehide', leave);
+  setTimeout(() => { for (const f of connCbs) f(true); });
+  return {
+    peers,
+    onPeers(f, e) { peersCbs.add(f); if (e) errCbs.add(e); setTimeout(() => f({ peers: peers() })); return () => { peersCbs.delete(f); errCbs.delete(e); }; },
+    onConnection(f) { connCbs.add(f); return () => connCbs.delete(f); },
+    presence(pr) { mine = pr; send(); return Promise.resolve(); },
+    leave() { removeEventListener('pagehide', leave); return leave(); },
+  };
+}
+if (!claudeRoom()) { $('gameList').hidden = $('gamesNone').hidden = true; document.querySelector('.netHead').hidden = true; }
 
 // ---------- online: everyone in a named room, each computer runs its own monster and its own army ----------
 // Presence carries each player's monster (where it is, what it's doing) plus a short log of what it did to the city.
@@ -3538,9 +3613,10 @@ async function netInit() {
   NET.started = true;
   setNet('Checking for online play…', false);
   let room = null, user = null;
-  try { if (window.claude && claude.use) [room, user] = await Promise.all([claude.use('room'), claude.use('user')]); } catch (e) {}
+  try { if (claudeRoom()) [room, user] = await Promise.all([claude.use('room'), claude.use('user')]); else room = await peerRoom(); } catch (e) {}
   NET.room = room; NET.user = user;
-  if (!room) { setNet('Online play works when this game is open on claude.ai and you are signed in. Share it with a friend from the Share menu so they can open it too.', false); return; }
+  if (!room) { setNet('Online play is not available right now. Check your internet connection and try again.', false); NET.started = false; return; }
+  if (!claudeRoom()) { setNet('Host a game and send your friends its four-letter code, or type a friend\'s code to join.', true); return; }
   if (user) user.name().then(n => { NET.myName = (n || '').split(' ')[0].slice(0, 14); if (mode === 'online' && state !== 'menu') players[0].name = NET.myName; }).catch(() => {});
   room.onPeers(ch => { NET.lobby = ch.peers; renderGames(); }, () => setNet('Online play is not available here right now.', false));
   setNet('Host a game, or join one a friend is hosting. Friends need this page shared with them (Share menu) and must be signed in.', true);
@@ -3577,7 +3653,7 @@ async function hostGame() {
   try { g = await NET.room.join('mm-' + code); } catch (e) { setNet(`Couldn't open a game (${e && e.code || 'error'}). Try again in a moment.`, true); return; }
   NET.t0 = Date.now();
   startOnline(g, code, 1, newSeed(), null);
-  showHint(`Your game code is ${code.toUpperCase()}. Friends you've shared this page with can pick Online and join you.`, 9);
+  showHint(`Your game code is ${code.toUpperCase()}. ${claudeRoom() ? "Friends you've shared this page with" : 'Friends who open this page'} can pick Online and join you.`, 9);
 }
 const sleep = ms => new Promise(r => setTimeout(r, ms));
 async function joinGame(code) {
